@@ -1,11 +1,11 @@
 from dash import html, dcc, callback, Input, Output, State
 import dash_bootstrap_components as dbc
-from .. import gitlab_api
-
-issues_opened = gitlab_api.get_issues(status="opened")
-issues_closed = gitlab_api.get_issues(status="closed")
-meta_data_open = gitlab_api.get_issues_metadata(issues_opened)
-meta_data_close = gitlab_api.get_issues_metadata(issues_closed)
+# from .. import gitlab_api
+#
+# issues_opened = gitlab_api.get_issues(status="opened")
+# issues_closed = gitlab_api.get_issues(status="closed")
+# meta_data_open = gitlab_api.get_issues_metadata(issues_opened)
+# meta_data_close = gitlab_api.get_issues_metadata(issues_closed)
 
 
 def main_request_card():
@@ -89,9 +89,9 @@ def request_tabs():
 def main_layout():
     return html.Div([
         request_tabs(),
-        dcc.Store(id='store_gitlab_issues',
-                  data={"closed_metadata": meta_data_close,
-                        "opened_metadata": meta_data_open}),
+        dcc.Store(id='store_gitlab_issues', data={})
+                  # data={"closed_metadata": meta_data_close,
+                  #       "opened_metadata": meta_data_open}),
     ])
 
 
@@ -103,24 +103,24 @@ def switch_tab(click_tab, issue_data):
     if click_tab == "main_tab":
         return [main_request_card(), issue_data]
     elif click_tab == "opened_tab":
-        opened_issues = gitlab_api.get_issues(status="opened")
-        opened_issues_meta = gitlab_api.get_issues_metadata(opened_issues)
-        stored_opened_meta = issue_data["opened_metadata"]
-
-        if len(stored_opened_meta) == len(opened_issues_meta):
-            issue_data["opened_metadata"] = stored_opened_meta
-        else:
-            issue_data["opened_metadata"] = opened_issues_meta
-
-        toasts = dbc.Accordion([
-            dbc.AccordionItem([
-                html.P(c["author"], style={"color": "white"}),
-                html.P(c["web_url"], style={"color": "white"}),
-            ],
-                title=c["name"],
-            ) for c in issue_data["opened_metadata"]
-        ])
-        return [opened_request_card(toasts), issue_data]
+        # opened_issues = gitlab_api.get_issues(status="opened")
+        # opened_issues_meta = gitlab_api.get_issues_metadata(opened_issues)
+        # stored_opened_meta = issue_data["opened_metadata"]
+        #
+        # if len(stored_opened_meta) == len(opened_issues_meta):
+        #     issue_data["opened_metadata"] = stored_opened_meta
+        # else:
+        #     issue_data["opened_metadata"] = opened_issues_meta
+        #
+        # toasts = dbc.Accordion([
+        #     dbc.AccordionItem([
+        #         html.P(c["author"], style={"color": "white"}),
+        #         html.P(c["web_url"], style={"color": "white"}),
+        #     ],
+        #         title=c["name"],
+        #     ) for c in issue_data["opened_metadata"]
+        # ])
+        return [opened_request_card([]), issue_data]
 
     elif click_tab == "closed_tab":
         # closed_issues = gitlab_api.get_issues(status="closed")
