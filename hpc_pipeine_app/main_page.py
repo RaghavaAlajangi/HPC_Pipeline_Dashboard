@@ -1,5 +1,7 @@
 from dash import html, dcc, callback, Input, Output, State
 import dash_bootstrap_components as dbc
+
+
 # from .. import gitlab_api
 #
 # issues_opened = gitlab_api.get_issues(status="opened")
@@ -90,13 +92,13 @@ def main_layout():
     return html.Div([
         request_tabs(),
         dcc.Store(id='store_gitlab_issues', data={})
-                  # data={"closed_metadata": meta_data_close,
-                  #       "opened_metadata": meta_data_open}),
+        # data={"closed_metadata": meta_data_close,
+        #       "opened_metadata": meta_data_open}),
     ])
 
 
 @callback([Output("tab_content", "children"),
-          Output("store_gitlab_issues", "data")],
+           Output("store_gitlab_issues", "data")],
           Input("tabs", "active_tab"),
           State("store_gitlab_issues", "data"))
 def switch_tab(click_tab, issue_data):
@@ -128,4 +130,3 @@ def switch_tab(click_tab, issue_data):
         # stored_opened_meta = issue_data["closed_metadata"]
         return [closed_request_card(), issue_data]
     return html.P("This shouldn't ever be displayed...")
-

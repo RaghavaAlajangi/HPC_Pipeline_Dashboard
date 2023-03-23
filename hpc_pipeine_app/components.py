@@ -6,8 +6,9 @@ def header_comp(text):
     return html.H6(text)
 
 
-def paragraph_comp(text):
-    return html.P(text)
+def paragraph_comp(text, middle=False):
+    style = {"text-align": "center"}
+    return html.P(text, style=style if middle else {})
 
 
 def line_breaks(times=1):
@@ -18,18 +19,24 @@ def horizontal_line_comp(width=50):
     return html.Hr(style={"width": f"{width}rem"})
 
 
-def text_searchbar_comp(comp_id, placeholder, width=50):
-    return dbc.Input(
-        id=comp_id,
-        type="text",
-        placeholder=placeholder,
-        style={"width": f"{width}rem"}
+def text_input_comp(comp_id, placeholder, width=50):
+    return html.Div(
+        dbc.Input(
+            id=comp_id,
+            disabled=False,
+            type="text",
+            placeholder=placeholder,
+            class_name="dbc_input",
+            style={"width": f"{width}rem"}
+        ),
+        className="row justify-content-center",
     )
 
 
 def num_searchbar_comp(comp_id, min, max, step, default, width=6):
     return dbc.Input(
         id=comp_id,
+        disabled=False,
         min=min, max=max, step=step,
         value=default,
         type="number",
@@ -41,10 +48,11 @@ def num_searchbar_comp(comp_id, min, max, step, default, width=6):
 def dropdown_searchbar_comp(comp_id, option_list, defaults_list):
     option_list = sorted(option_list)
     defaults_list = sorted(defaults_list)
-    options = [{"label": op, "value": n} for n, op in enumerate(option_list)]
-    defaults = [n for n in range(len(defaults_list))]
+    options = [{"label": op, "value": op} for op in option_list]
+    defaults = [op for op in defaults_list]
     return dbc.Select(
         id=comp_id,
+        disabled=False,
         options=options,
         value=defaults,
         style={"width": "6rem"}
@@ -54,8 +62,8 @@ def dropdown_searchbar_comp(comp_id, option_list, defaults_list):
 def checklist_comp(comp_id, option_list, defaults_list):
     option_list = sorted(option_list)
     defaults_list = sorted(defaults_list)
-    options = [{"label": op, "value": n} for n, op in enumerate(option_list)]
-    defaults = [n for n in range(len(defaults_list))]
+    options = [{"label": op, "value": op} for op in option_list]
+    defaults = [op for op in defaults_list]
     return dbc.Checklist(
         options=options,
         id=comp_id,
@@ -95,12 +103,3 @@ def popup_comp(comp_id):
 def groupby_horizontal(elements, width=2):
     columns = [dbc.Col(e, width=width) for e in elements]
     return dbc.Row(columns)
-
-
-def title_accord_item():
-    return dbc.AccordionItem([
-        text_searchbar_comp(comp_id="advanced_request_title",
-                            placeholder="Type title...")
-    ],
-        title="Title (required)",
-    )
