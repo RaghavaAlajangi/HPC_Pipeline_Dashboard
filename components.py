@@ -9,7 +9,7 @@ def header_comp(text, indent=0, middle=False):
         style = {"marginLeft": f"{indent}px"}
     else:
         style = {}
-    return html.Div(html.H6(text), style=style)
+    return html.Div(html.H6(text, style=style))
 
 
 def paragraph_comp(text, indent=0, middle=False):
@@ -125,8 +125,13 @@ def dropdown_menu_comp(name, components, indent=0, middle=False):
     )
 
 
-def group_columns(components, width=2):
-    columns = [dbc.Col(e, width=width) for e in components]
+def groupby_rows(components, width=2):
+    rows = [dbc.Col(e, width=width) for e in components]
+    return dbc.Row(rows)
+
+
+def groupby_columns(components, width=10):
+    columns = dbc.Col([e for e in components], width=width)
     return dbc.Row(columns)
 
 
