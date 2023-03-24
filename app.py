@@ -3,8 +3,8 @@ import dash_bootstrap_components as dbc
 import dash_bootstrap_templates as dbt
 from dash import Input, Output, dcc, html
 
-from .hpc_pipeine_app import main_layout
-from .hpc_pipeine_app import simple_request, advanced_request
+from .components import groupby_columns, dropdown_menu_comp, paragraph_comp
+from .hpc_pipeine_app import main_layout, simple_request, advanced_request
 from .viscosity_calculator_app import viscal_app
 
 url_theme1 = dbc.themes.SKETCHY
@@ -44,50 +44,44 @@ def wrong_page(pathname):
 
 def sidebar_menu():
     return html.Div([
-        dbc.Row([
-            dbc.Col([
-                html.H2("Guck Lab", className="text-white"),
-                html.Br(),
-                dbt.ThemeSwitchAIO(aio_id="theme",
-                                   themes=[url_theme, url_theme]),
-                html.Br()
-            ]),
+        groupby_columns([
+            html.H2("Guck Lab"),
+            html.Br(),
+            dbt.ThemeSwitchAIO(aio_id="theme",
+                               themes=[url_theme, url_theme]),
+            html.Br()
         ]),
-        html.P(
-            className="lead",
-            children=["Description"]
-        ),
-        dbc.Row([
-            dbc.Col([
-                html.Br(),
-                dbc.DropdownMenu([
-                    dbc.DropdownMenuItem([
-                        dbc.NavLink("Sigh in", href="/signin",
-                                    id="signin_active")
-                    ]),
-                    dbc.DropdownMenuItem([
-                        dbc.NavLink("Sign up", href="/signup",
-                                    id="signup_active")
-                    ]),
-                ],
-                    label="Sign in / Sign up",
-                    color="primary",
-                    size="md"
-                ),
-                html.Br(),
-                html.Br(),
-            ]),
+
+        paragraph_comp(text="App Description"),
+
+        groupby_columns([
+            html.Br(),
+            dropdown_menu_comp(name="Sign in / Sign up",
+                               components=[
+                                   dbc.NavLink("Sign in", href="/signin",
+                                               id="signin_active"),
+                                   dbc.NavLink("Sign up", href="/signup",
+                                               id="signup_active")
+                               ]),
+            html.Br(),
+            html.Br(),
         ]),
-        dbc.Nav([
-            dbc.NavLink("Home", href="/", id="home_active"),
-            dbc.NavLink("HPC Pipelines", href="/hpc_pipelines",
-                        id="hpc_pipeline_active"),
-            dbc.NavLink("Viscosity Calculator", href="/viscal",
-                        id="viscal_active"),
-        ],
-            vertical=True,
-            pills=True,
-        ),
+
+        groupby_columns([
+            html.Br(),
+            dbc.Nav([
+                dbc.NavLink("Home", href="/", id="home_active"),
+                dbc.NavLink("HPC Pipelines", href="/hpc_pipelines",
+                            id="hpc_pipeline_active"),
+                dbc.NavLink("Viscosity Calculator", href="/viscal",
+                            id="viscal_active"),
+            ],
+                vertical=True,
+                pills=True,
+            ),
+            html.Br(),
+        ]),
+
         html.Div([
             html.Br(), html.Br(), html.Br(), html.Br(), html.Br(),
             html.A([
@@ -96,8 +90,7 @@ def sidebar_menu():
             ],
                 href=project_repo_url,
                 target='_blank',
-                style={'color': 'white',
-                       "align-text": "center"}
+                style={"text-decoration": "none"}
             )
         ])
     ],
