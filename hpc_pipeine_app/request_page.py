@@ -1,69 +1,67 @@
 import dash_bootstrap_components as dbc
 from dash import callback, Input, Output, State, html
-from .components import header_comp, paragraph_comp, checklist_comp, \
+
+from ..components import header_comp, paragraph_comp, checklist_comp, \
     upload_comp, text_input_comp, dropdown_searchbar_comp, \
-    groupby_horizontal, num_searchbar_comp, popup_comp, horizontal_line_comp
+    groupby_rows, num_searchbar_comp, popup_comp, horizontal_line_comp, \
+    group_accordion
 
 
 def simple_request():
     return dbc.Toast([
         popup_comp(comp_id="simple_popup"),
+        html.Br(),
         header_comp("⦿ Pipeline for segmentation and/or classification "
-                    "(prediction) and analysis of data."),
+                    "(prediction) and analysis of data.", indent=40),
         header_comp("⦿ Choosing multiple Segmentation or Prediction "
                     "algorithms will create a matrix of jobs (multiple "
-                    "jobs)."),
+                    "jobs).", indent=40),
 
         html.Br(), html.Br(),
-
-        html.Div(
-            dbc.Accordion([
-                dbc.AccordionItem([
-                    text_input_comp(comp_id="simple_title",
-                                    placeholder="Type title...")
-                ],
-                    title="Title (required)",
-                ),
-
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="simp_segm_id",
-                                   option_list=["Legacy", "MLUNet",
-                                                "Watershed", "STD"],
-                                   defaults_list=["Legacy", "MLUNet"])
-                ],
-                    title="Segmentation",
-                ),
-                dbc.AccordionItem([
-                    paragraph_comp("Classification Model"),
-                    checklist_comp(comp_id="simp_classifier_id",
-                                   option_list=["MNet", "BloodyBunny"],
-                                   defaults_list=["MNet"])
-                ],
-                    title="Prediction",
-                ),
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="simp_postana_id",
-                                   option_list=["Benchmarking",
-                                                "Scatter Plots"],
-                                   defaults_list=["Scatter Plots"])
-                ],
-                    title="Post Analysis",
-                ),
-                dbc.AccordionItem([
-                    paragraph_comp("Add the data that need to be processed!",
-                                   middle=True),
-                    text_input_comp(comp_id="simple_upload_input",
-                                    placeholder="Enter DCOR id..."),
-                    html.Br(),
-                    paragraph_comp(text="OR", middle=True),
-                    upload_comp(comp_id="simple_drop_down_upload"),
-                ],
-                    title="Data to Process",
-                ),
+        group_accordion([
+            dbc.AccordionItem([
+                text_input_comp(comp_id="simple_title",
+                                placeholder="Type title...")
             ],
-                style={"width": "60rem"},
+                title="Title (required)",
             ),
-            className="row justify-content-center"
+
+            dbc.AccordionItem([
+                checklist_comp(comp_id="simp_segm_id",
+                               option_list=["Legacy", "MLUNet",
+                                            "Watershed", "STD"],
+                               defaults_list=["Legacy", "MLUNet"])
+            ],
+                title="Segmentation",
+            ),
+            dbc.AccordionItem([
+                paragraph_comp("Classification Model"),
+                checklist_comp(comp_id="simp_classifier_id",
+                               option_list=["MNet", "BloodyBunny"],
+                               defaults_list=["MNet"])
+            ],
+                title="Prediction",
+            ),
+            dbc.AccordionItem([
+                checklist_comp(comp_id="simp_postana_id",
+                               option_list=["Benchmarking",
+                                            "Scatter Plots"],
+                               defaults_list=["Scatter Plots"])
+            ],
+                title="Post Analysis",
+            ),
+            dbc.AccordionItem([
+                html.Br(),
+                text_input_comp(comp_id="simple_upload_input",
+                                placeholder="Enter DCOR id..."),
+                html.Br(),
+                paragraph_comp(text="OR", middle=True),
+                upload_comp(comp_id="simple_drop_down_upload"),
+            ],
+                title="Data to Process",
+            )
+        ],
+            middle=True, width=60
         ),
         html.Br(), html.Br(), html.Br(), html.Br(),
         dbc.Button("Create pipeline",
@@ -182,171 +180,149 @@ def advanced_request():
 
     return dbc.Toast([
         popup_comp(comp_id="advanced_popup"),
-        header_comp("Pipeline for segmentation and/or classification "
-                    "(prediction) and analysis of data."),
+        html.Br(),
+        header_comp("⦿ Pipeline for segmentation and/or classification "
+                    "(prediction) and analysis of data.", indent=40),
 
-        header_comp("Choosing multiple Segmentation or Prediction "
+        header_comp("⦿ Choosing multiple Segmentation or Prediction "
                     "algorithms will create a matrix of jobs "
-                    "(multiple jobs)."),
+                    "(multiple jobs).", indent=40),
 
         html.Br(), html.Br(),
-        html.Div(
-            dbc.Accordion([
-                dbc.AccordionItem([
-                    text_input_comp(comp_id="advanced_title",
-                                    placeholder="Type title...")
-                ],
-                    title="Title (required)",
-                ),
-
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="dcevent_ver_id",
-                                   option_list=["dcevent version=latest"],
-                                   defaults_list=["dcevent version=latest"]),
-                ],
-                    title="dcevent version",
-                ),
-
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="mlunet_id",
-                                   option_list=["MLUNet"],
-                                   defaults_list=["MLUNet"]),
-
-                    horizontal_line_comp(),
-
-                    checklist_comp(comp_id="legacy_id",
-                                   option_list=["legacy: Legacy thresholding"
-                                                " with OpenCV"],
-                                   defaults_list=["legacy: Legacy thresholding"
-                                                  " with OpenCV"]),
-
-                    groupby_horizontal(
-                        [legacy_thresh_param, legacy_thresh_sbar]),
-                    groupby_horizontal(
-                        [legacy_blur_param, legacy_blur_sbar]),
-                    groupby_horizontal(
-                        [legacy_binop_param, legacy_binop_sbar]),
-                    groupby_horizontal(
-                        [legacy_difme_param, legacy_difme_sbar]),
-                    groupby_horizontal(
-                        [legacy_clrbo_param, legacy_clrbo_sbar]),
-                    groupby_horizontal(
-                        [legacy_filho_param, legacy_filho_sbar]),
-                    groupby_horizontal(
-                        [legacy_cldis_param, legacy_cldis_sbar]),
-
-                    horizontal_line_comp(),
-
-                    checklist_comp(comp_id="watershed_id",
-                                   option_list=[
-                                       "watershed: Watershed algorithm"],
-                                   defaults_list=[
-                                       "watershed: Watershed algorithm"]),
-
-                    groupby_horizontal(
-                        [wtrshd_clrbo_param, wtrshd_clrbo_sbar]),
-                    groupby_horizontal(
-                        [wtrshd_filho_param, wtrshd_filho_sbar]),
-                    groupby_horizontal(
-                        [wtrshd_cldis_param, wtrshd_cldis_sbar]),
-
-                    horizontal_line_comp(),
-
-                    checklist_comp(comp_id="std_id",
-                                   option_list=["std: Standard-deviation-"
-                                                "based thresholding"],
-                                   defaults_list=[
-                                       "std: Standard-deviation-based "
-                                       "thresholding"]),
-
-                    groupby_horizontal([std_clrbo_param, std_clrbo_sbar]),
-                    groupby_horizontal([std_filho_param, std_filho_sbar]),
-                    groupby_horizontal([std_cldis_param, std_cldis_sbar]),
-                ],
-                    title="Segmentation Algorithm",
-                ),
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="rollmed_id",
-                                   option_list=["rollmed: Rolling median "
-                                                "RT-DC background image "
-                                                "computation"],
-                                   defaults_list=[
-                                       "rollmed: Rolling median RT-DC "
-                                       "background image computation"]),
-
-                    groupby_horizontal(
-                        [rollmed_ksize_param, rollmed_ksize_sbar]),
-                    groupby_horizontal(
-                        [rollmed_bsize_param, rollmed_bsize_sbar]),
-
-                    horizontal_line_comp(),
-
-                    checklist_comp(comp_id="sparsemed_id",
-                                   option_list=["sparsemed: Sparse median "
-                                                "background correction with "
-                                                "cleansing"],
-                                   defaults_list=["sparsemed: Sparse median "
-                                                  "background correction with "
-                                                  "cleansing"]),
-
-                    groupby_horizontal(
-                        [sparsemed_ksize_param, sparsemed_ksize_sbar]),
-                    groupby_horizontal(
-                        [sparsemed_bsize_param, sparsemed_bsize_sbar]),
-                    groupby_horizontal(
-                        [sparsemed_thrcln_param, sparsemed_thrcln_sbar]),
-                    groupby_horizontal(
-                        [sparsemed_frcln_param, sparsemed_frcln_sbar]),
-                ],
-                    title="Background Correction / Subtraction Method",
-                ),
-
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="ngate_id",
-                                   option_list=["norm gating"],
-                                   defaults_list=["norm gating"]),
-
-                    groupby_horizontal(
-                        [ngate_ongate_param, ngate_ongate_sbar]),
-                    groupby_horizontal(
-                        [ngate_thrmsk_param, ngate_thrmsk_sbar]),
-
-                    horizontal_line_comp(),
-
-                    checklist_comp(comp_id="repro_id",
-                                   option_list=["--reproduce=False"],
-                                   defaults_list=["--reproduce=False"])
-                ],
-                    title="Further Options",
-                ),
-
-                dbc.AccordionItem([
-                    checklist_comp(comp_id="dcml_ver_id",
-                                   option_list=["dcml version"],
-                                   defaults_list=["dcml version"]),
-
-                    checklist_comp(comp_id="classifier_id",
-                                   option_list=["Classification Model"],
-                                   defaults_list=["Classification Model"]),
-                ],
-                    title="Prediction",
-                ),
-                dbc.AccordionItem([
-                    paragraph_comp(
-                        text="Add the data that need to be processed!",
-                        middle=True),
-                    text_input_comp(comp_id="advanced_upload_input",
-                                    placeholder="Enter DCOR id..."),
-                    html.Br(),
-                    paragraph_comp(text="OR", middle=True),
-                    upload_comp(comp_id="advance_drop_down_upload"),
-                ],
-                    title="Data to Process",
-                )
+        group_accordion([
+            dbc.AccordionItem([
+                text_input_comp(comp_id="advanced_title",
+                                placeholder="Type title...")
             ],
-                style={"width": "60rem"},
+                title="Title (required)",
             ),
-            className="row justify-content-center"
+
+            dbc.AccordionItem([
+                checklist_comp(comp_id="dcevent_ver_id",
+                               option_list=["dcevent version=latest"],
+                               defaults_list=["dcevent version=latest"]),
+            ],
+                title="dcevent version",
+            ),
+
+            dbc.AccordionItem([
+                checklist_comp(comp_id="mlunet_id",
+                               option_list=["MLUNet"],
+                               defaults_list=["MLUNet"]),
+
+                horizontal_line_comp(),
+
+                checklist_comp(comp_id="legacy_id",
+                               option_list=["legacy: Legacy thresholding"
+                                            " with OpenCV"],
+                               defaults_list=["legacy: Legacy thresholding"
+                                              " with OpenCV"]),
+
+                groupby_rows([legacy_thresh_param, legacy_thresh_sbar]),
+                groupby_rows([legacy_blur_param, legacy_blur_sbar]),
+                groupby_rows([legacy_binop_param, legacy_binop_sbar]),
+                groupby_rows([legacy_difme_param, legacy_difme_sbar]),
+                groupby_rows([legacy_clrbo_param, legacy_clrbo_sbar]),
+                groupby_rows([legacy_filho_param, legacy_filho_sbar]),
+                groupby_rows([legacy_cldis_param, legacy_cldis_sbar]),
+
+                horizontal_line_comp(),
+
+                checklist_comp(comp_id="watershed_id",
+                               option_list=[
+                                   "watershed: Watershed algorithm"],
+                               defaults_list=[
+                                   "watershed: Watershed algorithm"]),
+
+                groupby_rows([wtrshd_clrbo_param, wtrshd_clrbo_sbar]),
+                groupby_rows([wtrshd_filho_param, wtrshd_filho_sbar]),
+                groupby_rows([wtrshd_cldis_param, wtrshd_cldis_sbar]),
+
+                horizontal_line_comp(),
+
+                checklist_comp(comp_id="std_id",
+                               option_list=["std: Standard-deviation-"
+                                            "based thresholding"],
+                               defaults_list=[
+                                   "std: Standard-deviation-based "
+                                   "thresholding"]),
+
+                groupby_rows([std_clrbo_param, std_clrbo_sbar]),
+                groupby_rows([std_filho_param, std_filho_sbar]),
+                groupby_rows([std_cldis_param, std_cldis_sbar]),
+            ],
+                title="Segmentation Algorithm",
+            ),
+            dbc.AccordionItem([
+                checklist_comp(comp_id="rollmed_id",
+                               option_list=["rollmed: Rolling median "
+                                            "RT-DC background image "
+                                            "computation"],
+                               defaults_list=[
+                                   "rollmed: Rolling median RT-DC "
+                                   "background image computation"]),
+
+                groupby_rows([rollmed_ksize_param, rollmed_ksize_sbar]),
+                groupby_rows([rollmed_bsize_param, rollmed_bsize_sbar]),
+
+                horizontal_line_comp(),
+
+                checklist_comp(comp_id="sparsemed_id",
+                               option_list=["sparsemed: Sparse median "
+                                            "background correction with "
+                                            "cleansing"],
+                               defaults_list=["sparsemed: Sparse median "
+                                              "background correction with "
+                                              "cleansing"]),
+
+                groupby_rows([sparsemed_ksize_param, sparsemed_ksize_sbar]),
+                groupby_rows([sparsemed_bsize_param, sparsemed_bsize_sbar]),
+                groupby_rows([sparsemed_thrcln_param, sparsemed_thrcln_sbar]),
+                groupby_rows([sparsemed_frcln_param, sparsemed_frcln_sbar]),
+            ],
+                title="Background Correction / Subtraction Method",
+            ),
+
+            dbc.AccordionItem([
+                checklist_comp(comp_id="ngate_id",
+                               option_list=["norm gating"],
+                               defaults_list=["norm gating"]),
+
+                groupby_rows([ngate_ongate_param, ngate_ongate_sbar]),
+                groupby_rows([ngate_thrmsk_param, ngate_thrmsk_sbar]),
+
+                horizontal_line_comp(),
+
+                checklist_comp(comp_id="repro_id",
+                               option_list=["--reproduce=False"],
+                               defaults_list=["--reproduce=False"])
+            ],
+                title="Further Options",
+            ),
+
+            dbc.AccordionItem([
+                checklist_comp(comp_id="dcml_ver_id",
+                               option_list=["dcml version"],
+                               defaults_list=["dcml version"]),
+
+                checklist_comp(comp_id="classifier_id",
+                               option_list=["Classification Model"],
+                               defaults_list=["Classification Model"]),
+            ],
+                title="Prediction",
+            ),
+            dbc.AccordionItem([
+                html.Br(),
+                text_input_comp(comp_id="advanced_upload_input",
+                                placeholder="Enter DCOR id..."),
+                html.Br(),
+                paragraph_comp(text="OR", middle=True),
+                upload_comp(comp_id="advance_drop_down_upload"),
+            ],
+                title="Data to Process",
+            )
+        ],
+            middle=True, width=60
         ),
 
         html.Br(), html.Br(), html.Br(), html.Br(),
