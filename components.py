@@ -2,13 +2,24 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 
-def header_comp(text):
-    return html.H6(text)
+def header_comp(text, indent=0, middle=False):
+    if middle:
+        style = {"text-align": "center"}
+    elif not middle and indent > 0:
+        style = {"marginLeft": f"{indent}px"}
+    else:
+        style = {}
+    return html.Div(html.H6(text), style=style)
 
 
-def paragraph_comp(text, middle=False):
-    style = {"text-align": "center"}
-    return html.P(text, style=style if middle else {})
+def paragraph_comp(text, indent=0, middle=False):
+    if middle:
+        style = {"text-align": "center"}
+    elif not middle and indent > 0:
+        style = {"marginLeft": f"{indent}px"}
+    else:
+        style = {}
+    return html.P(text, style=style)
 
 
 def line_breaks(times=1):
@@ -100,6 +111,30 @@ def popup_comp(comp_id):
     )
 
 
-def groupby_horizontal(elements, width=2):
-    columns = [dbc.Col(e, width=width) for e in elements]
+def dropdown_menu_comp(name, components, indent=0, middle=False):
+    if middle:
+        style = {"text-align": "center"}
+    elif not middle and indent > 0:
+        style = {"marginLeft": f"{indent}px"}
+    else:
+        style = {}
+    options = [dbc.DropdownMenuItem([c]) for c in components]
+    return html.Div(
+        dbc.DropdownMenu(options, label=name),
+        style=style
+    )
+
+
+def group_columns(components, width=2):
+    columns = [dbc.Col(e, width=width) for e in components]
     return dbc.Row(columns)
+
+
+def group_accordion(accord_items, width, middle=False):
+    accord_items = [a for a in accord_items]
+    return html.Div(
+        dbc.Accordion(accord_items,
+                      style={"width": f"{width}rem"}
+                      ),
+        className="row justify-content-center" if middle else ""
+    )

@@ -131,3 +131,8 @@
   text-align: center;
   margin: 0 auto;
 }
+
+/* Change color of link on hover */
+a:hover {
+    color: red;
+}
