@@ -3,4 +3,4 @@ __pycache__/
 .idea
 
 
-gitlab_api.py
+SECRETS.txt
