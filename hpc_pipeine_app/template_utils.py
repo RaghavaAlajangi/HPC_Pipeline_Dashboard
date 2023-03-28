@@ -1,4 +1,4 @@
-from .issue_templates import simple_template, advanced_template
+from .issue_templates import simple_template
 
 
 def update_simple_template(params, template=simple_template):

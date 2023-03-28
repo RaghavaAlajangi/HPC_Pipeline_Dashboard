@@ -85,8 +85,8 @@
         margin-left: 6.5rem;
     }
 
-    /* move all contents of navbar other than header (containing toggle) further
-       off-screen */
+    /* move all contents of navbar other than header
+    (containing toggle) further off-screen */
     #sidebar.collapsed > *:not(:first-child) {
         margin-left: -6rem;
         margin-right: 6rem;
