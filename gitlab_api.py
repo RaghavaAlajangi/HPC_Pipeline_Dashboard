@@ -31,10 +31,13 @@ class GitLabAPI:
         issues = self.project.issues.list(state=state, get_all=False)
         return issues
 
-    def get_comments(self, issue_id):
-        issue = self.project.issues.get(issue_id)
+    def get_comments(self, issue_iid):
+        issue = self.project.issues.get(issue_iid)
         issue_notes = issue.notes.list(get_all=True)
         return [n.asdict()["body"] for n in issue_notes]
+
+    def get_issue_obj(self, issue_iid):
+        return self.project.issues.get(issue_iid)
 
     def get_issues_meta(self, state):
         issues = self.get_issues(state)
@@ -54,10 +57,6 @@ class GitLabAPI:
     def run_pipeline(self, pipeline_request):
         new_pipeline = self.project.issues.create(pipeline_request)
         return new_pipeline.notes.create({'body': "GO"})
-
-    @staticmethod
-    def stop_pipeline(issue_object):
-        issue_object.notes.create({'body': "Cancel"})
 
 
 gitlab_api = GitLabAPI(url, token, project_num)
