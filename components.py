@@ -23,7 +23,14 @@ def paragraph_comp(text, indent=0, middle=False):
 
 
 def line_breaks(times=1):
-    return [html.Br() for i in range(times)]
+    br_list = [html.Br() for i in range(times)]
+    return html.Div(children=br_list)
+
+
+def button_comp(label, comp_id, type="primary"):
+    return dbc.Button(label, id=comp_id, color=type,
+                      className="my-button-class mx-auto d-block"
+                      if type == "primary" else {})
 
 
 def horizontal_line_comp(width=50):
@@ -89,8 +96,8 @@ def upload_comp(comp_id):
     return dcc.Upload(
         id=comp_id,
         children=html.Div([
-            'Drag and Drop or ',
-            html.A('Select Files')
+            "Drag and Drop or ",
+            html.A("Select Files")
         ]),
         className="dcc-upload",
         multiple=True
@@ -107,7 +114,7 @@ def popup_comp(comp_id):
         id=comp_id,
         centered=True,
         is_open=False,
-        style={'color': 'white'}
+        style={"color": "white"}
     )
 
 
@@ -135,11 +142,41 @@ def groupby_columns(components, width=10):
     return dbc.Row(columns)
 
 
-def group_accordion(accord_items, width, middle=False):
+def group_accordion(accord_items, width, middle=False, comp_id="none"):
     accord_items = [a for a in accord_items]
     return html.Div(
         dbc.Accordion(accord_items,
+                      id=comp_id,
                       style={"width": f"{width}rem"}
                       ),
         className="row justify-content-center" if middle else ""
     )
+
+
+def chat_box(chat, box_width=66, gap=15):
+    """
+    The chat_box function takes a list of strings and returns a chat box.
+    Parameters
+    ----------
+    chat
+        Store the messages that will be displayed in the chat box
+    box_width
+        Set the width of the chat box
+    gap
+        Set the margin-bottom of each message
+    Returns
+    -------
+        A list of comments
+    """
+    comments = [html.Div(
+        dbc.Card([
+            dbc.CardBody(msg, style={"padding": "0"})
+        ],
+            className="message-box",
+        ),
+        style={"margin-bottom": f"{gap}px"}
+    )
+        for msg in chat]
+
+    return dbc.Card(comments, body=True,
+                    style={"width": f"{box_width}rem"})
