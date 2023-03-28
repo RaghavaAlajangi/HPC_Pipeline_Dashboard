@@ -1,5 +1,6 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+import re
 
 
 def header_comp(text, indent=0, middle=False):
@@ -31,6 +32,12 @@ def button_comp(label, comp_id, type="primary"):
     return dbc.Button(label, id=comp_id, color=type,
                       className="my-button-class mx-auto d-block"
                       if type == "primary" else {})
+
+
+def web_link(label, url):
+    return html.A(label, href=url, target="_blank",
+                  style={"text-decoration": "none"}
+                  )
 
 
 def horizontal_line_comp(width=50):
@@ -153,6 +160,24 @@ def group_accordion(accord_items, width, middle=False, comp_id="none"):
     )
 
 
+def web_link_check(msg):
+    regex_exp = "(?P<url>https?://[^\s]+)"
+    links = re.findall(regex_exp, msg)
+    split_msg = re.split(regex_exp, msg)
+    if len(links) == 0:
+        return msg
+    elif len(links) == 1:
+        link_idx = split_msg.index(links[0])
+        split_msg[link_idx] = web_link(label=f"WEB LINK", url=links[0])
+        return split_msg
+    # else:
+    #     processed_msg = []
+    #     for sm in split_msg:
+    #         if sm in links:
+    #             processed_msg.append()
+    #         return msg.replace(lnk, web_link(label=f"WEB LINK", url=lnk))
+
+
 def chat_box(chat, box_width=66, gap=15):
     """
     The chat_box function takes a list of strings and returns a chat box.
@@ -168,9 +193,10 @@ def chat_box(chat, box_width=66, gap=15):
     -------
         A list of comments
     """
+
     comments = [html.Div(
         dbc.Card([
-            dbc.CardBody(msg, style={"padding": "0"})
+            dbc.CardBody(web_link_check(msg), style={"padding": "0"})
         ],
             className="message-box",
         ),
@@ -185,6 +211,6 @@ def chat_box(chat, box_width=66, gap=15):
 
 def loading_comp(children):
     return html.Div(
-        dcc.Loading(type="dot", color="#017b70", children=children),
+        dcc.Loading(type="default", color="#017b70", children=children),
         className="row justify-content-center"
     )

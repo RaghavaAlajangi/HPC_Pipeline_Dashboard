@@ -4,7 +4,7 @@ from dash import html, dcc, callback, Input, Output, State, MATCH
 
 from ..components import line_breaks, paragraph_comp, group_accordion, \
     dropdown_menu_comp, groupby_columns, header_comp, button_comp, \
-    chat_box, loading_comp
+    chat_box, loading_comp, web_link
 from ..gitlab_api import gitlab_api
 
 # Get the issue meta from gitlab API to store in dash cache memory
@@ -94,11 +94,10 @@ def get_issue_accord(active_tab, data):
             paragraph_comp(text="Request created by: {}".format(c["author"])),
             paragraph_comp(text=f"Pipeline ID: {c['id']}"),
             groupby_columns([
-                html.A(f"GitLab issue - #{c['iid']}",
-                       href=c["web_url"], target="_blank",
-                       style={"text-decoration": "none"}
-                       ),
+                web_link(label=f"GitLab issue - #{c['iid']}",
+                         url=c["web_url"]),
                 line_breaks(times=1),
+                # Remove button component for closed pipelines
                 button_comp(label="Stop Pipeline", type="danger",
                             comp_id={"type": "accord_item_stop", "index": c[
                                 'iid']}) if active_tab == "opened" else "",
