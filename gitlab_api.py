@@ -3,18 +3,18 @@ import pathlib
 
 secrets_path = pathlib.Path(__file__).parent / "SECRETS.txt"
 
-with open(secrets_path) as f:
-    lines = f.readlines()
-    url = str(lines[4].strip().split("=")[1])
-    token = str(lines[5].strip().split("=")[1])
-    project_num = str(lines[6].strip().split("=")[1])
-
-
 # with open(secrets_path) as f:
 #     lines = f.readlines()
-#     url = str(lines[0].strip().split("=")[1])
-#     token = str(lines[1].strip().split("=")[1])
-#     project_num = str(lines[2].strip().split("=")[1])
+#     url = str(lines[4].strip().split("=")[1])
+#     token = str(lines[5].strip().split("=")[1])
+#     project_num = str(lines[6].strip().split("=")[1])
+
+
+with open(secrets_path) as f:
+    lines = f.readlines()
+    url = str(lines[0].strip().split("=")[1])
+    token = str(lines[1].strip().split("=")[1])
+    project_num = str(lines[2].strip().split("=")[1])
 
 
 class GitLabAPI:

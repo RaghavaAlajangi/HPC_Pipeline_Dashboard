@@ -4,7 +4,7 @@ from dash import html, dcc, callback, Input, Output, State, MATCH
 
 from ..components import line_breaks, paragraph_comp, group_accordion, \
     dropdown_menu_comp, groupby_columns, header_comp, button_comp, \
-    chat_box
+    chat_box, loading_comp
 from ..gitlab_api import gitlab_api
 
 # Get the issue meta from gitlab API to store in dash cache memory
@@ -37,14 +37,14 @@ def main_tab_layout():
                            indent=40),
     ],
         className="mt-3",
-        style={"height": "50rem", 'background-color': "#424447"}
+        style={"height": "50rem", "background-color": "#424447"}
     )
 
 
 def open_close_tab_layout(pipelines):
     return dbc.Card([
         line_breaks(times=2),
-        html.Div(id='test', children=[]),
+        html.Div(id="test", children=[]),
         html.Div(
             pipelines,
             style={"max-height": "50rem", "overflow-y": "scroll",
@@ -53,7 +53,7 @@ def open_close_tab_layout(pipelines):
         line_breaks(times=2),
     ],
         className="mt-3",
-        style={"height": "50rem", 'background-color': "#424447"}
+        style={"height": "50rem", "background-color": "#424447"}
     )
 
 
@@ -82,7 +82,7 @@ def tabs_layout():
 def main_layout():
     return html.Div([
         tabs_layout(),
-        dcc.Store(id='store_gitlab_issues',
+        dcc.Store(id="store_gitlab_issues",
                   data={"opened": opened_issues,
                         "closed": closed_issues}),
     ])
@@ -95,12 +95,12 @@ def get_issue_accord(active_tab, data):
             paragraph_comp(text=f"Pipeline ID: {c['id']}"),
             groupby_columns([
                 html.A(f"GitLab issue - #{c['iid']}",
-                       href=c["web_url"], target='_blank',
+                       href=c["web_url"], target="_blank",
                        style={"text-decoration": "none"}
                        ),
                 line_breaks(times=1),
                 button_comp(label="Stop Pipeline", type="danger",
-                            comp_id={'type': 'accord_item_stop', 'index': c[
+                            comp_id={"type": "accord_item_stop", "index": c[
                                 'iid']}) if active_tab == "opened" else "",
 
                 line_breaks(times=2) if active_tab == "opened" else "",
@@ -110,7 +110,8 @@ def get_issue_accord(active_tab, data):
                 # (dynamically changing) that are created via a callback
                 # function. We can refer these id's in a different callback
                 # (as output id's) to do actions like show/store
-                html.Div(id={'type': 'accord_item_div', 'index': c['iid']})
+                loading_comp(html.Div(id={"type": "accord_item_div",
+                                          "index": c['iid']})),
             ]),
         ],
             title=c["name"],
@@ -146,9 +147,9 @@ def switch_tabs(active_tab, stored_issue_meta):
         return switch_tab_content(active_tab, stored_issue_meta)
 
 
-@callback(Output({'type': 'accord_item_div', 'index': MATCH}, 'children'),
+@callback(Output({"type": "accord_item_div", "index": MATCH}, "children"),
           Input("issue_accord", "active_item"),
-          State({'type': 'accord_item_div', 'index': MATCH}, 'id'))
+          State({"type": "accord_item_div", "index": MATCH}, "id"))
 def show_selected_issue_comments(accord_item, match_id):
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
@@ -163,16 +164,16 @@ def show_selected_issue_comments(accord_item, match_id):
             return comment_cards
 
 
-@callback(Output({'type': 'accord_item_stop', 'index': MATCH}, 'disabled'),
+@callback(Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
           Input("issue_accord", "active_item"),
-          Input({'type': 'accord_item_stop', 'index': MATCH}, 'n_clicks'),
-          State({'type': 'accord_item_stop', 'index': MATCH}, 'disabled'))
+          Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
+          State({"type": "accord_item_stop", "index": MATCH}, "disabled"))
 def stop_selected_open_issue(accord_item, click, enable_click):
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
         issue_obj = gitlab_api.get_issue_obj(issue_iid)
         if click is not None and click > 0:
-            issue_obj.notes.create({'body': "Cancel"})
+            issue_obj.notes.create({"body": "Cancel"})
             return True
         else:
             return False

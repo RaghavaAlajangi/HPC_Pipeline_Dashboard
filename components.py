@@ -174,9 +174,17 @@ def chat_box(chat, box_width=66, gap=15):
         ],
             className="message-box",
         ),
-        style={"margin-bottom": f"{gap}px"}
+        style={"margin-bottom": f"{gap}px",
+               "border": "0"}
     )
         for msg in chat]
 
     return dbc.Card(comments, body=True,
                     style={"width": f"{box_width}rem"})
+
+
+def loading_comp(children):
+    return html.Div(
+        dcc.Loading(type="dot", color="#017b70", children=children),
+        className="row justify-content-center"
+    )
