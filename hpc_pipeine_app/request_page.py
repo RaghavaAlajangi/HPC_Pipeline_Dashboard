@@ -1,23 +1,25 @@
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, html
+from dash import callback, Input, Output, State, dcc
 
+from ..gitlab_api import gitlab_api
+from .template_utils import update_simple_template
 from ..components import header_comp, paragraph_comp, checklist_comp, \
     upload_comp, text_input_comp, dropdown_searchbar_comp, \
     groupby_rows, num_searchbar_comp, popup_comp, horizontal_line_comp, \
-    group_accordion
+    group_accordion, line_breaks, button_comp
 
 
 def simple_request():
     return dbc.Toast([
         popup_comp(comp_id="simple_popup"),
-        html.Br(),
+        line_breaks(times=1),
         header_comp("⦿ Pipeline for segmentation and/or classification "
                     "(prediction) and analysis of data.", indent=40),
         header_comp("⦿ Choosing multiple Segmentation or Prediction "
                     "algorithms will create a matrix of jobs (multiple "
                     "jobs).", indent=40),
 
-        html.Br(), html.Br(),
+        line_breaks(times=2),
         group_accordion([
             dbc.AccordionItem([
                 text_input_comp(comp_id="simple_title",
@@ -28,16 +30,16 @@ def simple_request():
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="simp_segm_id",
-                               option_list=["Legacy", "MLUNet",
-                                            "Watershed", "STD"],
-                               defaults_list=["Legacy", "MLUNet"])
+                               option_list=["legacy", "mlunet",
+                                            "watershed", "std"],
+                               defaults_list=["legacy", "mlunet"])
             ],
                 title="Segmentation",
             ),
             dbc.AccordionItem([
                 paragraph_comp("Classification Model"),
                 checklist_comp(comp_id="simp_classifier_id",
-                               option_list=["MNet", "BloodyBunny"],
+                               option_list=["MNet", "Bloody Bunny"],
                                defaults_list=["MNet"])
             ],
                 title="Prediction",
@@ -51,10 +53,10 @@ def simple_request():
                 title="Post Analysis",
             ),
             dbc.AccordionItem([
-                html.Br(),
+                line_breaks(times=1),
                 text_input_comp(comp_id="simple_upload_input",
                                 placeholder="Enter DCOR id..."),
-                html.Br(),
+                line_breaks(times=1),
                 paragraph_comp(text="OR", middle=True),
                 upload_comp(comp_id="simple_drop_down_upload"),
             ],
@@ -63,10 +65,11 @@ def simple_request():
         ],
             middle=True, width=60
         ),
-        html.Br(), html.Br(), html.Br(), html.Br(),
-        dbc.Button("Create pipeline",
-                   id="create_simple_pipeline_button",
-                   className="my-button-class mx-auto d-block"),
+        line_breaks(times=4),
+        button_comp(label="Create pipeline",
+                    comp_id="create_simple_pipeline_button"),
+
+        dcc.Store(id="store_simple_template")
 
     ],
         id="simple_request_toast",
@@ -180,7 +183,7 @@ def advanced_request():
 
     return dbc.Toast([
         popup_comp(comp_id="advanced_popup"),
-        html.Br(),
+        line_breaks(times=1),
         header_comp("⦿ Pipeline for segmentation and/or classification "
                     "(prediction) and analysis of data.", indent=40),
 
@@ -188,7 +191,7 @@ def advanced_request():
                     "algorithms will create a matrix of jobs "
                     "(multiple jobs).", indent=40),
 
-        html.Br(), html.Br(),
+        line_breaks(times=2),
         group_accordion([
             dbc.AccordionItem([
                 text_input_comp(comp_id="advanced_title",
@@ -207,8 +210,8 @@ def advanced_request():
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="mlunet_id",
-                               option_list=["MLUNet"],
-                               defaults_list=["MLUNet"]),
+                               option_list=["mlunet"],
+                               defaults_list=["mlunet"]),
 
                 horizontal_line_comp(),
 
@@ -312,10 +315,10 @@ def advanced_request():
                 title="Prediction",
             ),
             dbc.AccordionItem([
-                html.Br(),
+                line_breaks(times=1),
                 text_input_comp(comp_id="advanced_upload_input",
                                 placeholder="Enter DCOR id..."),
-                html.Br(),
+                line_breaks(times=1),
                 paragraph_comp(text="OR", middle=True),
                 upload_comp(comp_id="advance_drop_down_upload"),
             ],
@@ -325,11 +328,12 @@ def advanced_request():
             middle=True, width=60
         ),
 
-        html.Br(), html.Br(), html.Br(), html.Br(),
+        line_breaks(times=4),
 
-        dbc.Button("Create pipeline",
-                   id="create_advanced_pipeline_button",
-                   className="my-button-class mx-auto d-block"),
+        button_comp(label="Create pipeline",
+                    comp_id="create_advanced_pipeline_button"),
+
+        dcc.Store(id="store_advanced_template")
 
     ],
         id="advanced_request_toast",
@@ -367,32 +371,38 @@ def toggle_advanced_legacy_params(segm_legacy_opt, segm_legacy_thresh,
         return [True] * 7
 
 
-@callback(Output("simple_title", "disabled"),
+@callback(Output("store_simple_template", "data"),
           Input("simple_title", "value"),
           Input("simp_segm_id", "value"),
           Input("simp_classifier_id", "value"),
           Input("simp_postana_id", "value"),
           Input("simple_upload_input", "value"),
           Input("simple_drop_down_upload", "filename"),
+          State("store_simple_template", "data")
           )
-def collect_simple_pipeline_params(simple_title, simp_segm_id,
-                                   simp_classifier_id, simp_postana_id,
-                                   simple_upload_text, simp_upload_drop):
-    print(simple_title, simp_segm_id,
-          simp_classifier_id, simp_postana_id,
-          simple_upload_text,
-          simp_upload_drop)
+def collect_simple_pipeline_params(simple_title, simple_segment,
+                                   simple_classifier, simple_postana,
+                                   simple_upload_text, simple_upload_drop,
+                                   store_simple_template):
+    params = simple_segment + simple_classifier + simple_postana
+
+    final_issue_template = {}
+    if simple_title is not None:
+        final_issue_template["title"] = simple_title
+        final_issue_template["description"] = update_simple_template(params)
+        return final_issue_template
 
 
 @callback(Output("simple_popup", "is_open"),
           Input("create_simple_pipeline_button", "n_clicks"),
+          Input("store_simple_template", "data"),
           State("simple_popup", "is_open")
           )
-def simple_request_notification(click, popup):
+def simple_request_notification(click, store_simple_template, popup):
     if click:
+        gitlab_api.run_pipeline(store_simple_template)
         return not popup
     return popup
-    # return create_gitlab_issue()
 
 
 @callback(Output("advanced_popup", "is_open"),

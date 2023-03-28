@@ -1,12 +1,27 @@
 import gitlab
+import pathlib
+
+secrets_path = pathlib.Path(__file__).parent / "SECRETS.txt"
+
+with open(secrets_path) as f:
+    lines = f.readlines()
+    url = str(lines[4].strip().split("=")[1])
+    token = str(lines[5].strip().split("=")[1])
+    project_num = str(lines[6].strip().split("=")[1])
+
+
+# with open(secrets_path) as f:
+#     lines = f.readlines()
+#     url = str(lines[0].strip().split("=")[1])
+#     token = str(lines[1].strip().split("=")[1])
+#     project_num = str(lines[2].strip().split("=")[1])
 
 
 class GitLabAPI:
-    def __init__(self, url="https://gitlab.gwdg.de",
-                 project_num=28692, token=None):
+    def __init__(self, url, token, project_num):
         self.url = url
-        self.project_num = project_num
         self.token = token
+        self.project_num = project_num
 
         gitlab_obj = gitlab.Gitlab(url=url, private_token=token)
         gitlab_obj.auth()
@@ -16,24 +31,33 @@ class GitLabAPI:
         issues = self.project.issues.list(state=state, get_all=False)
         return issues
 
+    def get_comments(self, issue_id):
+        issue = self.project.issues.get(issue_id)
+        issue_notes = issue.notes.list(get_all=True)
+        return [n.asdict()["body"] for n in issue_notes]
+
     def get_issues_meta(self, state):
         issues = self.get_issues(state)
         meta_data = []
         for issue in issues:
-            # issue_notes = issue.notes.list(get_all=True)
-            # comments = [n.asdict()["body"] for n in issue_notes]
             issue_meta = issue.asdict()
-            title = issue_meta["title"]
-            author = issue_meta["author"]["username"]
-            web_url = issue_meta["web_url"]
-            meta_req = {"name": title, "author": author,
-                        "web_url": web_url,
-                        # "comments": comments
-                        }
-            meta_data.append(meta_req)
+            required_meta = {
+                "name": issue_meta["title"],
+                "id": issue_meta["id"],
+                "iid": issue_meta["iid"],
+                "author": issue_meta["author"]["username"],
+                "web_url": issue_meta["web_url"]
+            }
+            meta_data.append(required_meta)
         return meta_data
 
-    def create_issue(self, issue_dict):
-        # issue_data = {"title": "raghava_test",
-        #               "description": "this is a test issue created by dash"}
-        return self.project.issues.create(issue_dict)
+    def run_pipeline(self, pipeline_request):
+        new_pipeline = self.project.issues.create(pipeline_request)
+        return new_pipeline.notes.create({'body': "GO"})
+
+    @staticmethod
+    def stop_pipeline(issue_object):
+        issue_object.notes.create({'body': "Cancel"})
+
+
+gitlab_api = GitLabAPI(url, token, project_num)

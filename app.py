@@ -3,7 +3,8 @@ import dash_bootstrap_components as dbc
 import dash_bootstrap_templates as dbt
 from dash import Input, Output, dcc, html
 
-from .components import groupby_columns, dropdown_menu_comp, paragraph_comp
+from .components import groupby_columns, line_breaks, paragraph_comp, \
+    dropdown_menu_comp
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
 from .viscosity_calculator_app import viscal_app
 
@@ -46,16 +47,16 @@ def sidebar_menu():
     return html.Div([
         groupby_columns([
             html.H2("Guck Lab"),
-            html.Br(),
+            line_breaks(times=1),
             dbt.ThemeSwitchAIO(aio_id="theme",
                                themes=[url_theme, url_theme]),
-            html.Br()
+            line_breaks(times=1)
         ]),
 
         paragraph_comp(text="App Description"),
 
         groupby_columns([
-            html.Br(),
+            line_breaks(times=1),
             dropdown_menu_comp(name="Sign in / Sign up",
                                components=[
                                    dbc.NavLink("Sign in", href="/signin",
@@ -63,12 +64,11 @@ def sidebar_menu():
                                    dbc.NavLink("Sign up", href="/signup",
                                                id="signup_active")
                                ]),
-            html.Br(),
-            html.Br(),
+            line_breaks(times=2),
         ]),
 
         groupby_columns([
-            html.Br(),
+            line_breaks(times=1),
             dbc.Nav([
                 dbc.NavLink("Home", href="/", id="home_active"),
                 dbc.NavLink("HPC Pipelines", href="/hpc_pipelines",
@@ -79,11 +79,11 @@ def sidebar_menu():
                 vertical=True,
                 pills=True,
             ),
-            html.Br(),
+            line_breaks(times=1),
         ]),
 
         html.Div([
-            html.Br(), html.Br(), html.Br(), html.Br(), html.Br(),
+            line_breaks(times=5),
             html.A([
                 html.Img(src=gitlab_logo_url, height=50),
                 " Source code"
