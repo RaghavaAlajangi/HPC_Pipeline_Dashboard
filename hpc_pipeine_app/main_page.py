@@ -1,47 +1,38 @@
-import pathlib
-
 import dash_bootstrap_components as dbc
-from dash import html, dcc, callback, Input, Output, State
+from dash import html, dcc, callback, Input, Output, State, MATCH
 
-from ..components import dropdown_menu_comp, paragraph_comp, group_accordion
-from ..gitlab_api import GitLabAPI
+from ..components import line_breaks, paragraph_comp, group_accordion, \
+    dropdown_menu_comp, groupby_columns, header_comp, button_comp, \
+    chat_box
+from ..gitlab_api import gitlab_api
 
-token_path = pathlib.Path(__file__).parents[1] / "SECRETS.txt"
-
-with open(token_path) as f:
-    token = f.readlines()[0]
-
-gitlab = GitLabAPI(token=token)
-
-opened = gitlab.get_issues_meta(state="opened")
-closed = gitlab.get_issues_meta(state="closed")
-
-# print(closed)
-print(opened)
+# Get the issue meta from gitlab API to store in dash cache memory
+opened = gitlab_api.get_issues_meta(state="opened")
+closed = gitlab_api.get_issues_meta(state="closed")
 
 
-def main_tab_content():
-    dropdown_comp1 = dbc.DropdownMenuItem([
+def main_tab_layout():
+    dropdown_menu1 = dbc.DropdownMenuItem([
         dbc.NavLink("Simple",
                     href="/hpc_pipelines/simple",
                     id="open_simple_request_page",
                     active=True)
     ])
-    dropdown_comp2 = dbc.DropdownMenuItem([
+    dropdown_menu2 = dbc.DropdownMenuItem([
         dbc.NavLink("Advanced",
                     href="/hpc_pipelines/advanced",
                     id="open_advance_request_page",
                     active=True),
     ])
     return dbc.Card([
-        html.Br(), html.Br(),
+        line_breaks(times=1),
         paragraph_comp("⦿ This page is responsible for running RTDC "
                        "dataset processing pipelines on MPCDF gpu "
                        "clusters (HPC)",
                        indent=40),
-        html.Br(),
+        line_breaks(times=1),
         dropdown_menu_comp(name="New Request",
-                           components=[dropdown_comp1, dropdown_comp2],
+                           components=[dropdown_menu1, dropdown_menu2],
                            indent=40),
     ],
         className="mt-3",
@@ -49,37 +40,23 @@ def main_tab_content():
     )
 
 
-def opened_tab_content(open_issues):
+def open_close_tab_layout(pipelines):
     return dbc.Card([
-        html.Br(), html.Br(),
+        line_breaks(times=2),
+        html.Div(id='test', children=[]),
         html.Div(
-            open_issues,
+            pipelines,
             style={"max-height": "50rem", "overflow-y": "scroll",
                    "overflowX": "hidden"},
         ),
-        html.Br(), html.Br(),
+        line_breaks(times=2),
     ],
         className="mt-3",
         style={"height": "50rem", 'background-color': "#424447"}
     )
 
 
-def closed_tab_content(close_issues):
-    return dbc.Card([
-        html.Br(), html.Br(),
-        html.Div(
-            close_issues,
-            style={"max-height": "50rem", "overflow-y": "scroll",
-                   "overflowX": "hidden"},
-        ),
-        html.Br(), html.Br(),
-    ],
-        className="mt-3",
-        style={"height": "50rem", 'background-color': "#424447"}
-    )
-
-
-def request_tabs():
+def tabs_layout():
     return dbc.Card([
         dbc.CardHeader(
             dbc.Tabs([
@@ -103,74 +80,87 @@ def request_tabs():
 
 def main_layout():
     return html.Div([
-        request_tabs(),
+        tabs_layout(),
         dcc.Store(id='store_gitlab_issues',
                   data={"opened": opened,
                         "closed": closed}),
     ])
 
 
-def get_issue_accord(data):
+def get_issue_accord(data, accord_id="issue_accord"):
     return group_accordion([
         dbc.AccordionItem([
-            paragraph_comp(text="Issue created by: {}".format(c["author"])),
-            html.A(
-                "See the issue on GitLab",
-                href=c["web_url"],
-                target='_blank',
-                style={"text-decoration": "none"}
-            ),
-            # html.Br(), html.Br(),
-            # dbc.Card([
-            #     dbc.Card(co) for co in c["comments"]
-            # ]),
+            paragraph_comp(text="Request created by: {}".format(c["author"])),
+            paragraph_comp(text=f"Pipeline ID: {c['id']}"),
+            groupby_columns([
+                html.A("See the issue on GitLab",
+                       href=c["web_url"], target='_blank',
+                       style={"text-decoration": "none"}
+                       ),
+                line_breaks(times=1),
+                button_comp(label="Stop Pipeline",
+                            type="danger",
+                            comp_id=f"accord_item_stop_{c['iid']}"),
+
+                line_breaks(times=2),
+                header_comp(text="Comments:"),
+
+                # This is a special way of creating id's for components
+                # (dynamically changing) that are created via a callback
+                # function. We can refer these id's in a different callback
+                # (as output id's) to do actions like show/store
+                html.Div(id={'type': 'accord_item_div', 'index': c['iid']})
+            ]),
         ],
             title=c["name"],
+            item_id=f"accord_item{c['iid']}"
         ) for c in data
     ],
-        middle=True, width=60
+        middle=True, width=70, comp_id=accord_id
     )
+
+
+def switch_tab_content(active_tab, dash_cache):
+    new_issue_meta = gitlab_api.get_issues_meta(state=active_tab)
+
+    if len(new_issue_meta) == 0:
+        issues = paragraph_comp(text="⦿ We do not have opened "
+                                     "requests!", indent=40)
+        return [open_close_tab_layout(issues), dash_cache]
+    else:
+        if len(dash_cache[active_tab]) != len(new_issue_meta):
+            dash_cache[active_tab] = new_issue_meta
+        issues = get_issue_accord(dash_cache[active_tab])
+        return [open_close_tab_layout(issues), dash_cache]
 
 
 @callback([Output("tab_content", "children"),
            Output("store_gitlab_issues", "data")],
           Input("tabs", "active_tab"),
           State("store_gitlab_issues", "data"))
-def switch_tab(click_tab, stored_issue_meta):
-    if click_tab == "main_tab":
-        return [main_tab_content(), stored_issue_meta]
-    elif click_tab == "opened_tab":
-        open_issues_meta = gitlab.get_issues_meta(state="opened")
-
-        if len(open_issues_meta) == 0:
-            open_issues = paragraph_comp(text="⦿ We do not have opened "
-                                              "requests!", indent=40)
-            return [opened_tab_content(open_issues), stored_issue_meta]
-        else:
-            stored_open_meta = stored_issue_meta["opened"]
-            if len(stored_open_meta) == len(open_issues_meta):
-                stored_issue_meta["opened"] = stored_open_meta
-            else:
-                stored_issue_meta["opened"] = open_issues_meta
-
-            open_issues = get_issue_accord(stored_issue_meta["opened"])
-
-            return [opened_tab_content(open_issues), stored_issue_meta]
-
-    elif click_tab == "closed_tab":
-        close_issues_meta = gitlab.get_issues_meta(state="closed")
-
-        if len(close_issues_meta) == 0:
-            close_issues = paragraph_comp(text="⦿ We do not have closed "
-                                               "requests!", indent=40)
-            return [closed_tab_content(close_issues), stored_issue_meta]
-        else:
-            stored_open_meta = stored_issue_meta["closed"]
-            if len(stored_open_meta) == len(close_issues_meta):
-                stored_issue_meta["closed"] = stored_open_meta
-            else:
-                stored_issue_meta["closed"] = close_issues_meta
-
-            close_issues = get_issue_accord(stored_issue_meta["closed"])
-        return [closed_tab_content(close_issues), stored_issue_meta]
+def switch_tabs(active_tab, stored_issue_meta):
+    if active_tab == "main_tab":
+        return [main_tab_layout(), stored_issue_meta]
+    elif active_tab == "opened_tab":
+        return switch_tab_content("opened", stored_issue_meta)
+    elif active_tab == "closed_tab":
+        return switch_tab_content("closed", stored_issue_meta)
     return html.P("This shouldn't ever be displayed...")
+
+
+@callback(Output({'type': 'accord_item_div', 'index': MATCH}, 'children'),
+          Input("issue_accord", "active_item"),
+          State({'type': 'accord_item_div', 'index': MATCH}, 'id'))
+def show_selected_issue_comments(accord_item, match_id):
+
+    if accord_item is not None:
+        issue_iid = int(accord_item.split("item")[1])
+        comments = gitlab_api.get_comments(issue_iid)
+
+        if len(comments) != 0:
+            comment_cards = chat_box(comments)
+        else:
+            comment_cards = chat_box(["No Activity!"])
+
+        if issue_iid == match_id["index"]:
+            return comment_cards
