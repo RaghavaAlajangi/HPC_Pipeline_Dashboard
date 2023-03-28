@@ -1,46 +1,46 @@
 #sidebar {
-  text-align: center;
-  padding: 2rem 1rem;
-  background-color: #017b70;
+    text-align: center;
+    padding: 2rem 1rem;
+    background-color: #017b70;
 }
 
 #sidebar h2 {
-  text-align: left;
-  margin-bottom: 0;
+    text-align: left;
+    margin-bottom: 0;
 }
 
 /* Hide the blurb on a small screen */
 #blurb {
-  display: none;
+    display: none;
 }
 
 #sidebar-toggle {
-  display: none;
+    display: none;
 }
 
 #collapse *:first-child {
-  margin-top: 1rem;
+    margin-top: 1rem;
 }
 
 /* add the three horizontal bars icon for the toggle */
 .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml;%3csvg viewBox=0 0 30 30 xmlns=http://www.w3.org/2000/svg%3e%3cpath stroke=rgba(0; 0; 0; 0.5) stroke-width=2 stroke-linecap=round stroke-miterlimit=10 d=M4 7h22M4 15h22M4 23h22/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml;%3csvg viewBox=0 0 30 30 xmlns=http://www.w3.org/2000/svg%3e%3cpath stroke=rgba(0; 0; 0; 0.5) stroke-width=2 stroke-linecap=round stroke-miterlimit=10 d=M4 7h22M4 15h22M4 23h22/%3e%3c/svg%3e");
 }
 
 #page-content {
-  padding: 2rem 1rem;
+    padding: 2rem 1rem;
 }
 
 .my-button-class {
-  background-color: #017b70;
-  font-weight: bold;
-  color: white;
-  font-size: 16px;
-  padding: 10px 20px;
-  margin: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    background-color: #017b70;
+    font-weight: bold;
+    color: white;
+    font-size: 16px;
+    padding: 10px 20px;
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .my-button-class span {
@@ -52,87 +52,116 @@
 }
 
 @media (min-width: 48em) {
-  #sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 20rem;
-    text-align: left;
-    transition: margin 0.3s ease-in-out;
-  }
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 20rem;
+        text-align: left;
+        transition: margin 0.3s ease-in-out;
+    }
 
-  #sidebar-toggle {
-    display: inline-block;
-    position: relative;
-    top: 0;
-    transition: top 0.3s ease-in-out;
-  }
+    #sidebar-toggle {
+        display: inline-block;
+        position: relative;
+        top: 0;
+        transition: top 0.3s ease-in-out;
+    }
 
-  /* add negative margin to sidebar to achieve the collapse */
-  #sidebar.collapsed {
-    margin-left: -15.5rem;
-    padding-right: 0.5rem;
-  }
+    /* add negative margin to sidebar to achieve the collapse */
+    #sidebar.collapsed {
+        margin-left: -15.5rem;
+        padding-right: 0.5rem;
+    }
 
-  /* move the sidebar toggle up to the top left corner */
-  #sidebar.collapsed #sidebar-toggle {
-    top: -2rem;
-  }
+    /* move the sidebar toggle up to the top left corner */
+    #sidebar.collapsed #sidebar-toggle {
+        top: -2rem;
+    }
 
-  /* also adjust margin of page content */
-  #sidebar.collapsed ~ #page-content {
-    margin-left: 6.5rem;
-  }
+    /* also adjust margin of page content */
+    #sidebar.collapsed ~ #page-content {
+        margin-left: 6.5rem;
+    }
 
-  /* move all contents of navbar other than header (containing toggle) further
-     off-screen */
-  #sidebar.collapsed > *:not(:first-child) {
-    margin-left: -6rem;
-    margin-right: 6rem;
-  }
+    /* move all contents of navbar other than header (containing toggle) further
+       off-screen */
+    #sidebar.collapsed > *:not(:first-child) {
+        margin-left: -6rem;
+        margin-right: 6rem;
+    }
 
-  /* reveal the blurb on a large screen */
-  #blurb {
-    display: block;
-  }
+    /* reveal the blurb on a large screen */
+    #blurb {
+        display: block;
+    }
 
-  /* Hide the toggle on a large screen */
-  #navbar-toggle {
-    display: none;
-  }
+    /* Hide the toggle on a large screen */
+    #navbar-toggle {
+        display: none;
+    }
 
-  #collapse {
-    display: block;
-  }
+    #collapse {
+        display: block;
+    }
 
-  /* set margins of the main content so that it doesnt overlap the sidebar */
-  #page-content {
-    margin-left: 22rem;
-    margin-right: 2rem;
-    transition: margin-left 0.3s ease-in-out;
-  }
+    /* set margins of the main content so that it doesnt overlap the sidebar */
+    #page-content {
+        margin-left: 22rem;
+        margin-right: 2rem;
+        transition: margin-left 0.3s ease-in-out;
+    }
 }
 
 /* dbc.Toast styling parameters*/
 .my-toast {
-  width: 80rem;
-  height: 60rem;
+    width: 80rem;
+    height: 60rem;
 }
 
 /* dcc.Upload styling parameters*/
 .dcc-upload {
-  width: 60%;
-  height: 60px;
-  line-height: 60px;
-  border-width: 1px;
-  border-style: dashed;
-  border-radius: 50px;
-  text-align: center;
-  margin: 0 auto;
+    width: 60%;
+    height: 60px;
+    line-height: 60px;
+    border-width: 1px;
+    border-style: dashed;
+    border-radius: 50px;
+    text-align: center;
+    margin: 0 auto;
 }
 
 /* Change color of link on hover */
 a:hover {
     color: red;
+}
+
+/* Change bdc.Card into message box */
+.message-box {
+    position: relative;
+    padding: 1rem;
+    width: fit-content;
+    height: fit-content;
+    background-color: #017b50;
+}
+
+.message-box:before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: -10px;
+    margin-top: -10px;
+    border-top: 1px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-right: 10px solid #017b50;
+}
+
+
+.message-card {
+    background-color: #dcf8c6;
+    background-image: linear-gradient(225deg, #dcf8c6 50%, transparent 50%);
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    margin: 1rem;
 }
