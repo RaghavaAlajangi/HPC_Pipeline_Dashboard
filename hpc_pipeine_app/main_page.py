@@ -4,7 +4,7 @@ from dash import html, dcc, callback, Input, Output, State, MATCH
 
 from ..components import line_breaks, paragraph_comp, group_accordion, \
     dropdown_menu_comp, groupby_columns, header_comp, button_comp, \
-    chat_box, loading_comp, web_link
+    chat_box, loading_comp, web_link, progressbar_comp
 from ..gitlab_api import gitlab_api
 
 # Get the issue meta from gitlab API to store in dash cache memory
@@ -33,7 +33,7 @@ def main_tab_layout():
                        indent=40),
         line_breaks(times=1),
         dropdown_menu_comp(name="New Request",
-                           components=[dropdown_menu1, dropdown_menu2],
+                           options=[dropdown_menu1, dropdown_menu2],
                            indent=40),
     ],
         className="mt-3",
@@ -97,12 +97,20 @@ def get_issue_accord(active_tab, data):
                 web_link(label=f"GitLab issue - #{c['iid']}",
                          url=c["web_url"]),
                 line_breaks(times=1),
+                web_link(label="Download RTDC csv",
+                         url="https://google.com"),
+                # dcc.Download(id="download_rtdc_csv"),
+                line_breaks(times=1),
                 # Remove button component for closed pipelines
                 button_comp(label="Stop Pipeline", type="danger",
                             comp_id={"type": "accord_item_stop", "index": c[
                                 'iid']}) if active_tab == "opened" else "",
 
                 line_breaks(times=2) if active_tab == "opened" else "",
+                # Progress bar
+                progressbar_comp(comp_id={"type": "accord_item_bar",
+                                          "index": c['iid']}),
+                line_breaks(times=2),
                 header_comp(text="Comments:"),
 
                 # This is a special way of creating id's for components
@@ -147,12 +155,23 @@ def switch_tabs(active_tab, stored_issue_meta):
 
 
 @callback(Output({"type": "accord_item_div", "index": MATCH}, "children"),
+          Output({"type": "accord_item_bar", "index": MATCH}, "value"),
+          Output({"type": "accord_item_bar", "index": MATCH}, "label"),
           Input("issue_accord", "active_item"),
           State({"type": "accord_item_div", "index": MATCH}, "id"))
 def show_selected_issue_comments(accord_item, match_id):
+    progress_comments = [
+        "STATE: setup",
+        "STATE: queued",
+        "STATE: transfer",
+        "STATE: done",
+    ]
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
         comments = gitlab_api.get_comments(issue_iid)
+
+        match_len = len(set(progress_comments).intersection(comments))
+        progress = (match_len / len(progress_comments)) * 100
 
         if len(comments) != 0:
             comment_cards = chat_box(comments)
@@ -160,7 +179,11 @@ def show_selected_issue_comments(accord_item, match_id):
             comment_cards = chat_box(["No Activity!"])
 
         if issue_iid == match_id["index"]:
-            return comment_cards
+            return comment_cards, progress, f"{progress} %"
+        else:
+            return dash.no_update
+    else:
+        return dash.no_update
 
 
 @callback(Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
