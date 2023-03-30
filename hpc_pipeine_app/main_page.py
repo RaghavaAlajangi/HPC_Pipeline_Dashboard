@@ -4,7 +4,7 @@ from dash import html, dcc, callback, Input, Output, State, MATCH
 
 from ..components import line_breaks, paragraph_comp, group_accordion, \
     dropdown_menu_comp, groupby_columns, header_comp, button_comp, \
-    chat_box, loading_comp, web_link, progressbar_comp
+    chat_box, loading_comp, web_link, progressbar_comp, divider_line_comp
 from ..gitlab_api import gitlab_api
 
 # Get the issue meta from gitlab API to store in dash cache memory
@@ -107,25 +107,28 @@ def get_issue_accord(active_tab, data):
                                 'iid']}) if active_tab == "opened" else "",
 
                 line_breaks(times=2) if active_tab == "opened" else "",
-                # Progress bar
-                progressbar_comp(comp_id={"type": "accord_item_bar",
-                                          "index": c['iid']}),
-                line_breaks(times=2),
-                header_comp(text="Comments:"),
-
-                # This is a special way of creating id's for components
-                # (dynamically changing) that are created via a callback
-                # function. We can refer these id's in a different callback
-                # (as output id's) to do actions like show/store
-                loading_comp(html.Div(id={"type": "accord_item_div",
-                                          "index": c['iid']})),
             ]),
+            divider_line_comp(),
+            line_breaks(times=1),
+            # Progress bar
+            progressbar_comp(comp_id={"type": "accord_item_bar",
+                                      "index": c['iid']}),
+            line_breaks(times=2),
+            divider_line_comp(),
+            header_comp(text="Comments:"),
+
+            # This is a special way of creating id's for components
+            # (dynamically changing) that are created via a callback
+            # function. We can refer these id's in a different callback
+            # (as output id's) to do actions like show/store
+            loading_comp(html.Div(id={"type": "accord_item_div",
+                                      "index": c['iid']})),
         ],
             title=c["name"],
             item_id=f"accord_item{c['iid']}"
         ) for c in data
     ],
-        middle=True, width=70, comp_id="issue_accord"
+        middle=True, comp_id="issue_accord"
     )
 
 

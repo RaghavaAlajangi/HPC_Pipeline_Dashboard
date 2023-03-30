@@ -1,10 +1,11 @@
 import dash
 import dash_bootstrap_components as dbc
 import dash_bootstrap_templates as dbt
-from dash import Input, Output, dcc, html
+from dash import Input, Output, dcc, html, State
 
+from .authentication import signin_page
 from .components import groupby_columns, line_breaks, paragraph_comp, \
-    dropdown_menu_comp
+    dropdown_menu_comp, web_link
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
 from .viscosity_calculator_app import viscal_app
 
@@ -12,6 +13,12 @@ url_theme1 = dbc.themes.SKETCHY
 url_theme2 = dbc.themes.DARKLY
 
 url_theme = url_theme2
+
+APP_CREDENTIALS = {
+    "username": "gucklab",
+    "password": "gucklab@123456",
+    "status": "logout"
+}
 
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap"
            "-templates@V1.0.1/dbc.min.css")
@@ -58,15 +65,17 @@ def sidebar_menu():
         groupby_columns([
             line_breaks(times=1),
             dropdown_menu_comp(name="Sign in / Sign up",
-                               components=[
+                               options=[
                                    dbc.NavLink("Sign in", href="/signin",
                                                id="signin_active"),
                                    dbc.NavLink("Sign up", href="/signup",
                                                id="signup_active")
                                ]),
             line_breaks(times=2),
-        ]),
+            html.Div(id="logout_link"),
+            # dcc.Interval(id="login_interval")
 
+        ]),
         groupby_columns([
             line_breaks(times=1),
             dbc.Nav([
@@ -109,6 +118,7 @@ def main_content_block():
 app.layout = html.Div([
     dcc.Location(id="url"),
     sidebar_menu(),
+    dcc.Store(id="secrets", data=APP_CREDENTIALS),
     main_content_block(),
 ])
 
@@ -120,6 +130,8 @@ app.layout = html.Div([
                Output("hpc_pipeline_active", "active"),
                Output("viscal_active", "active")],
               Input("url", "pathname"),
+              # Input("login_interval", ),
+              # State("secrets", "data")
               )
 def render_page_content(pathname):
     # template = template_theme1 if toggle else template_theme2
@@ -127,7 +139,8 @@ def render_page_content(pathname):
         return [html.P("Oh cool, this is page 2!"),
                 True, False, False, False, False]
     elif pathname == "/signin":
-        return [html.P("This is signin page"),
+
+        return [signin_page(),
                 False, True, False, False, False]
     elif pathname == "/signup":
         return [html.P("This is signup page"),

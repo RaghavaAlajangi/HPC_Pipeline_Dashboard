@@ -1,12 +1,12 @@
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc
+from dash import callback, Input, Output, State, dcc, html
 
 from ..gitlab_api import gitlab_api
-from .template_utils import update_simple_template
+from .utils import update_simple_template
 from ..components import header_comp, paragraph_comp, checklist_comp, \
     upload_comp, text_input_comp, dropdown_searchbar_comp, \
-    groupby_rows, num_searchbar_comp, popup_comp, horizontal_line_comp, \
-    group_accordion, line_breaks, button_comp
+    groupby_rows, num_searchbar_comp, popup_comp, divider_line_comp, \
+    group_accordion, line_breaks, button_comp, input_with_dropdown, display_box
 
 
 def simple_request():
@@ -30,45 +30,77 @@ def simple_request():
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="simp_segm_id",
-                               option_list=["legacy", "mlunet",
-                                            "watershed", "std"],
-                               defaults_list=["legacy", "mlunet"])
+                               options=["legacy", "mlunet",
+                                        "watershed", "std"],
+                               defaults=["legacy", "mlunet"])
             ],
                 title="Segmentation",
             ),
             dbc.AccordionItem([
                 paragraph_comp("Classification Model"),
                 checklist_comp(comp_id="simp_classifier_id",
-                               option_list=["MNet", "Bloody Bunny"],
-                               defaults_list=["MNet"])
+                               options=["MNet", "Bloody Bunny"],
+                               defaults=["MNet"])
             ],
                 title="Prediction",
             ),
             dbc.AccordionItem([
                 checklist_comp(comp_id="simp_postana_id",
-                               option_list=["Benchmarking",
-                                            "Scatter Plots"],
-                               defaults_list=["Scatter Plots"])
+                               options=["Benchmarking",
+                                        "Scatter Plots"],
+                               defaults=["Scatter Plots"])
             ],
                 title="Post Analysis",
             ),
             dbc.AccordionItem([
                 line_breaks(times=1),
-                text_input_comp(comp_id="simple_upload_input",
-                                placeholder="Enter DCOR id..."),
+                input_with_dropdown(comp_id="simple_input_bar"),
                 line_breaks(times=1),
                 paragraph_comp(text="OR", middle=True),
                 upload_comp(comp_id="simple_drop_down_upload"),
+                line_breaks(times=3),
+                html.Div(id='simple_upload_show'),
+                # dbc.Accordion([
+                #     dbc.AccordionItem([
+                #         dbc.Accordion([
+                #             dbc.AccordionItem(title="sub dir1"),
+                #             dbc.AccordionItem(title="sub dir2")
+                #         ]),
+                #         dbc.Checklist(
+                #             options=[
+                #                 {"label": "Option 1", "value": 1},
+                #                 {"label": "Option 2", "value": 2},
+                #                 {"label": "Option 3", "value": 3},
+                #             ],
+                #             value=[1, 2],
+                #         ),
+                #         ],
+                #         title="test1"
+                #     ),
+                #     dbc.AccordionItem([
+                #         dbc.Checklist(
+                #             options=[
+                #                 {"label": "Option 1", "value": 1},
+                #                 {"label": "Option 2", "value": 2},
+                #                 {"label": "Option 3", "value": 3},
+                #             ],
+                #             value=1,
+                #         )],
+                #         title="test2"
+                #     )],
+                # style={"width": "50%"}
+                # )
+
             ],
                 title="Data to Process",
             )
         ],
-            middle=True, width=60
+            middle=True
         ),
         line_breaks(times=4),
         button_comp(label="Create pipeline",
                     comp_id="create_simple_pipeline_button"),
-
+        line_breaks(times=5),
         dcc.Store(id="store_simple_template")
 
     ],
@@ -101,13 +133,13 @@ def advanced_request():
 
     legacy_clrbo_param = paragraph_comp(text="clear_border:")
     legacy_clrbo_sbar = dropdown_searchbar_comp(comp_id="legacy_clrbo_id",
-                                                option_list=["True", "False"],
-                                                defaults_list=["True"])
+                                                options=["True", "False"],
+                                                defaults=["True"])
 
     legacy_filho_param = paragraph_comp(text="fill_holes:")
     legacy_filho_sbar = dropdown_searchbar_comp(comp_id="legacy_filho_id",
-                                                option_list=["True", "False"],
-                                                defaults_list=["True"])
+                                                options=["True", "False"],
+                                                defaults=["True"])
 
     legacy_cldis_param = paragraph_comp(text="close_disk:")
     legacy_cldis_sbar = num_searchbar_comp(comp_id="legacy_cldis_id",
@@ -115,13 +147,13 @@ def advanced_request():
 
     wtrshd_clrbo_param = paragraph_comp(text="clear_border:")
     wtrshd_clrbo_sbar = dropdown_searchbar_comp(comp_id="wtrshd_clrbo_id",
-                                                option_list=["True", "False"],
-                                                defaults_list=["True"])
+                                                options=["True", "False"],
+                                                defaults=["True"])
 
     wtrshd_filho_param = paragraph_comp(text="fill_holes:")
     wtrshd_filho_sbar = dropdown_searchbar_comp(comp_id="wtrshd_filho_id",
-                                                option_list=["True", "False"],
-                                                defaults_list=["True"])
+                                                options=["True", "False"],
+                                                defaults=["True"])
 
     wtrshd_cldis_param = paragraph_comp(text="close_disk:")
     wtrshd_cldis_sbar = num_searchbar_comp(comp_id="wtrshd_cldis_id",
@@ -129,13 +161,13 @@ def advanced_request():
 
     std_clrbo_param = paragraph_comp(text="clear_border:")
     std_clrbo_sbar = dropdown_searchbar_comp(comp_id="std_clrbo_id",
-                                             option_list=["True", "False"],
-                                             defaults_list=["True"])
+                                             options=["True", "False"],
+                                             defaults=["True"])
 
     std_filho_param = paragraph_comp(text="fill_holes:")
     std_filho_sbar = dropdown_searchbar_comp(comp_id="std_filho_id",
-                                             option_list=["True", "False"],
-                                             defaults_list=["True"])
+                                             options=["True", "False"],
+                                             defaults=["True"])
 
     std_cldis_param = paragraph_comp(text="close_disk:")
     std_cldis_sbar = num_searchbar_comp(comp_id="std_cldis_id",
@@ -173,8 +205,8 @@ def advanced_request():
 
     ngate_ongate_param = paragraph_comp(text="online_gates:")
     ngate_ongate_sbar = dropdown_searchbar_comp(comp_id="ngate_ongate_id",
-                                                option_list=["True", "False"],
-                                                defaults_list=["False"])
+                                                options=["True", "False"],
+                                                defaults=["False"])
 
     ngate_thrmsk_param = paragraph_comp(text="size_thresh_mask:")
     ngate_thrmsk_sbar = num_searchbar_comp(comp_id="ngate_thrmsk_id",
@@ -202,24 +234,24 @@ def advanced_request():
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="dcevent_ver_id",
-                               option_list=["dcevent version=latest"],
-                               defaults_list=["dcevent version=latest"]),
+                               options=["dcevent version=latest"],
+                               defaults=["dcevent version=latest"]),
             ],
                 title="dcevent version",
             ),
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="mlunet_id",
-                               option_list=["mlunet"],
-                               defaults_list=["mlunet"]),
+                               options=["mlunet"],
+                               defaults=["mlunet"]),
 
-                horizontal_line_comp(),
+                divider_line_comp(),
 
                 checklist_comp(comp_id="legacy_id",
-                               option_list=["legacy: Legacy thresholding"
-                                            " with OpenCV"],
-                               defaults_list=["legacy: Legacy thresholding"
-                                              " with OpenCV"]),
+                               options=["legacy: Legacy thresholding"
+                                        " with OpenCV"],
+                               defaults=["legacy: Legacy thresholding"
+                                         " with OpenCV"]),
 
                 groupby_rows([legacy_thresh_param, legacy_thresh_sbar]),
                 groupby_rows([legacy_blur_param, legacy_blur_sbar]),
@@ -229,24 +261,24 @@ def advanced_request():
                 groupby_rows([legacy_filho_param, legacy_filho_sbar]),
                 groupby_rows([legacy_cldis_param, legacy_cldis_sbar]),
 
-                horizontal_line_comp(),
+                divider_line_comp(),
 
                 checklist_comp(comp_id="watershed_id",
-                               option_list=[
+                               options=[
                                    "watershed: Watershed algorithm"],
-                               defaults_list=[
+                               defaults=[
                                    "watershed: Watershed algorithm"]),
 
                 groupby_rows([wtrshd_clrbo_param, wtrshd_clrbo_sbar]),
                 groupby_rows([wtrshd_filho_param, wtrshd_filho_sbar]),
                 groupby_rows([wtrshd_cldis_param, wtrshd_cldis_sbar]),
 
-                horizontal_line_comp(),
+                divider_line_comp(),
 
                 checklist_comp(comp_id="std_id",
-                               option_list=["std: Standard-deviation-"
-                                            "based thresholding"],
-                               defaults_list=[
+                               options=["std: Standard-deviation-"
+                                        "based thresholding"],
+                               defaults=[
                                    "std: Standard-deviation-based "
                                    "thresholding"]),
 
@@ -258,25 +290,25 @@ def advanced_request():
             ),
             dbc.AccordionItem([
                 checklist_comp(comp_id="rollmed_id",
-                               option_list=["rollmed: Rolling median "
-                                            "RT-DC background image "
-                                            "computation"],
-                               defaults_list=[
+                               options=["rollmed: Rolling median "
+                                        "RT-DC background image "
+                                        "computation"],
+                               defaults=[
                                    "rollmed: Rolling median RT-DC "
                                    "background image computation"]),
 
                 groupby_rows([rollmed_ksize_param, rollmed_ksize_sbar]),
                 groupby_rows([rollmed_bsize_param, rollmed_bsize_sbar]),
 
-                horizontal_line_comp(),
+                divider_line_comp(),
 
                 checklist_comp(comp_id="sparsemed_id",
-                               option_list=["sparsemed: Sparse median "
-                                            "background correction with "
-                                            "cleansing"],
-                               defaults_list=["sparsemed: Sparse median "
-                                              "background correction with "
-                                              "cleansing"]),
+                               options=["sparsemed: Sparse median "
+                                        "background correction with "
+                                        "cleansing"],
+                               defaults=["sparsemed: Sparse median "
+                                         "background correction with "
+                                         "cleansing"]),
 
                 groupby_rows([sparsemed_ksize_param, sparsemed_ksize_sbar]),
                 groupby_rows([sparsemed_bsize_param, sparsemed_bsize_sbar]),
@@ -288,36 +320,37 @@ def advanced_request():
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="ngate_id",
-                               option_list=["norm gating"],
-                               defaults_list=["norm gating"]),
+                               options=["norm gating"],
+                               defaults=["norm gating"]),
 
                 groupby_rows([ngate_ongate_param, ngate_ongate_sbar]),
                 groupby_rows([ngate_thrmsk_param, ngate_thrmsk_sbar]),
 
-                horizontal_line_comp(),
+                divider_line_comp(),
 
                 checklist_comp(comp_id="repro_id",
-                               option_list=["--reproduce=False"],
-                               defaults_list=["--reproduce=False"])
+                               options=["--reproduce=False"],
+                               defaults=["--reproduce=False"])
             ],
                 title="Further Options",
             ),
 
             dbc.AccordionItem([
                 checklist_comp(comp_id="dcml_ver_id",
-                               option_list=["dcml version"],
-                               defaults_list=["dcml version"]),
+                               options=["dcml version"],
+                               defaults=["dcml version"]),
 
                 checklist_comp(comp_id="classifier_id",
-                               option_list=["Classification Model"],
-                               defaults_list=["Classification Model"]),
+                               options=["Classification Model"],
+                               defaults=["Classification Model"]),
             ],
                 title="Prediction",
             ),
             dbc.AccordionItem([
                 line_breaks(times=1),
-                text_input_comp(comp_id="advanced_upload_input",
-                                placeholder="Enter DCOR id..."),
+                input_with_dropdown(comp_id="advanced_input_bar"),
+                # text_input_comp(comp_id="advanced_upload_input",
+                #                 placeholder="Enter DCOR id..."),
                 line_breaks(times=1),
                 paragraph_comp(text="OR", middle=True),
                 upload_comp(comp_id="advance_drop_down_upload"),
@@ -325,7 +358,7 @@ def advanced_request():
                 title="Data to Process",
             )
         ],
-            middle=True, width=60
+            middle=True
         ),
 
         line_breaks(times=4),
@@ -354,17 +387,8 @@ def advanced_request():
            Output("legacy_filho_id", "disabled"),
            Output("legacy_cldis_id", "disabled")],
           Input("legacy_id", "value"),
-          [State("legacy_thresh_id", "disabled"),
-           State("legacy_blur_id", "disabled"),
-           State("legacy_binop_id", "disabled"),
-           State("legacy_difme_id", "disabled"),
-           State("legacy_clrbo_id", "disabled"),
-           State("legacy_filho_id", "disabled"),
-           State("legacy_cldis_id", "disabled")])
-def toggle_advanced_legacy_params(segm_legacy_opt, segm_legacy_thresh,
-                                  segm_legacy_blur, segm_legacy_binop,
-                                  segm_legacy_difme, segm_legacy_clrbo,
-                                  segm_legacy_filho, segm_legacy_cldis):
+          )
+def toggle_advanced_legacy_params(segm_legacy_opt):
     if len(segm_legacy_opt) == 1:
         return [False] * 7
     else:
@@ -376,21 +400,37 @@ def toggle_advanced_legacy_params(segm_legacy_opt, segm_legacy_thresh,
           Input("simp_segm_id", "value"),
           Input("simp_classifier_id", "value"),
           Input("simp_postana_id", "value"),
-          Input("simple_upload_input", "value"),
+          Input("simple_input_bar_drop", "value"),
+          Input("simple_input_bar_text", "value"),
           Input("simple_drop_down_upload", "filename"),
           State("store_simple_template", "data")
           )
 def collect_simple_pipeline_params(simple_title, simple_segment,
                                    simple_classifier, simple_postana,
-                                   simple_upload_text, simple_upload_drop,
+                                   simple_input_drop, simple_input_text,
+                                   simple_upload_drop,
                                    store_simple_template):
     params = simple_segment + simple_classifier + simple_postana
+
+    # print(simple_upload_dcor, simple_upload_drop)
 
     final_issue_template = {}
     if simple_title is not None:
         final_issue_template["title"] = simple_title
         final_issue_template["description"] = update_simple_template(params)
         return final_issue_template
+
+
+@callback(Output("simple_upload_show", "children"),
+          Input("simple_input_bar_drop", "value"),
+          Input("simple_input_bar_text", "value"),
+          Input("simple_drop_down_upload", "filename"),
+          )
+def display_uploaded_filepaths(drop_value, simple_input_text,
+                               simple_upload_drop):
+    filelist = str(simple_input_text).split(",")
+    if len(filelist) > 1:
+        return display_box(drop_value, filelist)
 
 
 @callback(Output("simple_popup", "is_open"),
@@ -413,4 +453,3 @@ def advanced_request_notification(click, popup):
     if click:
         return not popup
     return popup
-    # return create_gitlab_issue()

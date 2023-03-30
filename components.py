@@ -24,24 +24,22 @@ def button_comp(label, comp_id, type="primary"):
                       if type == "primary" else {})
 
 
-def chat_box(chat, box_width=66, gap=15):
+def chat_box(chat, gap=15):
     """
-    The chat_box function takes a list of strings and returns a Dash
-    Bootstrap Card object. The card is styled to look like the chat box
-    in WhatsApp, with each message in its own card body. The function also
-    checks for links within the messages and converts them into
-    clickable hyperlinks.
+    The chat_box function takes a list of messages and returns a Div
+    containing a Card for each message. The Card is styled to look like
+    the chat box in WhatsApp, with rounded corners and no border. Each
+    message is passed through the web_link_check function before being
+    added to the card.
     Parameters
     ----------
-    chat: list of str
-        Pass the chat data into the function
-    box_width: int
-        Set the width of the chat box
-    gap: int
-        Adjust the spacing between messages
+    chat
+        Pass the chat data to the function
+    gap
+        Set the margin-bottom of each message
     Returns
     -------
-    A card with the messages in a chat
+    A div object that contains a list of messages
     """
     comments = [html.Div(
         dbc.Card([
@@ -49,13 +47,14 @@ def chat_box(chat, box_width=66, gap=15):
         ],
             className="message-box",
         ),
-        style={"margin-bottom": f"{gap}px",
-               "border": "0"}
+        style={"margin-bottom": f"{gap}px", "border": "0"},
     )
         for msg in chat]
-
     return dbc.Card(comments, body=True,
-                    style={"width": f"{box_width}rem"})
+                    style={"max-height": "30rem",
+                           "overflow-y": "scroll",
+                           "overflowX": "hidden"},
+                    className="my-card")
 
 
 def checklist_comp(comp_id, options, defaults):
@@ -89,6 +88,27 @@ def checklist_comp(comp_id, options, defaults):
         switch=True,
         labelCheckedClassName="text-success",
         inputCheckedClassName="border border-success bg-success",
+    )
+
+
+def display_box(drop_value, filelist):
+    filelist = html.Ul([
+        html.Li(f"{drop_value} :  {name}") for name in filelist
+    ])
+    return html.Div([
+        paragraph_comp(text="Entered List:"),
+        dbc.Card(filelist, body=True,
+                 style={"max-height": "15rem",
+                        "overflow-y": "scroll",
+                        "overflowX": "hidden"},
+                 className="my-card")
+    ])
+
+
+def divider_line_comp(width=100, middle=True):
+    return html.Div(
+        html.Hr(style={"width": f"{width}%"}),
+        className="row justify-content-center" if middle else ""
     )
 
 
@@ -194,32 +214,30 @@ def groupby_rows(components, width=2):
     return dbc.Row(rows)
 
 
-def group_accordion(accord_items, width, middle=False, comp_id="none"):
+def group_accordion(accord_items, middle=False, comp_id="none"):
     """
-    The group_accordion function takes a list of accordion items, and
-    returns a html.Div containing a Bootstrap Accordion component with the
-    given width (in rems). The middle parameter is optional, and if set to
-    True will add the &quot;row justify-content-center&quot; className to
-    the returned div.
+    The group_accordion function takes a list of accordion items and
+    returns an HTML Div element containing the accordion. The middle
+    parameter is used to determine whether the returned div should
+    be centered on the page.The comp_id parameter is used to set an id
+    for this component, which can be referenced by other components.
     Parameters
     ----------
     accord_items
-        Pass in a list of accordion items
-    width
-        Set the width of the accordion
+        Pass in the accordion items
     middle
-        Center the accordion
+        Add a row class to the div that is returned
     comp_id
-        Identify the component
+        Identify the accordion
     Returns
     -------
-    A group of accordions
+    The accordion items
     """
     accord_items = [a for a in accord_items]
     return html.Div(
         dbc.Accordion(accord_items,
                       id=comp_id,
-                      style={"width": f"{width}rem"}
+                      className="my-accordion"
                       ),
         className="row justify-content-center" if middle else ""
     )
@@ -235,31 +253,50 @@ def header_comp(text, indent=0, middle=False):
     return html.Div(html.H6(text, style=style))
 
 
-def horizontal_line_comp(width=50):
-    return html.Hr(style={"width": f"{width}rem"})
-
-
 def line_breaks(times=1):
     br_list = [html.Br() for i in range(times)]
     return html.Div(children=br_list)
 
 
+def input_with_dropdown(comp_id, width=80):
+    return html.Div(
+        dbc.InputGroup([
+            dbc.Select(
+                id=f"{comp_id}_drop",
+                options=["HSMFS", "DVC", "DCOR", "DCOR-Colab"],
+                value="HSMFS",
+                style={"width": "20%"}
+            ),
+            dcc.Input(
+                type='text',
+                placeholder='Enter file path / ID',
+                multiple=True,
+                id=f"{comp_id}_text",
+                className='form-control',
+                style={"width": "80%"}
+
+            ),
+        ],
+            style={"width": f"{width}%"}
+        ),
+        className="row justify-content-center",
+    )
+
+
 def loading_comp(children):
     """
-    The loading_comp function is a wrapper for the dcc.Loading component,
-    which is used to display a loading indicator while data is being fetched
-    from the server. The function takes in one argument, children, which
-    should be an array of components that will be displayed once the data
-    has been loaded.
+    The loading_comp function takes in a list of children and returns a
+    dbc.Spinner component with the given children and color set to
+    &quot;success&quot;. The size is set to &quot;sm&quot; by default.
     Parameters
     ----------
     children
-        Specify the children of the loading component
+        Pass the children of the component
     Returns
     -------
-    A loading component, which is a div that contains a dcc
+    A spinner component
     """
-    return dcc.Loading(type="default", color="#017b70", children=children)
+    return dbc.Spinner(size="sm", children=children, color="success")
 
 
 def num_searchbar_comp(comp_id, min, max, step, default, width=6):
@@ -284,10 +321,11 @@ def paragraph_comp(text, indent=0, middle=False):
     return html.P(text, style=style)
 
 
-def progressbar_comp(comp_id):
-    return dbc.Progress(id=comp_id, value=0, color="success",
-                        animated=True, striped=True,
-                        style={"transform": "translate(10%, 50%)"})
+def progressbar_comp(comp_id, width=80):
+    return dbc.Progress(id=comp_id, value=0, striped=True,
+                        animated=True, color="success",
+                        style={"width": f"{width}%", "margin": "0 auto"}
+                        )
 
 
 def popup_comp(comp_id):

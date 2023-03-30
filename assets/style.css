@@ -31,6 +31,7 @@
     padding: 2rem 1rem;
 }
 
+/* styling the button */
 .my-button-class {
     background-color: #017b70;
     font-weight: bold;
@@ -48,7 +49,7 @@
 }
 
 .my-button-class:hover {
-    background-color: #017b50;
+    background-color: red;
 }
 
 @media (min-width: 48em) {
@@ -116,8 +117,19 @@
 
 /* dbc.Toast styling parameters*/
 .my-toast {
-    width: 80rem;
-    height: 60rem;
+    width: 100%;
+    height: fit-content;
+}
+
+/* dbc.accordion styling parameters*/
+.my-accordion {
+    width: 85%;
+    height: fit-content;
+}
+
+/* dbc.Card styling parameters*/
+.my-card {
+    width: 100%;
 }
 
 /* dcc.Upload styling parameters*/
@@ -139,6 +151,7 @@ a:hover {
 
 /* Change bdc.Card into message box */
 .message-box {
+    border: #017b50;
     position: relative;
     padding: 1rem;
     width: fit-content;
@@ -146,22 +159,14 @@ a:hover {
     background-color: #017b50;
 }
 
+/* Styling triangular tip of message box */
 .message-box:before {
     content: "";
     position: absolute;
     top: 20px;
-    left: -10px;
+    left: -8px;
     margin-top: -10px;
     border-top: 1px solid transparent;
     border-bottom: 15px solid transparent;
     border-right: 10px solid #017b50;
-}
-
-
-.message-card {
-    background-color: #dcf8c6;
-    background-image: linear-gradient(225deg, #dcf8c6 50%, transparent 50%);
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    margin: 1rem;
 }
