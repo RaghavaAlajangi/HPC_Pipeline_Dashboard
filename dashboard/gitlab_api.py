@@ -54,9 +54,20 @@ class GitLabAPI:
             meta_data.append(required_meta)
         return meta_data
 
+    def get_templates(self):
+        simple_path = ".gitlab/issue_templates/pipeline_request_simple.md"
+        advanced_path = ".gitlab/issue_templates/pipeline_request_advanced.md"
+
+        simple_template = self.project.files.get(simple_path, ref='main')
+        advanced_template = self.project.files.get(advanced_path, ref='main')
+
+        simple_template = simple_template.decode().decode()
+        advanced_template = advanced_template.decode().decode()
+        return simple_template, advanced_template
+
     def run_pipeline(self, pipeline_request):
         new_pipeline = self.project.issues.create(pipeline_request)
-        return new_pipeline.notes.create({'body': "GO"})
+        return new_pipeline.notes.create({"body": "GO"})
 
 
 gitlab_api = GitLabAPI(url, token, project_num)

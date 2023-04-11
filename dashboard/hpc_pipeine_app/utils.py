@@ -1,4 +1,6 @@
-from .issue_templates import simple_template
+from ..gitlab_api import gitlab_api
+
+simple_template, advanced_template = gitlab_api.get_templates()
 
 
 def update_simple_template(params, template=simple_template):
