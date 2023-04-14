@@ -3,8 +3,8 @@ import dash_bootstrap_components as dbc
 import dash_bootstrap_templates as dbt
 from dash import Input, Output, dcc, html
 
-from .components import groupby_columns, line_breaks, paragraph_comp, \
-    dropdown_menu_comp
+from .components import (groupby_columns, line_breaks, paragraph_comp,
+                         dropdown_menu_comp)
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
 from .viscosity_calculator_app import viscal_app
 

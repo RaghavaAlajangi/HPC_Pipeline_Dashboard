@@ -2,9 +2,10 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html, dcc, callback, Input, Output, State, MATCH
 
-from ..components import line_breaks, paragraph_comp, group_accordion, \
-    dropdown_menu_comp, groupby_columns, header_comp, button_comp, \
-    chat_box, loading_comp, web_link, progressbar_comp, divider_line_comp
+from ..components import (line_breaks, paragraph_comp, group_accordion,
+                          dropdown_menu_comp, groupby_columns, header_comp,
+                          button_comp, chat_box, loading_comp, web_link,
+                          progressbar_comp, divider_line_comp)
 from ..gitlab_api import gitlab_api
 
 # Get the issue meta from gitlab API to store in dash cache memory
