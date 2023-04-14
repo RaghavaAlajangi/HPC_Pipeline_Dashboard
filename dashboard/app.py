@@ -115,7 +115,8 @@ def sidebar_menu():
 def main_content_block():
     return html.Div(
         id="page-content",
-        style={"align-items": "center"}
+        style={"align-items": "center",
+               "overflowX": "hidden"}
     )
 
 
