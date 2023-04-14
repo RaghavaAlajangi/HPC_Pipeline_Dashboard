@@ -1,12 +1,73 @@
+import pathlib
+import dash
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc, html
+from dash import callback, Input, Output, State, dcc, html, ALL, MATCH
 
 from ..gitlab_api import gitlab_api
 from .utils import update_simple_template
-from ..components import header_comp, paragraph_comp, checklist_comp, \
-    upload_comp, text_input_comp, dropdown_searchbar_comp, \
-    groupby_rows, num_searchbar_comp, popup_comp, divider_line_comp, \
-    group_accordion, line_breaks, button_comp, input_with_dropdown, display_box
+from ..components import (header_comp, paragraph_comp, checklist_comp,
+                          upload_comp, text_input_comp, groupby_rows,
+                          dropdown_searchbar_comp, num_searchbar_comp,
+                          popup_comp, divider_line_comp, group_accordion,
+                          line_breaks, button_comp, input_with_dropdown)
+
+# HSFMS path
+hsfs_path = pathlib.Path("U:")
+
+
+def file_checkbox(pathlib_path):
+    """
+    The file_checkbox function takes a pathlib.Path object as an argument and
+    returns a dash_bootstrap_components Checklist component with the name of
+    the file as its label, and the full path to that file as its value.
+    """
+    return dbc.Checklist(
+        options=[
+            {"label": str(pathlib_path.name), "value": str(pathlib_path)},
+        ],
+        value=[],
+        # persistence=True,
+        id={"type": "item_checkbox", "index": str(pathlib_path.name)}
+    )
+
+
+def dir_pointer(pathlib_path):
+    return html.Li(
+        children=[
+            html.Span(
+                str(pathlib_path.name),
+                className="folder",
+                id={"type": "folder", "index": str(pathlib_path.name)},
+                n_clicks=0
+            ),
+            html.Ul(
+                key=str(pathlib_path),
+                id={"type": "folder-children",
+                    "index": str(pathlib_path.name)},
+            ),
+        ],
+        style={"cursor": "pointer"}
+    )
+
+
+def hsmfs_drive_comp(hsfs_path):
+    dir_tree = {d: d for d in hsfs_path.iterdir() if
+                d.is_dir() or d.suffix == ".rtdc"}
+    return html.Div([
+        paragraph_comp(text="HSMFS shared drive:", middle=True),
+        dbc.Card(
+            html.Div(
+                children=[
+                    dir_pointer(item) for item in dir_tree
+                ]
+            ), body=True,
+            style={"max-height": "30rem",
+                   "overflow-y": "scroll",
+                   "overflowX": "scroll"},
+            className="my-card")
+    ],
+        className="row justify-content-center"
+    )
 
 
 def simple_request():
@@ -59,38 +120,8 @@ def simple_request():
                 paragraph_comp(text="OR", middle=True),
                 upload_comp(comp_id="simple_drop_down_upload"),
                 line_breaks(times=3),
-                html.Div(id='simple_upload_show'),
-                # dbc.Accordion([
-                #     dbc.AccordionItem([
-                #         dbc.Accordion([
-                #             dbc.AccordionItem(title="sub dir1"),
-                #             dbc.AccordionItem(title="sub dir2")
-                #         ]),
-                #         dbc.Checklist(
-                #             options=[
-                #                 {"label": "Option 1", "value": 1},
-                #                 {"label": "Option 2", "value": 2},
-                #                 {"label": "Option 3", "value": 3},
-                #             ],
-                #             value=[1, 2],
-                #         ),
-                #         ],
-                #         title="test1"
-                #     ),
-                #     dbc.AccordionItem([
-                #         dbc.Checklist(
-                #             options=[
-                #                 {"label": "Option 1", "value": 1},
-                #                 {"label": "Option 2", "value": 2},
-                #                 {"label": "Option 3", "value": 3},
-                #             ],
-                #             value=1,
-                #         )],
-                #         title="test2"
-                #     )],
-                # style={"width": "50%"}
-                # )
-
+                hsmfs_drive_comp(hsfs_path),
+                line_breaks(times=2),
             ],
                 title="Data to Process",
             )
@@ -98,7 +129,10 @@ def simple_request():
             middle=True
         ),
         line_breaks(times=4),
+        html.Div(id='simple_upload_show'),
+        line_breaks(times=4),
         button_comp(label="Create pipeline",
+                    disabled=True,
                     comp_id="create_simple_pipeline_button"),
         line_breaks(times=5),
         dcc.Store(id="store_simple_template")
@@ -112,6 +146,138 @@ def simple_request():
         is_open=True,
         className="my-toast"
     )
+
+
+@callback([Output("legacy_thresh_id", "disabled"),
+           Output("legacy_blur_id", "disabled"),
+           Output("legacy_binop_id", "disabled"),
+           Output("legacy_difme_id", "disabled"),
+           Output("legacy_clrbo_id", "disabled"),
+           Output("legacy_filho_id", "disabled"),
+           Output("legacy_cldis_id", "disabled")],
+          Input("legacy_id", "value"),
+          )
+def toggle_advanced_legacy_params(segm_legacy_opt):
+    if len(segm_legacy_opt) == 1:
+        return [False] * 7
+    else:
+        return [True] * 7
+
+
+@callback(Output("store_simple_template", "data"),
+          Input("simple_title", "value"),
+          Input("simp_segm_id", "value"),
+          Input("simp_classifier_id", "value"),
+          Input("simp_postana_id", "value"),
+          Input("simple_input_bar_drop", "value"),
+          Input("simple_input_bar_text", "value"),
+          Input("simple_drop_down_upload", "filename"),
+          State("store_simple_template", "data")
+          )
+def collect_simple_pipeline_params(simple_title, simple_segment,
+                                   simple_classifier, simple_postana,
+                                   simple_input_drop, simple_input_text,
+                                   simple_upload_drop,
+                                   store_simple_template):
+    params = simple_segment + simple_classifier + simple_postana
+
+    final_issue_template = {}
+    if simple_title is not None:
+        final_issue_template["title"] = simple_title
+        final_issue_template["description"] = update_simple_template(params)
+        return final_issue_template
+
+
+def hsmfs_list(filelist):
+    return html.Div([
+        paragraph_comp(text="Selected files:", middle=True),
+        dbc.Card(
+            html.Ul([
+                html.Li(name) for name in filelist
+            ]),
+            body=True,
+            style={"max-height": "15rem",
+                   "overflow-y": "scroll",
+                   "overflowX": "hidden"},
+            className="my-card")
+    ],
+        className="row justify-content-center"
+    )
+
+
+@callback(Output("simple_upload_show", "children"),
+          Input("simple_input_bar_drop", "value"),
+          Input("simple_input_bar_text", "value"),
+          Input("simple_drop_down_upload", "filename"),
+          Input({"type": "item_checkbox", "index": ALL}, "value")
+          )
+def display_uploaded_filepaths(drop_value, simple_input_text,
+                               simple_upload_drop, check_list):
+    if simple_input_text is not None and simple_input_text != "":
+        bar_list = str(simple_input_text).split(",")
+        bar_list = [f"{drop_value} :  {f}" for f in bar_list]
+    else:
+        bar_list = []
+
+    if simple_upload_drop is not None and simple_upload_drop != "":
+        drop_list = str(simple_input_text).split(",")
+    else:
+        drop_list = []
+
+    drive_list = [item for sublist in check_list for item in sublist]
+    if len(drive_list) != 0:
+        drive_list = [f"HSMFS :  {f.split(':')[1]}" for f in drive_list]
+
+    filelist = bar_list + drop_list + drive_list
+
+    if len(filelist) > 0:
+        return hsmfs_list(filelist)
+
+
+@callback([Output({"type": "folder-children", "index": MATCH}, "style"),
+           Output({"type": "folder-children", "index": MATCH}, "children")],
+          Input({"type": "folder", "index": MATCH}, "n_clicks"),
+          Input({"type": "folder-children", "index": MATCH}, "key"),
+          )
+def folder_tree_dropdown(n_clicks, key):
+    if n_clicks % 2 == 0:
+        return [{"display": "none"}, dash.no_update]
+    else:
+        pointed_dir = pathlib.Path(key)
+        print(pointed_dir)
+        dir_child_tree = {d: d for d in pointed_dir.iterdir() if
+                          d.is_dir() or d.suffix == ".rtdc"}
+        if len(dir_child_tree) > 0:
+            children = [
+                dir_pointer(item)
+                if item.is_dir() else file_checkbox(item) for
+                item in dir_child_tree.values()
+            ]
+            return [{"display": "block"}, children]
+
+        else:
+            return [{"display": "none"}, dash.no_update]
+
+
+@callback(Output("create_simple_pipeline_button", "disabled"),
+          Input("simple_title", "value"))
+def toggle_create_pipeline_button(title):
+    if title is None or title == "":
+        return True
+    else:
+        return False
+
+
+@callback(Output("simple_popup", "is_open"),
+          Input("create_simple_pipeline_button", "n_clicks"),
+          Input("store_simple_template", "data"),
+          State("simple_popup", "is_open")
+          )
+def simple_request_notification(click, store_simple_template, popup):
+    if click:
+        gitlab_api.run_pipeline(store_simple_template)
+        return not popup
+    return popup
 
 
 def advanced_request():
@@ -378,72 +544,6 @@ def advanced_request():
         is_open=True,
         className="my-toast"
     )
-
-
-@callback([Output("legacy_thresh_id", "disabled"),
-           Output("legacy_blur_id", "disabled"),
-           Output("legacy_binop_id", "disabled"),
-           Output("legacy_difme_id", "disabled"),
-           Output("legacy_clrbo_id", "disabled"),
-           Output("legacy_filho_id", "disabled"),
-           Output("legacy_cldis_id", "disabled")],
-          Input("legacy_id", "value"),
-          )
-def toggle_advanced_legacy_params(segm_legacy_opt):
-    if len(segm_legacy_opt) == 1:
-        return [False] * 7
-    else:
-        return [True] * 7
-
-
-@callback(Output("store_simple_template", "data"),
-          Input("simple_title", "value"),
-          Input("simp_segm_id", "value"),
-          Input("simp_classifier_id", "value"),
-          Input("simp_postana_id", "value"),
-          Input("simple_input_bar_drop", "value"),
-          Input("simple_input_bar_text", "value"),
-          Input("simple_drop_down_upload", "filename"),
-          State("store_simple_template", "data")
-          )
-def collect_simple_pipeline_params(simple_title, simple_segment,
-                                   simple_classifier, simple_postana,
-                                   simple_input_drop, simple_input_text,
-                                   simple_upload_drop,
-                                   store_simple_template):
-    params = simple_segment + simple_classifier + simple_postana
-
-    # print(simple_upload_dcor, simple_upload_drop)
-
-    final_issue_template = {}
-    if simple_title is not None:
-        final_issue_template["title"] = simple_title
-        final_issue_template["description"] = update_simple_template(params)
-        return final_issue_template
-
-
-@callback(Output("simple_upload_show", "children"),
-          Input("simple_input_bar_drop", "value"),
-          Input("simple_input_bar_text", "value"),
-          Input("simple_drop_down_upload", "filename"),
-          )
-def display_uploaded_filepaths(drop_value, simple_input_text,
-                               simple_upload_drop):
-    filelist = str(simple_input_text).split(",")
-    if len(filelist) > 1:
-        return display_box(drop_value, filelist)
-
-
-@callback(Output("simple_popup", "is_open"),
-          Input("create_simple_pipeline_button", "n_clicks"),
-          Input("store_simple_template", "data"),
-          State("simple_popup", "is_open")
-          )
-def simple_request_notification(click, store_simple_template, popup):
-    if click:
-        gitlab_api.run_pipeline(store_simple_template)
-        return not popup
-    return popup
 
 
 @callback(Output("advanced_popup", "is_open"),
