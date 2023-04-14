@@ -30,7 +30,7 @@ def main_tab_layout():
         paragraph_comp("⦿ This page is responsible for running RTDC "
                        "dataset processing pipelines on MPCDF gpu "
                        "clusters (HPC)",
-                       indent=40),
+                       indent=2),
         line_breaks(times=1),
         dropdown_menu_comp(name="New Request",
                            options=[dropdown_menu1, dropdown_menu2],
@@ -136,8 +136,7 @@ def switch_tab_content(active_tab, dash_cache):
     new_issue_meta = gitlab_api.get_issues_meta(state=active_tab)
 
     if len(new_issue_meta) == 0:
-        issues = paragraph_comp(text="⦿ We do not have opened "
-                                     "requests!", indent=40)
+        issues = paragraph_comp(text="⦿ No opened requests!", indent=2)
         return [open_close_tab_layout(issues), dash_cache]
     else:
         if len(dash_cache[active_tab]) != len(new_issue_meta):

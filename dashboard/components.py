@@ -3,23 +3,9 @@ import dash_bootstrap_components as dbc
 import re
 
 
-def button_comp(label, comp_id, type="primary"):
-    """
-    The button_comp function is a helper function that creates a Dash
-    Bootstrap Component (dbc) Button.
-    Parameters
-    ----------
-    label
-        Set the text of the button
-    comp_id
-        Identify the button in the callback function
-    type
-        Determine the color of the button
-    Returns
-    -------
-    A button component with the given label, id and type
-    """
+def button_comp(label, comp_id, type="primary", disabled=False):
     return dbc.Button(label, id=comp_id, color=type,
+                      disabled=disabled,
                       className="my-button-class mx-auto d-block"
                       if type == "primary" else {})
 
@@ -52,9 +38,10 @@ def chat_box(chat, gap=15):
         for msg in chat]
     return dbc.Card(comments, body=True,
                     style={"max-height": "30rem",
+                           "width": "100%",
                            "overflow-y": "scroll",
                            "overflowX": "hidden"},
-                    className="my-card")
+                    )
 
 
 def checklist_comp(comp_id, options, defaults):
@@ -89,20 +76,6 @@ def checklist_comp(comp_id, options, defaults):
         labelCheckedClassName="text-success",
         inputCheckedClassName="border border-success bg-success",
     )
-
-
-def display_box(drop_value, filelist):
-    filelist = html.Ul([
-        html.Li(f"{drop_value} :  {name}") for name in filelist
-    ])
-    return html.Div([
-        paragraph_comp(text="Entered List:"),
-        dbc.Card(filelist, body=True,
-                 style={"max-height": "15rem",
-                        "overflow-y": "scroll",
-                        "overflowX": "hidden"},
-                 className="my-card")
-    ])
 
 
 def divider_line_comp(width=100, middle=True):
@@ -263,8 +236,8 @@ def input_with_dropdown(comp_id, width=80):
         dbc.InputGroup([
             dbc.Select(
                 id=f"{comp_id}_drop",
-                options=["HSMFS", "DVC", "DCOR", "DCOR-Colab"],
-                value="HSMFS",
+                options=["DVC", "DCOR", "DCOR-Colab"],
+                value="DVC",
                 style={"width": "20%"}
             ),
             dcc.Input(
@@ -315,7 +288,7 @@ def paragraph_comp(text, indent=0, middle=False):
     if middle:
         style = {"text-align": "center"}
     elif not middle and indent > 0:
-        style = {"marginLeft": f"{indent}px"}
+        style = {"marginLeft": f"{indent}rem"}
     else:
         style = {}
     return html.P(text, style=style)
