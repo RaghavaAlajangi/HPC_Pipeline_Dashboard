@@ -388,7 +388,7 @@ def web_link_check(text):
     -------
     A list of strings and web_link objects
     """
-    regex_exp = "(?P<url>https?://[^\s]+)"
+    regex_exp = r"(?P<url>https?://[^\s]+)"
     links = re.findall(regex_exp, text)
     split_text = re.split(regex_exp, text)
     if len(links) == 0:
