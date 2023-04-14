@@ -15,52 +15,56 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
 hsfs_path = pathlib.Path("U:")
 
 
-def file_checkbox(pathlib_path):
+def file_checkbox(pathlib_path, margin=5):
     """
     The file_checkbox function takes a pathlib.Path object as an argument and
     returns a dash_bootstrap_components Checklist component with the name of
     the file as its label, and the full path to that file as its value.
     """
-    return dbc.Checklist(
-        options=[
-            {"label": str(pathlib_path.name), "value": str(pathlib_path)},
-        ],
-        value=[],
-        # persistence=True,
-        id={"type": "item_checkbox", "index": str(pathlib_path.name)}
+    return html.Div(
+        dbc.Checklist(
+            options=[
+                {"label": str(pathlib_path.name), "value": str(pathlib_path)},
+            ],
+            value=[],
+            # persistence=True,
+            id={"type": "item_checkbox", "index": str(pathlib_path.name)}
+        ),
+        style={"margin-bottom": f"{margin}px", "margin-top": f"{margin}px"}
     )
 
 
-def dir_pointer(pathlib_path):
-    return html.Li(
-        children=[
-            html.Span(
-                str(pathlib_path.name),
-                className="folder",
-                id={"type": "folder", "index": str(pathlib_path.name)},
-                n_clicks=0
-            ),
-            html.Ul(
-                key=str(pathlib_path),
-                id={"type": "folder-children",
-                    "index": str(pathlib_path.name)},
-            ),
-        ],
-        style={"cursor": "pointer"}
+def dir_pointer(pathlib_path, margin=5):
+    return html.Div(
+        html.Li(
+            children=[
+                html.Span(
+                    str(pathlib_path.name),
+                    className="folder",
+                    id={"type": "folder", "index": str(pathlib_path.name)},
+                    n_clicks=0
+                ),
+                html.Ul(
+                    key=str(pathlib_path),
+                    id={"type": "folder-children",
+                        "index": str(pathlib_path.name)},
+                ),
+            ],
+            style={"cursor": "pointer"}
+        ),
+        style={"margin-bottom": f"{margin}px", "margin-top": f"{margin}px"}
     )
 
 
 def hsmfs_drive_comp(hsfs_path):
-    dir_tree = {d: d for d in hsfs_path.iterdir() if
-                d.is_dir() or d.suffix == ".rtdc"}
+    dir_tree = [d for d in hsfs_path.iterdir() if
+                d.is_dir() or d.suffix == ".rtdc"]
     return html.Div([
         paragraph_comp(text="HSMFS shared drive:", middle=True),
         dbc.Card(
-            html.Div(
-                children=[
-                    dir_pointer(item) for item in dir_tree
-                ]
-            ), body=True,
+            children=[
+                dir_pointer(item) for item in dir_tree
+            ],
             style={"max-height": "30rem",
                    "overflow-y": "scroll",
                    "overflowX": "scroll"},
@@ -197,9 +201,10 @@ def hsmfs_list(filelist):
             ]),
             body=True,
             style={"max-height": "15rem",
+                   "width": "70%",
                    "overflow-y": "scroll",
                    "overflowX": "hidden"},
-            className="my-card")
+        )
     ],
         className="row justify-content-center"
     )
@@ -239,19 +244,18 @@ def display_uploaded_filepaths(drop_value, simple_input_text,
           Input({"type": "folder", "index": MATCH}, "n_clicks"),
           Input({"type": "folder-children", "index": MATCH}, "key"),
           )
-def folder_tree_dropdown(n_clicks, key):
+def folder_tree_dropdown(n_clicks, pointed_path):
     if n_clicks % 2 == 0:
         return [{"display": "none"}, dash.no_update]
     else:
-        pointed_dir = pathlib.Path(key)
-        print(pointed_dir)
-        dir_child_tree = {d: d for d in pointed_dir.iterdir() if
-                          d.is_dir() or d.suffix == ".rtdc"}
-        if len(dir_child_tree) > 0:
+        pointed_path = pathlib.Path(pointed_path)
+        child_dir_tree = [d for d in pointed_path.iterdir() if
+                          d.is_dir() or d.suffix == ".rtdc"]
+        if len(child_dir_tree) > 0:
             children = [
                 dir_pointer(item)
                 if item.is_dir() else file_checkbox(item) for
-                item in dir_child_tree.values()
+                item in child_dir_tree
             ]
             return [{"display": "block"}, children]
 
