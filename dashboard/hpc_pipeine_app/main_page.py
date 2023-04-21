@@ -162,11 +162,10 @@ def switch_tabs(active_tab, stored_issue_meta):
           Output({"type": "accord_item_bar", "index": MATCH}, "label"),
           Input("issue_accord", "active_item"),
           State({"type": "accord_item_div", "index": MATCH}, "id"))
-def show_selected_issue_comments(accord_item, match_id):
+def show_pipeline_comments(accord_item, match_id):
     progress_comments = [
         "STATE: setup",
         "STATE: queued",
-        "STATE: transfer",
         "STATE: done",
     ]
     if accord_item is not None:
@@ -182,7 +181,7 @@ def show_selected_issue_comments(accord_item, match_id):
             comment_cards = chat_box(["No Activity!"])
 
         if issue_iid == match_id["index"]:
-            return comment_cards, progress, f"{progress} %"
+            return comment_cards, progress, f"{progress:.1f} %"
         else:
             return dash.no_update
     else:
@@ -193,7 +192,7 @@ def show_selected_issue_comments(accord_item, match_id):
           Input("issue_accord", "active_item"),
           Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
           State({"type": "accord_item_stop", "index": MATCH}, "disabled"))
-def stop_selected_open_issue(accord_item, click, enable_click):
+def cancel_pipeline(accord_item, click, enable_click):
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
         issue_obj = gitlab_api.get_issue_obj(issue_iid)
