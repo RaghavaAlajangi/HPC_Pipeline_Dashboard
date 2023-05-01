@@ -49,7 +49,7 @@ def open_close_tab_layout(pipelines):
         html.Div(
             pipelines,
             style={"max-height": "50rem", "overflow-y": "scroll",
-                   "overflowX": "hidden"},
+                   "overflow-x": "hidden"},
         ),
         line_breaks(times=2),
     ],
