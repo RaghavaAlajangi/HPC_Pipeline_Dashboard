@@ -4,10 +4,11 @@ import re
 
 
 def button_comp(label, comp_id, type="primary", disabled=False):
-    return dbc.Button(label, id=comp_id, color=type,
-                      disabled=disabled,
-                      className="my-button-class mx-auto d-block"
-                      if type == "primary" else {})
+    return dbc.Button(
+        label, id=comp_id, color=type,
+        disabled=disabled,
+        className="my-button-class mx-auto d-block" if type == "primary" else {}
+    )
 
 
 def chat_box(chat, gap=15):
@@ -231,23 +232,23 @@ def line_breaks(times=1):
     return html.Div(children=br_list)
 
 
-def input_with_dropdown(comp_id, width=80):
+def input_with_dropdown(comp_id, width=100):
     return html.Div(
         dbc.InputGroup([
             dbc.Select(
+                placeholder="Source",
                 id=f"{comp_id}_drop",
                 options=["DVC", "DCOR", "DCOR-Colab"],
-                value="DVC",
-                style={"width": "20%"}
+                style={"width": "15%"}
             ),
-            dcc.Input(
-                type='text',
-                placeholder='Enter file path or patient ID',
-                multiple=True,
-                id=f"{comp_id}_text",
-                className='form-control',
-                style={"width": "80%"}
-
+            dbc.Input(
+                type="text", id=f"{comp_id}_text",
+                placeholder="Enter file path or patient ID",
+                style={"width": "75%"}
+            ),
+            dbc.Button(
+                "Add", id=f"{comp_id}_button", color="info",
+                style={"width": "10%"}
             ),
         ],
             style={"width": f"{width}%"}
