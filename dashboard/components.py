@@ -7,7 +7,8 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     return dbc.Button(
         label, id=comp_id, color=type,
         disabled=disabled,
-        className="my-button-class mx-auto d-block" if type == "primary" else {}
+        className="my-button-class mx-auto d-block"
+        if type == "primary" else {}
     )
 
 
@@ -228,7 +229,7 @@ def header_comp(text, indent=0, middle=False):
 
 
 def line_breaks(times=1):
-    br_list = [html.Br() for i in range(times)]
+    br_list = [html.Br() for _ in range(times)]
     return html.Div(children=br_list)
 
 
@@ -238,7 +239,12 @@ def input_with_dropdown(comp_id, width=100):
             dbc.Select(
                 placeholder="Source",
                 id=f"{comp_id}_drop",
-                options=["DVC", "DCOR", "DCOR-Colab"],
+                options=[
+                    {"label": "DVC", "value": "DVC"},
+                    {"label": "DCOR", "value": "DCOR"},
+                    {"label": "DCOR-Colab", "value": "DCOR-Colab",
+                     "disabled": True},
+                ],
                 style={"width": "15%"}
             ),
             dbc.Input(
