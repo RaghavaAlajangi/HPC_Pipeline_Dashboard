@@ -1,19 +1,14 @@
+import functools
+
 import gitlab
 import pathlib
 
 secrets_path = pathlib.Path(__file__).parents[1] / "SECRETS.txt"
 
-# with open(secrets_path) as f:
-#     lines = f.readlines()
-#     url = str(lines[4].strip().split("=")[1])
-#     token = str(lines[5].strip().split("=")[1])
-#     project_num = str(lines[6].strip().split("=")[1])
-
-
 with open(secrets_path) as f:
     lines = f.readlines()
-    url = str(lines[0].strip().split("=")[1])
-    token = str(lines[1].strip().split("=")[1])
+    repo_url = str(lines[0].strip().split("=")[1])
+    repo_token = str(lines[1].strip().split("=")[1])
     project_num = str(lines[2].strip().split("=")[1])
 
 
@@ -27,11 +22,22 @@ class GitLabAPI:
         gitlab_obj.auth()
         self.project = gitlab_obj.projects.get(project_num)
 
+    @functools.lru_cache(maxsize=500, typed=True)
     def get_issues(self, state):
-        issues = self.project.issues.list(state=state, get_all=False)
+        """
+        It takes a state as an argument and returns all issues in that state.
+        The function uses the project's list method to get all issues in the
+        given state, but only gets the first page of results (get_all=False).
+        This is because we don't want to make too many requests at once.
+        """
+        issues = self.project.issues.list(state=state, get_all=True)
         return issues
 
     def get_comments(self, issue_iid):
+        """
+        It takes an issue_iid as input and returns a list of comments
+        associated with that issue.
+        """
         issue = self.project.issues.get(issue_iid)
         issue_notes = issue.notes.list(get_all=True)
         return [n.asdict()["body"] for n in issue_notes]
@@ -54,20 +60,22 @@ class GitLabAPI:
             meta_data.append(required_meta)
         return meta_data
 
-    def get_templates(self):
+    def get_simple_template(self):
         simple_path = ".gitlab/issue_templates/pipeline_request_simple.md"
-        advanced_path = ".gitlab/issue_templates/pipeline_request_advanced.md"
-
         simple_template = self.project.files.get(simple_path, ref='main')
-        advanced_template = self.project.files.get(advanced_path, ref='main')
-
         simple_template = simple_template.decode().decode()
+        return simple_template
+
+    def get_advanced_template(self):
+        advanced_path = ".gitlab/issue_templates/pipeline_request_advanced.md"
+        advanced_template = self.project.files.get(advanced_path, ref='main')
         advanced_template = advanced_template.decode().decode()
-        return simple_template, advanced_template
+        return advanced_template
 
     def run_pipeline(self, pipeline_request):
         new_pipeline = self.project.issues.create(pipeline_request)
         return new_pipeline.notes.create({"body": "GO"})
 
 
-gitlab_api = GitLabAPI(url, token, project_num)
+# Instantiate GitLabAPI class
+gitlab_api = GitLabAPI(repo_url, repo_token, project_num)
