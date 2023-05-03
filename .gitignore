@@ -3,9 +3,3 @@ __pycache__/
 .idea
 
 SECRETS.txt
-
-tester.py
-test.py
-test1.py
-
-Dockerfile
