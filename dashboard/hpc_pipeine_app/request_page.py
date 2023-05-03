@@ -1,60 +1,153 @@
+import os
+import functools
+
 from pathlib import Path
 import dash
+from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash import callback, Input, Output, State, dcc, html, ALL, MATCH
-
 from ..gitlab_api import gitlab_api
 from .utils import update_simple_template
 from ..components import (header_comp, paragraph_comp, checklist_comp,
-                          upload_comp, text_input_comp, groupby_rows,
-                          dropdown_searchbar_comp, num_searchbar_comp,
-                          popup_comp, divider_line_comp, group_accordion,
-                          line_breaks, button_comp, input_with_dropdown)
+                          text_input_comp, groupby_rows, num_searchbar_comp,
+                          dropdown_searchbar_comp, popup_comp, button_comp,
+                          divider_line_comp, group_accordion, line_breaks,
+                          input_with_dropdown)
 
-# HSMFS path
-# hsmfs_path = Path("U:")
-
-
-hsmfs_path = Path(r"C:\Raghava_local")
+# HSMFS drive path
+hsm_path = Path(__file__).parents[3] / "HSMFS"
 
 
-def hsmfs_drive_comp(hsfs_path):
-    dir_tree = [d for d in hsfs_path.iterdir() if
-                d.is_dir() or d.suffix == ".rtdc"]
+# hsm_path = Path(r"C:\Users\ralajan\Desktop\Raghava_Desktop\copy")
+
+
+def os_suffix(path):
+    return os.path.splitext(path)[1]
+
+
+def os_bname(path):
+    return os.path.basename(path)
+
+
+@functools.lru_cache(maxsize=None, typed=True)
+def get_dir_contents(path, mode="dir_rtdc"):
+    if mode == "only_rtdc":
+        contents = [d for d in os.scandir(path) if os_suffix(d) == ".rtdc"]
+    else:
+        contents = [d for d in os.scandir(path) if
+                    d.is_dir() or os_suffix(d) == ".rtdc"]
+    return contents
+
+
+def file_checkbox_comp(pathlib_path, margin=5, tickbox=False):
+    checkbox_item = dbc.Checklist(
+        options=[
+            {"label": pathlib_path.name, "value": pathlib_path.path}
+        ],
+        id={"type": "file_checkbox", "index": pathlib_path.path},
+        input_checked_class_name="border-success bg-success",
+        value=[pathlib_path.path] if tickbox else []
+    )
+    return html.Div(
+        checkbox_item,
+        style={"margin-bottom": f"{margin}px",
+               "margin-top": f"{margin}px"}
+    )
+
+
+def dir_checkbox_comp(pathlib_path, margin=5):
+    # Get the list of rtdc files of the given pathlib_path
+    dir_contents = get_dir_contents(pathlib_path, mode="only_rtdc")
+    # Check whether dir has rtdc files
+    is_dir_empty = True if len(dir_contents) == 0 else False
+    list_item = html.Li(
+        children=[
+            dbc.Checklist(
+                options=[
+                    {"label": "", "value": pathlib_path.path,
+                     # disable the dir checkbox if it does not
+                     # have the rtdc files
+                     "disabled": is_dir_empty
+                     }
+                ],
+                value=[], style={"display": "inline-block"},
+                id={"type": "dir_checkbox", "index": pathlib_path.path},
+                key=pathlib_path.path,
+                label_checked_class_name="text-danger",
+                input_checked_class_name="border-danger bg-danger"
+            ),
+            html.Span(
+                pathlib_path.name,
+                id={"type": "dir", "index": pathlib_path.path},
+                key=pathlib_path.path,
+                n_clicks=0
+            ),
+            html.Ul(
+                id={"type": "dir_children", "index": pathlib_path.path},
+            )
+        ],
+        style={"cursor": "pointer"}
+    )
+    return html.Div(
+        list_item,
+        style={"margin-bottom": f"{margin}px", "margin-top": f"{margin}px"}
+    )
+
+
+def hsm_drive_comp(hsm_path):
+    dir_contents = get_dir_contents(hsm_path)
+    div_children = [
+        dir_checkbox_comp(item)
+        if item.is_dir() else file_checkbox_comp(item) for
+        item in dir_contents
+    ]
     return html.Div([
-        dcc.Store(id="cached_hsmfs_paths", data=[]),
+        dcc.Store(id="store_final_paths", data=[]),
+        dcc.Store(id="store_input_paths", data=[]),
         paragraph_comp(text="HSMFS shared drive:", middle=True),
         dbc.Card(
-            children=[
-                dir_pointer(item)
-                if item.is_dir() else file_checkbox(item) for
-                item in dir_tree
-            ],
-            style={"max-height": "30rem",
-                   "width": "80%",
-                   "overflow-y": "scroll",
-                   "overflowX": "hidden"},
+            children=div_children,
+            style={"max-height": "30rem", "width": "80%",
+                   "overflow-y": "scroll"},
         )
     ],
         className="row justify-content-center"
     )
 
 
-def selected_paths_comp(comp_id):
+def display_paths_comp(comp_id):
     return html.Div(
         className="row justify-content-center",
         children=[
             paragraph_comp(text="Selected files:", middle=True),
             dbc.Card(
-                html.Ul(id=comp_id),
+                id=comp_id,
                 body=True,
-                style={"max-height": "25rem",
-                       "width": "80%",
-                       "overflow-y": "scroll",
-                       "overflow-x": "hidden"},
+                style={"max-height": "25rem", "width": "80%",
+                       "overflow-x": "scroll"},
             )
-        ]
-    )
+        ])
+
+
+def create_html_path_list(str_paths):
+    return [
+        dbc.Row([
+            html.Li([
+                dbc.Button(
+                    "X",
+                    n_clicks=0,
+                    key=[name],
+                    style={"width": "20px", "height": "20px",
+                           "padding": "0px", "margin-right": "5px"},
+                    class_name="btn btn-danger btn-sm",
+                    id={"type": "remove_file", "index": name}
+                ),
+                html.Span(name)
+            ]),
+        ],
+            style={"flexWrap": "nowrap"}
+        ) for name in str_paths
+    ]
 
 
 def simple_request():
@@ -87,7 +180,7 @@ def simple_request():
             dbc.AccordionItem([
                 paragraph_comp("Classification Model"),
                 checklist_comp(comp_id="simp_classifier_id",
-                               options=["MNet", "Bloody Bunny"],
+                               options=["MNet", "Bloody-Bunny"],
                                defaults=["MNet"])
             ],
                 title="Prediction",
@@ -102,12 +195,12 @@ def simple_request():
             ),
             dbc.AccordionItem([
                 line_breaks(times=1),
-                input_with_dropdown(comp_id="simple_input_bar", width=60),
-                line_breaks(times=1),
-                paragraph_comp(text="OR", middle=True),
-                upload_comp(comp_id="simple_drop_down_upload"),
-                line_breaks(times=3),
-                hsmfs_drive_comp(hsmfs_path),
+                input_with_dropdown(comp_id="input_group", width=80),
+                # line_breaks(times=1),
+                # paragraph_comp(text="OR", middle=True),
+                # upload_comp(comp_id="simple_drop_down_upload"),
+                line_breaks(times=2),
+                hsm_drive_comp(hsm_path),
                 line_breaks(times=2),
             ],
                 title="Data to Process",
@@ -116,7 +209,7 @@ def simple_request():
             middle=True
         ),
         line_breaks(times=4),
-        selected_paths_comp(comp_id="simple_upload_show"),
+        display_paths_comp(comp_id="simple_upload_show"),
         line_breaks(times=4),
         button_comp(label="Create pipeline",
                     disabled=True,
@@ -139,199 +232,136 @@ def simple_request():
           Input("simple_title", "value"),
           Input("simp_segm_id", "value"),
           Input("simp_classifier_id", "value"),
-          Input("simp_postana_id", "value"))
+          Input("simp_postana_id", "value"),
+          Input({"type": "file_checkbox", "index": ALL}, "value"),
+          Input("store_input_paths", "data"))
 def collect_simple_pipeline_params(simple_title, simple_segment,
-                                   simple_classifier, simple_postana):
+                                   simple_classifier, simple_postana,
+                                   file_checkboxes, stored_input):
     params = simple_segment + simple_classifier + simple_postana
-
-    final_issue_template = {}
-    if simple_title is not None:
-        final_issue_template["title"] = simple_title
-        final_issue_template["description"] = update_simple_template(params)
-        return final_issue_template
-
-
-def file_checkbox(pathlib_path, margin=5, check=False):
-    checkbox_item = dbc.Checklist(
-        options=[
-            {"label": str(pathlib_path.name), "value": str(pathlib_path)}
-        ],
-        id={"type": "item_checkbox", "index": str(pathlib_path)},
-        input_checked_class_name="border-success bg-success",
-        value=[str(pathlib_path)] if check else []
-    )
-    return html.Div(
-        checkbox_item,
-        style={"margin-bottom": f"{margin}px",
-               "margin-top": f"{margin}px"}
-    )
+    rtdc_files = [f for sub in file_checkboxes for f in sub] + stored_input
+    pipeline_template = {}
+    if simple_title is not None and len(rtdc_files) != 0:
+        simple_template = gitlab_api.get_simple_template()
+        pipeline_template["title"] = simple_title
+        description = update_simple_template(params,
+                                             rtdc_files,
+                                             simple_template)
+        pipeline_template["description"] = description
+        return pipeline_template
 
 
-def dir_pointer(pathlib_path, margin=5):
-    # Get the list of rtdc files of the given pathlib_path
-    child_folder = [f for f in pathlib_path.iterdir() if f.suffix == ".rtdc"]
-    # Check whether folder has rtdc files
-    is_folder_empty = True if len(child_folder) == 0 else False
-    list_item = html.Li(
-        children=[
-            dbc.Checklist(
-                options=[
-                    {"label": "", "value": str(pathlib_path),
-                     # disable the folder checkbox if it does not
-                     # have the rtdc files
-                     "disabled": True if is_folder_empty else False
-                     }
-                ],
-                value=[], style={"display": "inline-block"},
-
-                id={"type": "folder_checkbox",
-                    "index": str(pathlib_path.name)},
-                key=str(pathlib_path),
-                label_checked_class_name="text-danger",
-                input_checked_class_name="border-danger bg-danger"
-            ),
-            html.Span(
-                str(pathlib_path.name),
-                id={"type": "folder", "index": str(pathlib_path.name)},
-                key=str(pathlib_path),
-                n_clicks=0
-            ),
-            html.Ul(
-                id={"type": "folder_children",
-                    "index": str(pathlib_path.name)},
-            ),
-            # dbc.Tooltip(
-            #     "Dir is empty!",
-            #     id={"type": "tooltip", "index": str(pathlib_path.name)},
-            #     target={"type": "folder", "index": str(pathlib_path.name)},
-            #     is_open=False,
-            #     trigger="legacy",
-            #     placement="right"
-            # ),
-        ],
-        style={"cursor": "pointer"}
-    )
-    return html.Div(
-        list_item,
-        style={"margin-bottom": f"{margin}px",
-               "margin-top": f"{margin}px"}
-    )
-
-
-@callback([Output({"type": "folder_children", "index": MATCH}, "style"),
-           Output({"type": "folder_children", "index": MATCH}, "children")],
-          Input({"type": "folder", "index": MATCH}, "n_clicks"),
-          Input({"type": "folder", "index": MATCH}, "key"),
-          Input({"type": "folder_checkbox", "index": MATCH}, "value")
+@callback([Output({"type": "dir_children", "index": MATCH}, "style"),
+           Output({"type": "dir_children", "index": MATCH}, "children")],
+          Input({"type": "dir", "index": MATCH}, "n_clicks"),
+          Input({"type": "dir", "index": MATCH}, "key"),
+          Input({"type": "dir_checkbox", "index": MATCH}, "value")
           )
-def folder_tree_dropdown(folder_click, folder_path, folder_checkbox):
-    if folder_click % 2 == 0:
+def dir_tree_dropdown(dir_click, dir_key, dir_checkbox):
+    if dir_click % 2 == 0:
         return [{"display": "none"}, dash.no_update]
     else:
-        pointed_path = Path(folder_path)
-        # Get the sub-folders and rtdc files in the selected path
-        child_dir_tree = [d for d in pointed_path.iterdir() if
-                          d.is_dir() or d.suffix == ".rtdc"]
-        if len(child_dir_tree) > 0:
-            # Select all the checkboxes of rtdc files in the child folder
-            # if user select the checkbox of the parent folder
-            check = True if folder_path in folder_checkbox else False
+        dir_contents = get_dir_contents(dir_key)
+        if len(dir_contents) > 0:
+            # Tick all the checkboxes of rtdc files in the child dir
+            # if user select the checkbox of the parent dir
+            tick = True if dir_key in dir_checkbox else False
             children = [
-                dir_pointer(item)
-                if item.is_dir() else file_checkbox(item, check=check)
-                for item in child_dir_tree
+                dir_checkbox_comp(item)
+                if item.is_dir() else file_checkbox_comp(item, tickbox=tick)
+                for item in dir_contents
             ]
             return [{"display": "block"}, children]
         else:
             return [{"display": "none"}, dash.no_update]
 
 
-def create_path_list(filelist):
-    hsfms_list = [
-        html.Li([
-            dbc.Button("X",
-                       style={"width": "20px", "height": "20px",
-                              "padding": "0px", "margin-right": "5px"},
-                       class_name="btn btn-danger btn-sm",
-                       id={"type": "remove_file",
-                           "index": name}),
-            html.Span(name)
-        ]) for name in filelist]
-    return hsfms_list
+@callback([Output("store_input_paths", "data"),
+           Output("input_group_drop", "value"),
+           Output("input_group_text", "value")],
+          Input("input_group_button", "n_clicks"),
+          Input("input_group_drop", "value"),
+          Input("input_group_text", "value"),
+          Input({"type": "remove_file", "index": ALL}, "n_clicks"),
+          Input({"type": "remove_file", "index": ALL}, "key"),
+          State("store_input_paths", "data"))
+def store_input_group_paths(add_button, drop_input, text_input,
+                            remove_buttons, button_keys, cached_paths):
+    button_trigger = [p["prop_id"] for p in cc.triggered][0]
+    if text_input is not None and text_input != "" and drop_input is not None:
 
+        if "input_group_button" in button_trigger:
+            input_path = f"{drop_input}: {text_input}"
+            cached_paths.append(input_path)
+            return [cached_paths, None, None]
+        else:
+            return dash.no_update
 
-# @callback(Output("cached_hsmfs_paths", "data"),
-#           Input("simple_input_bar_drop", "value"),
-#           Input("simple_input_bar_text", "value"),
-#           Input("simple_drop_down_upload", "filename"),
-#           Input({"type": "item_checkbox", "index": ALL}, "value"),
-#           Input({"type": "remove_file", "index": ALL}, "n_clicks"),
-#           State("cached_hsmfs_paths", "data")
-#           )
-# def store_selected_paths(drop_value, simple_input_text, simple_upload_drop,
-#                          file_check_list, button_clicks, cached_paths):
-#     if simple_input_text is not None and simple_input_text != "":
-#         bar_list = str(simple_input_text).split(",")
-#         bar_list = [f"{drop_value} :  {f}" for f in bar_list]
-#     else:
-#         bar_list = []
-#
-#     if simple_upload_drop is not None and simple_upload_drop != "":
-#         drop_list = str(simple_input_text).split(",")
-#     else:
-#         drop_list = []
-#
-#     file_check_list = [f"HSMFS :  {f}" for sublist in file_check_list
-#                        for f in sublist]
-#     filelist = bar_list + drop_list + file_check_list
-#     final_list = [f for f in filelist if f != "" and f not in cached_paths]
-#     cached_paths.extend(final_list)
-#     return cached_paths
-
-
-@callback(Output("cached_hsmfs_paths", "data"),
-          Input({"type": "folder_checkbox", "index": ALL}, "value"),
-          Input({"type": "item_checkbox", "index": ALL}, "value"))
-def store_selected_paths(folder_checklist, file_checklist):
-    # Flatten the folder_checklist
-    folder_checklist = [Path(f) for sub in folder_checklist for f in sub]
-
-    # Get the rtdc file checkboxes based on folder checkbox
-    file_checklist1 = [str(f) for fc in folder_checklist for f in
-                       fc.iterdir() if f.suffix == ".rtdc"]
-
-    # Get the rtdc file checkboxes based on file checkboxes
-    file_checklist2 = [f for sub in file_checklist for f in sub]
-
-    # Get the rtdc files checkboxes that are selected by the user
-    final_list = list(set(file_checklist1).intersection(file_checklist2))
-
-    # final_list = [f for f in file_checklist if f not in cached_paths]
-    # cached_paths.extend(final_list)
-    return final_list
+    elif 1 in remove_buttons:
+        index = remove_buttons.index(1)
+        key = button_keys[index][0]
+        if key in cached_paths:
+            cached_paths.remove(key)
+            return [cached_paths, drop_input, text_input]
+        else:
+            return dash.no_update
+    else:
+        return [cached_paths, drop_input, text_input]
 
 
 @callback(Output("simple_upload_show", "children"),
-          Input("cached_hsmfs_paths", "data"),
-          Input({"type": "remove_file", "index": ALL}, "n_clicks"),
-          State({"type": "item_checkbox", "index": ALL}, "value"),
-          )
-def show_selected_hsmfs_paths(cached_paths, button_clicks,
-                              state_file_checklist):
-    return create_path_list(cached_paths)
-    # if 1 in button_clicks:
-    #     index = button_clicks.index(1)
-    #     cached_paths.pop(index)
-    #     # state_file_checklist.pop(index)
-    #     return hsmfs_selected_list(cached_paths)
-    # else:
-    #     return hsmfs_selected_list(cached_paths)
+          Input({"type": "dir_checkbox", "index": ALL}, "value"),
+          Input({"type": "file_checkbox", "index": ALL}, "value"),
+          Input("store_input_paths", "data"),
+          State("simple_upload_show", "children"))
+def show_selected_paths(dir_checkboxes, file_checkboxes, stored_input,
+                        display_children):
+    # print(dir_checkboxes)
+    # folder_checklist = [Path(f) for sub in dir_checkboxes for f in sub]
+    #
+    # # Get the rtdc file checkboxes based on folder checkbox
+    # file_checklist1 = [str(f) for fc in folder_checklist for f in
+    #                    fc.iterdir() if f.suffix == ".rtdc"]
+    #
+    # # Get the rtdc file checkboxes based on file checkboxes
+    # file_checklist2 = [f for sub in file_checkboxes for f in sub]
+    #
+    # # Get the rtdc files checkboxes that are selected by the user
+    # final_list = list(set(file_checklist1).union(file_checklist2))
+    #
+    # selected_paths = final_list + stored_input
+
+    selected_paths = [f for sub in file_checkboxes for f in sub] + stored_input
+    if display_children is not None and len(display_children) == len(
+            selected_paths):
+        return display_children
+    else:
+        return create_html_path_list(selected_paths)
+
+
+@callback(
+    Output({"type": "file_checkbox", "index": ALL}, "value"),
+    Input({"type": "remove_file", "index": ALL}, "n_clicks"),
+    Input({"type": "remove_file", "index": ALL}, "key"),
+    State({"type": "file_checkbox", "index": ALL}, "value"))
+def remove_files_from_list(remove_buttons, button_keys, file_checkboxes):
+    remove_buttons = [0 if b % 2 == 0 else 1 for b in remove_buttons]
+    if 1 in remove_buttons:
+        index = remove_buttons.index(1)
+        key = button_keys[index]
+        file_checkboxes = [[] if i == key else i for i in file_checkboxes]
+    return file_checkboxes
 
 
 @callback(Output("create_simple_pipeline_button", "disabled"),
-          Input("simple_title", "value"))
-def toggle_create_pipeline_button(title):
+          Input("simple_title", "value"),
+          Input({"type": "file_checkbox", "index": ALL}, "value"),
+          Input("store_input_paths", "data"))
+def toggle_create_pipeline_button(title, file_checkboxes, stored_input):
+    selected_paths = [f for sub in file_checkboxes for f in sub] + stored_input
     if title is None or title == "":
+        return True
+    elif len(selected_paths) == 0:
         return True
     else:
         return False
@@ -340,10 +370,10 @@ def toggle_create_pipeline_button(title):
 @callback(Output("simple_popup", "is_open"),
           Input("create_simple_pipeline_button", "n_clicks"),
           Input("store_simple_template", "data"),
-          State("simple_popup", "is_open")
-          )
+          State("simple_popup", "is_open"))
 def simple_request_notification(click, store_simple_template, popup):
-    if click:
+    button_trigger = [p["prop_id"] for p in cc.triggered][0]
+    if "create_simple_pipeline_button" in button_trigger:
         gitlab_api.run_pipeline(store_simple_template)
         return not popup
     return popup
@@ -584,12 +614,12 @@ def advanced_request():
             ),
             dbc.AccordionItem([
                 line_breaks(times=1),
-                input_with_dropdown(comp_id="simple_input_bar", width=60),
-                line_breaks(times=1),
-                paragraph_comp(text="OR", middle=True),
-                upload_comp(comp_id="simple_drop_down_upload"),
-                line_breaks(times=3),
-                hsmfs_drive_comp(hsmfs_path),
+                input_with_dropdown(comp_id="input_group", width=60),
+                # line_breaks(times=1),
+                # paragraph_comp(text="OR", middle=True),
+                # upload_comp(comp_id="simple_drop_down_upload"),
+                line_breaks(times=2),
+                hsm_drive_comp(hsm_path),
                 line_breaks(times=2),
             ],
                 title="Data to Process",
@@ -599,7 +629,7 @@ def advanced_request():
         ),
 
         line_breaks(times=4),
-        selected_paths_comp(comp_id="simple_upload_show"),
+        display_paths_comp(comp_id="simple_upload_show"),
         button_comp(label="Create pipeline",
                     comp_id="create_advanced_pipeline_button"),
 
