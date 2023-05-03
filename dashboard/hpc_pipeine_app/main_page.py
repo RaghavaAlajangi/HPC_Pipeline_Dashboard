@@ -32,6 +32,11 @@ def main_tab_layout():
                        "dataset processing pipelines on MPCDF gpu "
                        "clusters (HPC)",
                        indent=2),
+        paragraph_comp("⦿ NOTE:", indent=2),
+        paragraph_comp("- Please be aware that running a pipeline is "
+                       "computationally expensive so please do not trigger or "
+                       "create unnecessary pipelines!",
+                       indent=4),
         line_breaks(times=1),
         dropdown_menu_comp(name="New Request",
                            options=[dropdown_menu1, dropdown_menu2],
