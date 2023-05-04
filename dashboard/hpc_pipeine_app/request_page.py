@@ -6,7 +6,8 @@ import dash
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash import callback, Input, Output, State, dcc, html, ALL, MATCH
-from ..gitlab_api import gitlab_api
+
+from ..gitlab_api import get_gitlab_obj
 from .utils import update_simple_template
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           text_input_comp, groupby_rows, num_searchbar_comp,
@@ -16,7 +17,7 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
 
 # HSMFS drive path
 hsm_path = Path(__file__).parents[3] / "HSMFS"
-
+gitlab_obj = get_gitlab_obj()
 
 # hsm_path = Path(r"C:\Users\ralajan\Desktop\Raghava_Desktop\copy")
 
@@ -95,6 +96,14 @@ def dir_checkbox_comp(pathlib_path, margin=5):
 
 
 def hsm_drive_comp(hsm_path):
+    """
+    The hsm_drive_comp function is a Dash component that displays the
+    contents of the HSMFS shared drive. It takes in one argument, hsm_path,
+    which is a string representing the path to an HSMFS directory.
+    The function returns a Div containing:
+    - A dcc.Store object, which stores all selected paths for later use; and
+    - A Card containing, subdirectories and rtdc files
+    """
     dir_contents = get_dir_contents(hsm_path)
     div_children = [
         dir_checkbox_comp(item)
@@ -102,7 +111,7 @@ def hsm_drive_comp(hsm_path):
         item in dir_contents
     ]
     return html.Div([
-        dcc.Store(id="store_final_paths", data=[]),
+        # dcc.Store(id="store_final_paths", data=[]),
         dcc.Store(id="store_input_paths", data=[]),
         paragraph_comp(text="HSMFS shared drive:", middle=True),
         dbc.Card(
@@ -242,7 +251,7 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
     rtdc_files = [f for sub in file_checkboxes for f in sub] + stored_input
     pipeline_template = {}
     if simple_title is not None and len(rtdc_files) != 0:
-        simple_template = gitlab_api.get_simple_template()
+        simple_template = gitlab_obj.get_simple_template()
         pipeline_template["title"] = simple_title
         description = update_simple_template(params,
                                              rtdc_files,
@@ -374,7 +383,7 @@ def toggle_create_pipeline_button(title, file_checkboxes, stored_input):
 def simple_request_notification(click, store_simple_template, popup):
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
-        gitlab_api.run_pipeline(store_simple_template)
+        gitlab_obj.run_pipeline(store_simple_template)
         return not popup
     return popup
 

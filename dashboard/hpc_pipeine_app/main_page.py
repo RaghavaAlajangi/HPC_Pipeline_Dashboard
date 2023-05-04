@@ -6,11 +6,12 @@ from ..components import (line_breaks, paragraph_comp, group_accordion,
                           dropdown_menu_comp, groupby_columns, header_comp,
                           button_comp, chat_box, loading_comp, web_link,
                           progressbar_comp, divider_line_comp)
-from ..gitlab_api import gitlab_api
+from ..gitlab_api import get_gitlab_obj
 
+gitlab_obj = get_gitlab_obj()
 # Get the issue meta from gitlab API to store in dash cache memory
-opened_issues = gitlab_api.get_issues_meta(state="opened")
-closed_issues = gitlab_api.get_issues_meta(state="closed")
+opened_issues = gitlab_obj.get_issues_meta(state="opened")
+closed_issues = gitlab_obj.get_issues_meta(state="closed")
 
 
 def main_tab_layout():
@@ -139,7 +140,7 @@ def get_issue_accord(active_tab, data):
 
 
 def switch_tab_content(active_tab, dash_cache):
-    new_issue_meta = gitlab_api.get_issues_meta(state=active_tab)
+    new_issue_meta = gitlab_obj.get_issues_meta(state=active_tab)
 
     if len(new_issue_meta) == 0:
         issues = paragraph_comp(text="⦿ No opened requests!", indent=2)
@@ -175,7 +176,7 @@ def show_pipeline_comments(accord_item, match_id):
     ]
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
-        comments = gitlab_api.get_comments(issue_iid)
+        comments = get_gitlab_obj().get_comments(issue_iid)
 
         match_len = len(set(progress_comments).intersection(comments))
         progress = (match_len / len(progress_comments)) * 100
@@ -200,7 +201,7 @@ def show_pipeline_comments(accord_item, match_id):
 def cancel_pipeline(accord_item, click, enable_click):
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
-        issue_obj = gitlab_api.get_issue_obj(issue_iid)
+        issue_obj = gitlab_obj.get_issue_obj(issue_iid)
         if click is not None and click > 0:
             issue_obj.notes.create({"body": "Cancel"})
             return True

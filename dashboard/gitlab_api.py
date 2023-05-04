@@ -77,5 +77,6 @@ class GitLabAPI:
         return new_pipeline.notes.create({"body": "GO"})
 
 
-# Instantiate GitLabAPI class
-gitlab_api = GitLabAPI(repo_url, repo_token, project_num)
+def get_gitlab_obj():
+    """Creates and returns a GitLabAPI object"""
+    return GitLabAPI(repo_url, repo_token, project_num)
