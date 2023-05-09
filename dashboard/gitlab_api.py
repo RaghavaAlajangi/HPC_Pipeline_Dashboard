@@ -1,15 +1,19 @@
 import functools
-
+import os
 import gitlab
-import pathlib
+# import pathlib
 
-secrets_path = pathlib.Path(__file__).parents[1] / "SECRETS.txt"
+# secrets_path = pathlib.Path(__file__).parents[1] / "SECRETS.txt"
+#
+# with open(secrets_path) as f:
+#     lines = f.readlines()
+#     repo_url = str(lines[0].strip().split("=")[1])
+#     repo_token = str(lines[1].strip().split("=")[1])
+#     project_num = str(lines[2].strip().split("=")[1])
 
-with open(secrets_path) as f:
-    lines = f.readlines()
-    repo_url = str(lines[0].strip().split("=")[1])
-    repo_token = str(lines[1].strip().split("=")[1])
-    project_num = str(lines[2].strip().split("=")[1])
+repo_url = os.getenv("REPO_URL")
+repo_token = os.getenv("REPO_TOKEN")
+project_num = os.getenv("PROJECT_NUM")
 
 
 class GitLabAPI:

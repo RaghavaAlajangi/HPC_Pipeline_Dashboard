@@ -11,8 +11,10 @@ COPY dashboard /app/dashboard
 # Install requirements
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
-# Set the environment variable (hpc_pipeline_requests repo access token)
-ENV ACCESS_TOKEN_FILE /app/SECRETS.txt
+# Set the environment variables (hpc_pipeline_requests repo access token)
+ENV REPO_URL = None
+ENV REPO_TOKEN = None
+ENV PROJECT_NUM = None
 
 # Once a Docker image is built, its contents are fixed and cannot be
 # changed. If we need to update the contents of a directory in a running
