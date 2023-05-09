@@ -3,6 +3,8 @@ from dash import dcc, html, callback, Input, Output, State
 import dash_bootstrap_components as dbc
 import numpy as np
 
+from ..components import paragraph_comp, line_breaks
+
 
 def formula(flwrate, chsize, n, k):
     """Formula to calculate the viscosity of a fluid based on its flow rate,
@@ -42,9 +44,9 @@ def compute_viscosity(float_feats):
 
 def viscal_app():
     return dbc.Card([
-        html.Br(), html.Br(), html.Br(),
+
         html.H4("RT-DC Buffer Viscosity Calculator"),
-        html.Br(), html.Br(),
+        line_breaks(2),
         html.H6("Medium"),
         dcc.Dropdown(id="medium",
                      searchable=True,
@@ -61,7 +63,7 @@ def viscal_app():
                             "height": "35px",
                             "color": "blue",
                             }),
-        html.Br(),
+        line_breaks(1),
         html.H6("Temperature [°C]"),
         dbc.Input(id="temperature",
                   persistence=False,
@@ -70,7 +72,7 @@ def viscal_app():
                          "height": "39px",
                          },
                   type="text"),
-        html.Br(),
+        line_breaks(1),
         html.H6("Channel size [μm]"),
         dbc.Input(id="channel_size",
                   type="text",
@@ -79,7 +81,7 @@ def viscal_app():
                   style={"width": "250px",
                          "height": "39px"
                          }),
-        html.Br(),
+        line_breaks(1),
         html.H6("Flowrate [μl/s]"),
         dbc.Input(id="flow_rate",
                   type="text",
@@ -88,10 +90,10 @@ def viscal_app():
                   style={"width": "250px",
                          "height": "39px"
                          }),
-        html.Br(),
+        line_breaks(1),
         dbc.Button("Calculate", id="submit_button", color="primary",
                    className="my-button-class", disabled=True),
-        html.Br(),
+        line_breaks(1),
         html.H5("Computed viscosity [mPa.s]"),
         dbc.Card(
             id="display_viscosity",
@@ -100,8 +102,22 @@ def viscal_app():
             style={"width": "18rem", "height": "6rem"},
         ),
         dcc.Store(id="store_viscosity"),
+        line_breaks(4),
+        dbc.Alert([
+            html.I(className="bi bi-exclamation-triangle-fill me-2"),
+            "Note:",
+            paragraph_comp(
+                "The viscosity calculator was designed for the "
+                "temperatures between 22 °C and 37 °C. For the temperatures "
+                "outside of this range, the viscosity curve is extrapolated.",
+                indent=2
+            ),
+        ],
+            style={"color": "black", "width": "fit-content"},
+            color="warning",
+        ),
     ],
-        style={"height": "50rem",
+        style={"height": "80rem",
                "align-items": "center",
                "color": "white",
                "background-color": "#424447",

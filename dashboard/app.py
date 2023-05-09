@@ -35,7 +35,7 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     # routes_pathname_prefix=PATHNAME_PREFIX,
     # requests_pathname_prefix=PATHNAME_PREFIX,
-    external_stylesheets=[dbc.themes.DARKLY, dbc_css],
+    external_stylesheets=[dbc.themes.DARKLY, dbc_css, dbc.icons.BOOTSTRAP],
     # these meta_tags ensure content is scaled correctly on different devices
     # see: https://www.w3schools.com/css/css_rwd_viewport.asp for more
     meta_tags=[

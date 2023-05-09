@@ -33,18 +33,28 @@ def main_tab_layout():
                        "dataset processing pipelines on MPCDF gpu "
                        "clusters (HPC)",
                        indent=2),
-        paragraph_comp("⦿ NOTE:", indent=2),
-        paragraph_comp("- Please be aware that running a pipeline is "
-                       "computationally expensive so please do not trigger or "
-                       "create unnecessary pipelines!",
-                       indent=4),
+        line_breaks(times=2),
+        # Alert box to show warning message
+        dbc.Alert([
+            html.I(className="bi bi-exclamation-triangle-fill me-2"),
+            "Note:",
+            paragraph_comp(
+                "Please be aware that running a pipeline is computationally "
+                "expensive so please do not trigger or create unnecessary "
+                "pipelines!", indent=2
+            ),
+        ],
+            style={"color": "black",
+                   "width": "fit-content",
+                   "marginLeft": "2rem"},
+            color="warning",
+        ),
         line_breaks(times=1),
         dropdown_menu_comp(name="New Request",
                            options=[dropdown_menu1, dropdown_menu2],
                            indent=40),
     ],
-        className="mt-3",
-        style={"height": "50rem", "background-color": "#424447"}
+        style={"height": "80rem", "background-color": "#424447"}
     )
 
 
@@ -54,13 +64,12 @@ def open_close_tab_layout(pipelines):
         html.Div(id="test", children=[]),
         html.Div(
             pipelines,
-            style={"max-height": "50rem", "overflow-y": "scroll",
+            style={"max-height": "70rem", "overflow-y": "scroll",
                    "overflow-x": "hidden"},
         ),
         line_breaks(times=2),
     ],
-        className="mt-3",
-        style={"height": "50rem", "background-color": "#424447"}
+        style={"height": "80rem", "background-color": "#424447"}
     )
 
 
