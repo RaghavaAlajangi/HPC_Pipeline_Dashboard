@@ -53,7 +53,6 @@ def create_hsmfs_grid():
                 "autoGroupColumnDef": {
                     "headerName": "HSMFS Drive",
                     "minWidth": 150,
-                    # "cellRenderer": "agGroupCellRenderer",
                     "cellRendererParams": {
                         "suppressCount": True,
                         "checkbox": True,
@@ -71,6 +70,7 @@ def create_hsmfs_grid():
             },
             rowData=get_grid_data(),
             enableEnterpriseModules=True,
+            style={"height": 600}
         )
     ])
 
@@ -82,8 +82,8 @@ def display_paths_comp(comp_id):
             html.Div(
                 dbc.Button([
                     "Selected files:",
-                    dbc.Badge(id="num_files", color="danger", text_color="dark",
-                              className="ms-1"),
+                    dbc.Badge(id="num_files", color="danger",
+                              text_color="dark", className="ms-1"),
                 ],
                     color="info",
                 ),
@@ -156,7 +156,7 @@ def store_input_group_paths(_, drop_input, text_input,
 
 
 @callback(
-    Output("simple_upload_show", "children"),
+    Output("upload_show", "children"),
     Output("num_files", "children"),
     Input("hsmfs_grid", "selectedRows"),
     Input("store_input_paths", "data"),
@@ -213,7 +213,9 @@ def simple_request():
             dbc.AccordionItem([
                 input_with_dropdown(
                     comp_id="simple_title",
-                    drop_options=gitlab_obj.get_project_members(),
+                    # drop_options=gitlab_obj.get_project_members(),
+                    drop_options=["eoghan", "max", "nadia",
+                                  "paul", "raghava"],
                     dropdown_holder="User",
                     input_holder="Type title...",
                     with_button=False, width=80
@@ -267,7 +269,7 @@ def simple_request():
             middle=True
         ),
         line_breaks(times=4),
-        display_paths_comp(comp_id="simple_upload_show"),
+        display_paths_comp(comp_id="upload_show"),
         line_breaks(times=4),
         button_comp(label="Create pipeline",
                     disabled=True,
@@ -321,7 +323,7 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
           Input("simple_title_text", "value"),
           Input("hsmfs_grid", "selectedRows"),
           Input("store_input_paths", "data"))
-def toggle_create_pipeline_button(title, selected_rows, stored_input):
+def toggle_simple_create_pipeline_button(title, selected_rows, stored_input):
     rtdc_files = [] + stored_input
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]
@@ -340,7 +342,7 @@ def toggle_create_pipeline_button(title, selected_rows, stored_input):
           Input("create_simple_pipeline_button", "n_clicks"),
           Input("store_simple_template", "data"),
           State("simple_popup", "is_open"))
-def simple_request_notification(_, store_simple_template, popup):
+def simple_request_submission_popup(_, store_simple_template, popup):
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(store_simple_template)
@@ -460,11 +462,9 @@ def advanced_request():
         line_breaks(times=2),
         group_accordion([
             dbc.AccordionItem([
-                # text_input_comp(comp_id="advanced_title",
-                #                 placeholder="Type title...",
-                #                 width=50)
-                input_with_dropdown(comp_id="simple_title",
-                                    drop_options=["ralajan", "paul"],
+                input_with_dropdown(comp_id="advanced_title",
+                                    drop_options=["eoghan", "max", "nadia",
+                                                  "paul", "raghava"],
                                     dropdown_holder="User",
                                     input_holder="Type title...",
                                     with_button=False, width=80)
@@ -595,13 +595,10 @@ def advanced_request():
                                                  "or Circle or Dataset etc...",
                                     width=80),
                 line_breaks(times=2),
-                # paragraph_comp(text="OR", middle=True),
-                # upload_comp(comp_id="simple_drop_down_upload"),
                 text_input_comp(comp_id="grid_filter",
                                 placeholder="filter...",
                                 middle=False,
                                 width=20),
-                # line_breaks(times=1),
                 create_hsmfs_grid(),
                 line_breaks(times=2),
             ],
@@ -610,10 +607,10 @@ def advanced_request():
         ],
             middle=True
         ),
-
         line_breaks(times=4),
-        display_paths_comp(comp_id="simple_upload_show"),
+        display_paths_comp(comp_id="upload_show"),
         button_comp(label="Create pipeline",
+                    disabled=True,
                     comp_id="create_advanced_pipeline_button"),
 
         dcc.Store(id="store_advanced_template")
@@ -649,7 +646,27 @@ def toggle_advanced_legacy_params(segm_legacy_opt):
           Input("create_advanced_pipeline_button", "n_clicks"),
           State("advanced_popup", "is_open")
           )
-def advanced_request_notification(click, popup):
+def advanced_request_submission_popup(click, popup):
     if click:
         return not popup
     return popup
+
+
+# @callback(Output("create_advanced_pipeline_button", "disabled"),
+#           Input("advanced_title_text", "value"),
+#           Input("hsmfs_grid", "selectedRows"),
+#           Input("store_input_paths", "data"))
+# def toggle_advanced_create_pipeline_button(title, selected_rows, stored_input):
+#     print(title)
+#     rtdc_files = [] + stored_input
+#     if selected_rows:
+#         selected_paths = [s["filepath"] for s in selected_rows]
+#         for path_parts in selected_paths:
+#             new_path = "/".join(path_parts)
+#             rtdc_files.append(new_path)
+#     if title is None or title == "":
+#         return True
+#     elif len(rtdc_files) == 0:
+#         return True
+#     else:
+#         return False
