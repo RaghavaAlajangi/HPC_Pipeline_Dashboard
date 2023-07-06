@@ -233,29 +233,27 @@ def line_breaks(times=1):
     return html.Div(children=br_list)
 
 
-def input_with_dropdown(comp_id, width=100):
+def input_with_dropdown(comp_id, drop_options, dropdown_holder="Source",
+                        input_holder="text", with_button=True, width=100):
     return html.Div(
         dbc.InputGroup([
             dbc.Select(
-                placeholder="Source",
+                placeholder=dropdown_holder,
                 id=f"{comp_id}_drop",
                 options=[
-                    {"label": "DVC", "value": "DVC"},
-                    {"label": "DCOR", "value": "DCOR"},
-                    {"label": "DCOR-Colab", "value": "DCOR-Colab",
-                     "disabled": True},
+                    {"label": i, "value": i} for i in drop_options
                 ],
                 style={"width": "15%"}
             ),
             dbc.Input(
                 type="text", id=f"{comp_id}_text",
-                placeholder="Enter file path or patient ID",
+                placeholder=input_holder,
                 style={"width": "75%"}
             ),
             dbc.Button(
                 "Add", id=f"{comp_id}_button", color="info",
                 style={"width": "10%"}
-            ),
+            ) if with_button else "",
         ],
             style={"width": f"{width}%"}
         ),
@@ -291,14 +289,14 @@ def num_searchbar_comp(comp_id, min, max, step, default, width=6):
     )
 
 
-def paragraph_comp(text, indent=0, middle=False):
+def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
     if middle:
         style = {"text-align": "center"}
     elif not middle and indent > 0:
         style = {"marginLeft": f"{indent}rem"}
     else:
         style = {}
-    return html.P(text, style=style)
+    return html.P(id=comp_id, children=text, style=style)
 
 
 def progressbar_comp(comp_id, width=80):
@@ -323,18 +321,27 @@ def popup_comp(comp_id):
     """
     return dbc.Modal([
         dbc.ModalHeader(
-            dbc.ModalTitle("Pipeline Status"), close_button=True
+            dbc.ModalTitle("Pipeline Status"), close_button=False
         ),
-        dbc.ModalBody("Pipeline request has been submitted!")
+        dbc.ModalBody("Pipeline request has been submitted!"),
+        dbc.ModalFooter(
+            dbc.Button("Close",
+                       id=f"{comp_id}_close",
+                       className="ms-auto",
+                       n_clicks=0,
+                       )
+        ),
     ],
         id=comp_id,
         centered=True,
         is_open=False,
+        keyboard=True,
+        backdrop="static",
         style={"color": "white"}
     )
 
 
-def text_input_comp(comp_id, placeholder, width=50):
+def text_input_comp(comp_id, placeholder, width=50, middle=True):
     return html.Div(
         dbc.Input(
             id=comp_id,
@@ -344,7 +351,7 @@ def text_input_comp(comp_id, placeholder, width=50):
             class_name="dbc_input",
             style={"width": f"{width}rem"}
         ),
-        className="row justify-content-center",
+        className="row justify-content-center" if middle else "",
     )
 
 
