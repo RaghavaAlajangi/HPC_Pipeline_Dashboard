@@ -1,23 +1,9 @@
 import dash
 import dash_bootstrap_components as dbc
-import dash_bootstrap_templates as dbt
 from dash import Input, Output, dcc, html
 
-from .components import (groupby_columns, line_breaks, paragraph_comp,
-                         dropdown_menu_comp)
+from .components import (groupby_columns, line_breaks, paragraph_comp)
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
-from .viscosity_calculator_app import viscal_app
-
-url_theme1 = dbc.themes.SKETCHY
-url_theme2 = dbc.themes.DARKLY
-
-url_theme = url_theme2
-
-APP_CREDENTIALS = {
-    "username": "gucklab",
-    "password": "gucklab@123456",
-    "status": "logout"
-}
 
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap"
            "-templates@V1.0.1/dbc.min.css")
@@ -28,7 +14,7 @@ gitlab_logo_url = "https://about.gitlab.com/images/press" \
                   "/logo/png/gitlab-icon-rgb.png"
 
 # Initialise the app
-PATHNAME_PREFIX = '/GuckLab-tools/'
+PATHNAME_PREFIX = '/HPC Pipelines/'
 
 app = dash.Dash(
     assets_folder="assets",
@@ -59,36 +45,31 @@ def wrong_page(pathname):
 def sidebar_menu():
     return html.Div([
         groupby_columns([
-            html.H2("Guck Lab"),
-            line_breaks(times=1),
-            dbt.ThemeSwitchAIO(aio_id="theme",
-                               themes=[url_theme, url_theme]),
+            html.H3("HPC Pipelines", style={"font-weight": "bold"}),
             line_breaks(times=1)
         ]),
-
-        paragraph_comp(text="App Description"),
-
-        groupby_columns([
-            line_breaks(times=1),
-            dropdown_menu_comp(name="Sign in / Sign up",
-                               options=[
-                                   dbc.NavLink("Sign in", href="/signin",
-                                               id="signin_active"),
-                                   dbc.NavLink("Sign up", href="/signup",
-                                               id="signup_active")
-                               ]),
-            line_breaks(times=2),
-            html.Div(id="logout_link"),
-
-        ]),
+        dbc.Alert([
+            # Warning icon
+            html.I(className="bi bi-exclamation-triangle-fill me-2"),
+            "Note:",
+            paragraph_comp(
+                text="Please be aware that running a pipeline is "
+                     "computationally expensive so please do not trigger or "
+                     "create unnecessary pipelines!",
+                comp_id="dummy2", indent=1
+            ),
+        ],
+            style={"color": "black", "width": "fit-content"},
+            color="warning",
+        ),
         groupby_columns([
             line_breaks(times=1),
             dbc.Nav([
                 dbc.NavLink("Home", href="/", id="home_active"),
-                dbc.NavLink("HPC Pipelines", href="/hpc_pipelines",
-                            id="hpc_pipeline_active"),
-                dbc.NavLink("Viscosity Calculator", href="/viscal",
-                            id="viscal_active"),
+                dbc.NavLink("Simple request", href="/simple_request",
+                            id="simple_request_active"),
+                dbc.NavLink("Advanced request", href="/advanced_request",
+                            id="advanced_request_active"),
             ],
                 vertical=True,
                 pills=True,
@@ -124,41 +105,22 @@ def main_content_block():
 app.layout = html.Div([
     dcc.Location(id="url"),
     sidebar_menu(),
-    dcc.Store(id="secrets", data=APP_CREDENTIALS),
     main_content_block(),
 ])
 
 
 @app.callback([Output("page-content", "children"),
                Output("home_active", "active"),
-               Output("signin_active", "active"),
-               Output("signup_active", "active"),
-               Output("hpc_pipeline_active", "active"),
-               Output("viscal_active", "active")],
+               Output("simple_request_active", "active"),
+               Output("advanced_request_active", "active")],
               Input("url", "pathname"),
               )
 def render_page_content(pathname):
-    # template = template_theme1 if toggle else template_theme2
     if pathname == "/":
-        return [html.P("Oh cool, this is page 2!"),
-                True, False, False, False, False]
-    elif pathname == "/signin":
-        return [html.P("This is signin page"),
-                False, True, False, False, False]
-    elif pathname == "/signup":
-        return [html.P("This is signup page"),
-                False, False, True, False, False]
-    elif pathname == "/hpc_pipelines":
-        return [main_layout(),
-                False, False, False, True, False]
-    elif pathname == "/viscal":
-        return [viscal_app(),
-                False, False, False, False, True]
-    elif pathname == "/hpc_pipelines/simple":
-        return [simple_request(),
-                False, False, False, True, False]
-    elif pathname == "/hpc_pipelines/advanced":
-        return [advanced_request(),
-                False, False, False, True, False]
+        return [main_layout(), True, False, False]
+    elif pathname == "/simple_request":
+        return [simple_request(), False, True, False]
+    elif pathname == "/advanced_request":
+        return [advanced_request(), False, False, True]
     # Return a 404 message, if user tries to reach undefined page
     return wrong_page(pathname)

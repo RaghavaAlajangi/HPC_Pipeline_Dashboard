@@ -3,9 +3,9 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc, callback, Input, Output, State, MATCH
 
 from ..components import (line_breaks, paragraph_comp, group_accordion,
-                          dropdown_menu_comp, groupby_columns, header_comp,
-                          button_comp, chat_box, loading_comp, web_link,
-                          progressbar_comp, divider_line_comp)
+                          groupby_columns, header_comp, button_comp, chat_box,
+                          loading_comp, web_link, progressbar_comp,
+                          divider_line_comp)
 from ..gitlab_api import get_gitlab_obj
 
 gitlab_obj = get_gitlab_obj()
@@ -15,44 +15,14 @@ closed_issues = gitlab_obj.get_issues_meta(state="closed")
 
 
 def main_tab_layout():
-    dropdown_menu1 = dbc.DropdownMenuItem([
-        dbc.NavLink("Simple",
-                    href="/hpc_pipelines/simple",
-                    id="open_simple_request_page",
-                    active=True)
-    ])
-    dropdown_menu2 = dbc.DropdownMenuItem([
-        dbc.NavLink("Advanced",
-                    href="/hpc_pipelines/advanced",
-                    id="open_advance_request_page",
-                    active=True),
-    ])
     return dbc.Card([
         line_breaks(times=1),
-        paragraph_comp("⦿ This page is responsible for running RTDC "
-                       "dataset processing pipelines on MPCDF gpu "
-                       "clusters (HPC)",
-                       indent=2),
-        line_breaks(times=2),
-        # Alert box to show warning message
-        dbc.Alert([
-            html.I(className="bi bi-exclamation-triangle-fill me-2"),
-            "Note:",
-            paragraph_comp(
-                "Please be aware that running a pipeline is computationally "
-                "expensive so please do not trigger or create unnecessary "
-                "pipelines!", indent=2
-            ),
-        ],
-            style={"color": "black",
-                   "width": "fit-content",
-                   "marginLeft": "2rem"},
-            color="warning",
+        paragraph_comp(
+            text="⦿ This page is responsible for running RTDC "
+                 "dataset processing pipelines on MPCDF gpu "
+                 "clusters (HPC)",
+            indent=2
         ),
-        line_breaks(times=1),
-        dropdown_menu_comp(name="New Request",
-                           options=[dropdown_menu1, dropdown_menu2],
-                           indent=40),
     ],
         style={"height": "80rem", "background-color": "#424447"}
     )
@@ -140,7 +110,7 @@ def get_issue_accord(active_tab, data):
             loading_comp(html.Div(id={"type": "accord_item_div",
                                       "index": c['iid']})),
         ],
-            title=c["name"],
+            title=f"#{c['iid']} {c['name']}",
             item_id=f"accord_item{c['iid']}"
         ) for c in data
     ],
@@ -212,7 +182,12 @@ def cancel_pipeline(accord_item, click, enable_click):
         issue_iid = int(accord_item.split("item")[1])
         issue_obj = gitlab_obj.get_issue_obj(issue_iid)
         if click is not None and click > 0:
+            # Write cancel comment
             issue_obj.notes.create({"body": "Cancel"})
+            # Update the issue status
+            issue_obj.state_event = 'close'
+            # Save the status
+            issue_obj.save()
             return True
         else:
             return False

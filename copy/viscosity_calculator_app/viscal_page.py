@@ -44,7 +44,7 @@ def compute_viscosity(float_feats):
 
 def viscal_app():
     return dbc.Card([
-
+        line_breaks(4),
         html.H4("RT-DC Buffer Viscosity Calculator"),
         line_breaks(2),
         html.H6("Medium"),
