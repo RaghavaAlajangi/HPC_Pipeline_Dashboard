@@ -14,13 +14,13 @@ gitlab_logo_url = "https://about.gitlab.com/images/press" \
                   "/logo/png/gitlab-icon-rgb.png"
 
 # Initialise the app
-PATHNAME_PREFIX = '/HPC Pipelines/'
+PATHNAME_PREFIX = "/hpc-pipelines/"
 
 app = dash.Dash(
     assets_folder="assets",
     suppress_callback_exceptions=True,
-    # routes_pathname_prefix=PATHNAME_PREFIX,
-    # requests_pathname_prefix=PATHNAME_PREFIX,
+    routes_pathname_prefix=PATHNAME_PREFIX,
+    requests_pathname_prefix=PATHNAME_PREFIX,
     external_stylesheets=[dbc.themes.DARKLY, dbc_css, dbc.icons.BOOTSTRAP],
     # these meta_tags ensure content is scaled correctly on different devices
     # see: https://www.w3schools.com/css/css_rwd_viewport.asp for more
