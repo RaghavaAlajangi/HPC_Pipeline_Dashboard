@@ -5,6 +5,7 @@ import dash_ag_grid as dag
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash import callback, Input, Output, State, dcc, html, ALL, ctx, Patch
+import pathlib
 
 from ..gitlab_api import get_gitlab_obj
 from .utils import update_simple_template
@@ -16,21 +17,18 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
 
 gitlab_obj = get_gitlab_obj()
 
-hsmfs_path = r'C:\Raghava_local\GITLAB\hpc_pipeline_dashboard\HSMFS_drive.csv'
+hsmfs_path = pathlib.Path(__file__).parents[2] / "HSMFS_drive.csv"
 
 
 def get_grid_data(hsm_path=hsmfs_path):
     grid_data = []
-    with open(hsm_path, mode='r') as file:
+    with open(hsm_path, mode="r", encoding="utf-8", errors="replace") as file:
         csvfile = csv.reader(file)
-        for n, line in enumerate(csvfile):
-            parts = line[0].split("\\")[3:]
-            modified_date = parts[-1]
-            parts.remove(modified_date)
-            parts[0] = "HSMFS:"
+        for line in csvfile:
+            parts = line[0].split("\\")
             entry = {
-                "filepath": parts,
-                "dateModified": modified_date
+                "filepath": ["HSMFS:"] + parts[4:-1],
+                "dateModified": parts[-1]
             }
             grid_data.append(entry)
     return grid_data
@@ -62,7 +60,7 @@ def create_hsmfs_grid():
                 "getDataPath": {"function": "getDataPath(params)"},
                 "treeData": True,
                 "animateRows": True,
-                "rowSelection": 'multiple',
+                "rowSelection": "multiple",
                 "groupSelectsChildren": True,
                 "suppressRowClickSelection": True,
                 # no blue highlight
@@ -164,10 +162,10 @@ def store_input_group_paths(_, drop_input, text_input,
 def display_selected_paths(selected_rows, stored_input):
     original_paths = [] + stored_input
     if selected_rows:
-        selected_paths = [s["filepath"] for s in selected_rows]
-        for path_parts in selected_paths:
-            new_path = "/".join(path_parts)
-            original_paths.append(new_path)
+        # Get the list of user selected hsmfs paths (each path is a list
+        # of strings) and join them with "/"
+        selected_paths = ["/".join(s["filepath"]) for s in selected_rows]
+        original_paths = original_paths + selected_paths
     return convert_paths_to_buttons(original_paths), len(original_paths)
 
 
@@ -191,8 +189,8 @@ def remove_paths_from_list(remove_buttons, selected_rows):
     if sum(remove_buttons) > 0 and selected_rows is not None:
         selects = Patch()
         for x in range(len(selected_rows) - 1, -1, -1):
-            if all(i in ctx.triggered_id.index.split('/') for i in
-                   selected_rows[x]['filepath']):
+            if all(i in ctx.triggered_id.index.split("/") for i in
+                   selected_rows[x]["filepath"]):
                 del selects[x]
         return selects
     return dash.no_update
@@ -650,7 +648,6 @@ def advanced_request_submission_popup(click, popup):
     if click:
         return not popup
     return popup
-
 
 # @callback(Output("create_advanced_pipeline_button", "disabled"),
 #           Input("advanced_title_text", "value"),
