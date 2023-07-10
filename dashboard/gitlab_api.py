@@ -26,7 +26,6 @@ class GitLabAPI:
         gitlab_obj.auth()
         self.project = gitlab_obj.projects.get(project_num)
 
-    @functools.lru_cache(maxsize=500, typed=True)
     def get_issues(self, state):
         """
         It takes a state as an argument and returns all issues in that state.
@@ -37,6 +36,7 @@ class GitLabAPI:
         issues = self.project.issues.list(state=state, get_all=True)
         return issues
 
+    @functools.lru_cache(maxsize=500, typed=True)
     def get_comments(self, issue_iid):
         """
         It takes an issue_iid as input and returns a list of comments
@@ -63,6 +63,11 @@ class GitLabAPI:
             }
             meta_data.append(required_meta)
         return meta_data
+
+    def get_project_members(self):
+        members = self.project.members.list(all=True, include_inherited=True)
+        mem_usernames = [m.name for m in members]
+        return mem_usernames
 
     def get_simple_template(self):
         simple_path = ".gitlab/issue_templates/pipeline_request_simple.md"
