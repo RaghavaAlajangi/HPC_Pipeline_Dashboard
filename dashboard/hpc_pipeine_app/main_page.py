@@ -1,4 +1,4 @@
-import dash
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash import html, dcc, callback, Input, Output, State, MATCH
 
@@ -107,8 +107,9 @@ def get_issue_accord(active_tab, data):
             # (dynamically changing) that are created via a callback
             # function. We can refer these id's in a different callback
             # (as output id's) to do actions like show/store
-            loading_comp(html.Div(id={"type": "accord_item_div",
-                                      "index": c['iid']})),
+            loading_comp(
+                html.Div(id={"type": "accord_item_div", "index": c['iid']})
+            ),
         ],
             title=f"#{c['iid']} {c['name']}",
             item_id=f"accord_item{c['iid']}"
@@ -131,10 +132,12 @@ def switch_tab_content(active_tab, dash_cache):
         return [open_close_tab_layout(issues), dash_cache]
 
 
-@callback([Output("tab_content", "children"),
-           Output("store_gitlab_issues", "data")],
-          Input("tabs", "active_tab"),
-          State("store_gitlab_issues", "data"))
+@callback(
+    [Output("tab_content", "children"),
+     Output("store_gitlab_issues", "data")],
+    Input("tabs", "active_tab"),
+    State("store_gitlab_issues", "data")
+)
 def switch_tabs(active_tab, stored_issue_meta):
     if active_tab == "main_tab":
         return [main_tab_layout(), stored_issue_meta]
@@ -142,11 +145,13 @@ def switch_tabs(active_tab, stored_issue_meta):
         return switch_tab_content(active_tab, stored_issue_meta)
 
 
-@callback(Output({"type": "accord_item_div", "index": MATCH}, "children"),
-          Output({"type": "accord_item_bar", "index": MATCH}, "value"),
-          Output({"type": "accord_item_bar", "index": MATCH}, "label"),
-          Input("issue_accord", "active_item"),
-          State({"type": "accord_item_div", "index": MATCH}, "id"))
+@callback(
+    Output({"type": "accord_item_div", "index": MATCH}, "children"),
+    Output({"type": "accord_item_bar", "index": MATCH}, "value"),
+    Output({"type": "accord_item_bar", "index": MATCH}, "label"),
+    Input("issue_accord", "active_item"),
+    State({"type": "accord_item_div", "index": MATCH}, "id")
+)
 def show_pipeline_comments(accord_item, match_id):
     progress_comments = [
         "STATE: setup",
@@ -168,15 +173,17 @@ def show_pipeline_comments(accord_item, match_id):
         if issue_iid == match_id["index"]:
             return comment_cards, progress, f"{progress:.1f} %"
         else:
-            return dash.no_update
+            raise PreventUpdate
     else:
-        return dash.no_update
+        raise PreventUpdate
 
 
-@callback(Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
-          Input("issue_accord", "active_item"),
-          Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
-          State({"type": "accord_item_stop", "index": MATCH}, "disabled"))
+@callback(
+    Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
+    Input("issue_accord", "active_item"),
+    Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
+    State({"type": "accord_item_stop", "index": MATCH}, "disabled")
+)
 def cancel_pipeline(accord_item, click, enable_click):
     if accord_item is not None:
         issue_iid = int(accord_item.split("item")[1])
@@ -191,5 +198,4 @@ def cancel_pipeline(accord_item, click, enable_click):
             return True
         else:
             return False
-
-    return dash.no_update
+    raise PreventUpdate
