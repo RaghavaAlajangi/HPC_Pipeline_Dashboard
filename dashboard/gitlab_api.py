@@ -1,15 +1,7 @@
-import functools
 import os
-import gitlab
-# import pathlib
 
-# secrets_path = pathlib.Path(__file__).parents[1] / "SECRETS.txt"
-#
-# with open(secrets_path) as f:
-#     lines = f.readlines()
-#     repo_url = str(lines[0].strip().split("=")[1])
-#     repo_token = str(lines[1].strip().split("=")[1])
-#     project_num = str(lines[2].strip().split("=")[1])
+import gitlab
+
 
 repo_url = os.getenv("REPO_URL")
 repo_token = os.getenv("REPO_TOKEN")
@@ -36,7 +28,6 @@ class GitLabAPI:
         issues = self.project.issues.list(state=state, get_all=False)
         return issues
 
-    @functools.lru_cache(maxsize=500, typed=True)
     def get_comments(self, issue_iid):
         """
         It takes an issue_iid as input and returns a list of comments
