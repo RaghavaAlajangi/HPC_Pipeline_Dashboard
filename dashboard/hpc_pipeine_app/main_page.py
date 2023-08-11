@@ -22,6 +22,11 @@ def fetch_issues(state):
     return gitlab_obj.get_issues_meta(state=state)
 
 
+opened_issues = fetch_issues(state="opened")
+closed_issues = fetch_issues(state="closed")
+
+
+
 def main_tab_layout():
     text = "⦿ This page is responsible for running RTDC dataset " \
            "processing pipelines on MPCDF gpu clusters (HPC)"
@@ -56,15 +61,15 @@ def tabs_layout():
             dbc.CardHeader(
                 dbc.Tabs(
                     [
-                        dbc.Tab(label="Main", tab_id="main_tab",
-                                active_label_style={"color": "#017b70"}),
+                        # dbc.Tab(label="Main", tab_id="main_tab",
+                        #         active_label_style={"color": "#017b70"}),
                         dbc.Tab(label="Open requests", tab_id="opened",
                                 active_label_style={"color": "#017b70"}),
                         dbc.Tab(label="Closed requests", tab_id="closed",
                                 active_label_style={"color": "#017b70"}),
                     ],
                     id="tabs",
-                    active_tab="main_tab"
+                    active_tab="opened"
                 )
             ),
             html.Div(id="tab_content")
@@ -78,8 +83,8 @@ def main_layout():
             tabs_layout(),
             dcc.Store(
                 id="store_gitlab_issues",
-                data={"opened": fetch_issues("opened"),
-                      "closed": fetch_issues("closed")}
+                data={"opened": opened_issues,
+                      "closed": closed_issues}
             )
         ]
     )
@@ -149,8 +154,8 @@ def switch_tab_content(active_tab, dash_cache):
     State("store_gitlab_issues", "data")
 )
 def switch_tabs(active_tab, stored_issue_meta):
-    if active_tab == "main_tab":
-        return [main_tab_layout(), stored_issue_meta]
+    # if active_tab == "main_tab":
+    #     return [main_tab_layout(), stored_issue_meta]
     return switch_tab_content(active_tab, stored_issue_meta)
 
 
