@@ -26,65 +26,72 @@ def determine_chunk_to_load(filter_value):
     if CHUNK_IDX_PATH.exists():
         with open(str(CHUNK_IDX_PATH), "rb") as f:
             index_file = pickle.load(f)
-        # If the filter value is in the index, return the first chunk
-        if filter_value in index_file:
-            return list(index_file[filter_value])[0]
-        else:
-            return 0  # Default to the first chunk if keyword is not found
+
+        # Convert the filter value to lowercase for case-insensitive matching
+        filter_value_lower = filter_value.lower()
+
+        # Search for the filter value in the index and retrieve the first match
+        for key in index_file.keys():
+            if filter_value_lower in key.lower():
+                return list(index_file[key])[0]
+
+        # If not found, return the default chunk
+        return 0
     else:
         return None
 
 
 def create_hsm_grid():
-    return html.Div([
-        dcc.Store(id="store_input_paths", data=[]),
-        text_input_comp(comp_id="grid_filter",
-                        placeholder="Filter with name...",
-                        width=30, middle=False),
-        dag.AgGrid(
-            id="hsm_grid",
-            className="ag-theme-alpine-dark",
-            columnDefs=[
-                {"field": "dateModified"},
-            ],
-            defaultColDef={
-                "flex": 1,
-                "sortable": True,
-            },
-            dashGridOptions={
-                "autoGroupColumnDef": {
-                    "headerName": "HSMFS Drive",
-                    "minWidth": 150,
-                    "cellRendererParams": {
-                        "suppressCount": True,
-                        "checkbox": True,
-                    },
+    return html.Div(
+        [
+            dcc.Store(id="store_input_paths", data=[]),
+            text_input_comp(comp_id="grid_filter",
+                            placeholder="Filter with name...",
+                            width=30, middle=False),
+            dag.AgGrid(
+                id="hsm_grid",
+                className="ag-theme-alpine-dark",
+                columnDefs=[
+                    {"field": "dateModified"},
+                ],
+                defaultColDef={
+                    "flex": 1,
+                    "sortable": True,
                 },
-                "groupDefaultExpanded": 6,
-                "getDataPath": {"function": "getDataPath(params)"},
-                "treeData": True,
-                "animateRows": True,
-                "rowSelection": "multiple",
-                "groupSelectsChildren": True,
-                "suppressRowClickSelection": True,
-                # no blue highlight
-                "suppressRowHoverHighlight": True,
-            },
-            enableEnterpriseModules=True,
-            style={"height": 600}
-        ),
-        dbc.Pagination(
-            id="grid_pagination",
-            min_value=1,
-            max_value=1,
-            active_page=1,
-            first_last=True,
-            previous_next=True,
-            fully_expanded=False,
-            style={"justify-content": "center"},
-            class_name="pagination-custom"
-        )
-    ])
+                dashGridOptions={
+                    "autoGroupColumnDef": {
+                        "headerName": "HSMFS Drive",
+                        "minWidth": 150,
+                        "cellRendererParams": {
+                            "suppressCount": True,
+                            "checkbox": True,
+                        },
+                    },
+                    "groupDefaultExpanded": 6,
+                    "getDataPath": {"function": "getDataPath(params)"},
+                    "treeData": True,
+                    "animateRows": True,
+                    "rowSelection": "multiple",
+                    "groupSelectsChildren": True,
+                    "suppressRowClickSelection": True,
+                    # no blue highlight
+                    "suppressRowHoverHighlight": True,
+                },
+                enableEnterpriseModules=True,
+                style={"height": 600}
+            ),
+            dbc.Pagination(
+                id="grid_pagination",
+                min_value=1,
+                max_value=1,
+                active_page=1,
+                first_last=True,
+                previous_next=True,
+                fully_expanded=False,
+                style={"justify-content": "center"},
+            )
+        ]
+    )
 
 
 def display_paths_comp(comp_id):
@@ -92,11 +99,12 @@ def display_paths_comp(comp_id):
         className="row justify-content-center",
         children=[
             html.Div(
-                dbc.Button([
-                    "Selected files:",
-                    dbc.Badge(id="num_files", color="danger",
-                              text_color="dark", className="ms-1"),
-                ],
+                dbc.Button(
+                    [
+                        "Selected files:",
+                        dbc.Badge(id="num_files", color="danger",
+                                  text_color="dark", className="ms-1"),
+                    ],
                     color="info",
                 ),
                 style={"marginLeft": "0px", "width": "80%"}
@@ -113,20 +121,23 @@ def display_paths_comp(comp_id):
 
 def convert_paths_to_buttons(paths):
     return [
-        dbc.Row([
-            html.Li([
-                dbc.Button(
-                    "X",
-                    n_clicks=0,
-                    key=[name],
-                    style={"width": "20px", "height": "20px",
-                           "padding": "0px", "margin-right": "5px"},
-                    class_name="btn btn-danger btn-sm",
-                    id={"type": "remove_file", "index": name}
+        dbc.Row(
+            [
+                html.Li(
+                    [
+                        dbc.Button(
+                            "X",
+                            n_clicks=0,
+                            key=[name],
+                            style={"width": "20px", "height": "20px",
+                                   "padding": "0px", "margin-right": "5px"},
+                            class_name="btn btn-danger btn-sm",
+                            id={"type": "remove_file", "index": name}
+                        ),
+                        html.Span(name)
+                    ]
                 ),
-                html.Span(name)
-            ]),
-        ],
+            ],
             style={"flexWrap": "nowrap"}
         ) for name in paths
     ]
@@ -146,8 +157,8 @@ def update_max_value(current_page):
 
 @callback(
     Output("hsm_grid", "rowData"),
-    [Input("grid_filter", "value"),
-     Input("grid_pagination", "active_page")],
+    Input("grid_filter", "value"),
+    Input("grid_pagination", "active_page"),
 )
 def update_grid_data(filter_value, selected_chunk_page):
     if filter_value:
@@ -155,12 +166,12 @@ def update_grid_data(filter_value, selected_chunk_page):
     else:
         chunk_id = selected_chunk_page
 
-    return load_data_chunk(chunk_id)
+    return load_data_chunk(chunk_id), chunk_id
 
 
 @callback(
     Output("grid_pagination", "active_page"),
-    [Input("grid_filter", "value")],
+    Input("grid_filter", "value"),
 )
 def update_pagination_page(filter_value):
     if filter_value:
