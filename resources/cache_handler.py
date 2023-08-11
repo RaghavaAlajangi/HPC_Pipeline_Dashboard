@@ -4,23 +4,26 @@ import pickle
 import os
 import time
 
+HSM_PATH = Path(__file__).parents[1] / "HSMFS"
+RESOURCE_PATH = Path(__file__).parents[1] / "resources"
+
 
 class HSMDataProcessor:
-    def __init__(self, drive_path, chunk_size, chunk_dir_path):
+    def __init__(self, drive_path, chunk_size, resource_path):
         self.drive_path = drive_path
         self.chunk_size = chunk_size
-        self.chunk_dir_path = Path(chunk_dir_path)
-        if not self.chunk_dir_path.is_dir():
+        self.resource_path = resource_path
+        self.chunk_dir_path = resource_path / "hsm_chunk_dir"
+        self.chunk_idx_file_path = resource_path / "hsm_chunk_index.pkl"
+        if not self.chunk_dir_path.exists():
             self.chunk_dir_path.mkdir(parents=True, exist_ok=True)
-        self.chunk_index_file_path = Path("hsm_chunk_index.pkl")
         self.data = []
         self.chunk_data = []
         self.chunk_index = {}
 
     def clear_chunk_directory(self):
-        self.chunk_index_file_path.unlink()
-        chunk_path = Path(self.chunk_dir_path)
-        for item in chunk_path.iterdir():
+        self.chunk_idx_file_path.unlink()
+        for item in self.chunk_dir_path.iterdir():
             if item.is_file():
                 item.unlink()
             elif item.is_dir():
@@ -34,7 +37,7 @@ class HSMDataProcessor:
                 self.chunk_index[keyword].add(chunk_id)
 
     def save_chunk_to_pickle(self, chunk_data, chunk_id):
-        chunk_path = Path(self.chunk_dir_path) / f"chunk_num_{chunk_id}.pkl"
+        chunk_path = self.chunk_dir_path / f"chunk_num_{chunk_id}.pkl"
         with open(chunk_path, "wb") as f:
             pickle.dump(chunk_data, f)
 
@@ -79,22 +82,14 @@ class HSMDataProcessor:
             self.update_chunk_index(chunk_data, chunk_counter)
 
         # Save the chunk index file
-        with open(str(self.chunk_index_file_path), "wb") as f:
+        with open(str(self.chunk_idx_file_path), "wb") as f:
             pickle.dump(self.chunk_index, f)
 
         disc_time = str(timedelta(seconds=time.time() - t1)).split('.')[0]
         print(f"Disc scanning time: {disc_time}")
 
 
-def main():
-    HSM_PATH = Path(__file__).parents[1] / "HSMFS"
-    HSM_PATH = "U:/"
-    CHUNK_DIR = "hsm_chunk_dir"
-    CHUNK_SIZE = 500
-
-    processor = HSMDataProcessor(HSM_PATH, CHUNK_SIZE, CHUNK_DIR)
-    processor.process_hsmdrive()
-
-
 if __name__ == "__main__":
-    main()
+    CHUNK_SIZE = 200
+    processor = HSMDataProcessor(HSM_PATH, CHUNK_SIZE, RESOURCE_PATH)
+    processor.process_hsmdrive()
