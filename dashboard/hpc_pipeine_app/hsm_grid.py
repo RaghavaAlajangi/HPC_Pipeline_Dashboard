@@ -166,7 +166,7 @@ def update_grid_data(filter_value, selected_chunk_page):
     else:
         chunk_id = selected_chunk_page
 
-    return load_data_chunk(chunk_id), chunk_id
+    return load_data_chunk(chunk_id)
 
 
 @callback(
