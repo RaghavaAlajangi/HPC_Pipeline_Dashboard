@@ -36,14 +36,15 @@ RUN mkdir -p /var/log/supervisor /var/run/crond && \
     # Give permissions to read, write, and delete files from resources dir
     chmod -R 777 /app/resources && \
     # Run a cron job at 23:47 everyday
-    echo "47 23 * * * /usr/local/bin/python3 /app/resources/cache_handler.py > /proc/1/fd/1 2>&1" >> /etc/cron.d/scanfs && \
+#    echo "47 23 * * * /usr/local/bin/python3 /app/resources/cache_handler.py > /proc/1/fd/1 2>&1" >> /etc/cron.d/scanfs && \
+    echo "*/1 * * * * /usr/local/bin/python3 /app/resources/cache_handler.py > /proc/1/fd/1 2>&1" >> /etc/cron.d/scanfs && \
     crontab -u newuser /etc/cron.d/scanfs && \
     chmod u+s /usr/sbin/cron
 
 # Switch to the new user
 USER newuser
 
-VOLUME app/HSMFS
+VOLUME /HSMFS
 
 # Run supervisord as the main command
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
