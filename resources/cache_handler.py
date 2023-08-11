@@ -4,10 +4,8 @@ import pickle
 import os
 import time
 
-# HSM_PATH = Path(__file__).parents[1] / "HSMFS"
+HSM_PATH = Path(__file__).parents[2] / "HSMFS"
 RESOURCE_PATH = Path(__file__).parents[1] / "resources"
-
-HSM_PATH = "U:/"
 
 
 class HSMDataProcessor:
@@ -49,7 +47,7 @@ class HSMDataProcessor:
         with open(str(self.chunk_idx_file_path), "wb") as f:
             pickle.dump(self.chunk_index, f)
 
-    def process_hsmdrive(self):
+    def process_drive(self):
         t1 = time.time()
 
         self.clear_chunk_directory()
@@ -99,4 +97,4 @@ class HSMDataProcessor:
 if __name__ == "__main__":
     CHUNK_SIZE = 200
     processor = HSMDataProcessor(HSM_PATH, CHUNK_SIZE, RESOURCE_PATH)
-    processor.process_hsmdrive()
+    processor.process_drive()
