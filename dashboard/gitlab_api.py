@@ -2,7 +2,6 @@ import os
 
 import gitlab
 
-
 repo_url = os.getenv("REPO_URL")
 repo_token = os.getenv("REPO_TOKEN")
 project_num = os.getenv("PROJECT_NUM")
