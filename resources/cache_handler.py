@@ -22,7 +22,8 @@ class HSMDataProcessor:
         self.chunk_index = {}
 
     def clear_chunk_directory(self):
-        self.chunk_idx_file_path.unlink()
+        if self.chunk_idx_file_path.exists():
+            self.chunk_idx_file_path.unlink()
         for item in self.chunk_dir_path.iterdir():
             if item.is_file():
                 item.unlink()
