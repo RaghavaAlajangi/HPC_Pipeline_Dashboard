@@ -26,7 +26,6 @@ opened_issues = fetch_issues(state="opened")
 closed_issues = fetch_issues(state="closed")
 
 
-
 def main_tab_layout():
     text = "⦿ This page is responsible for running RTDC dataset " \
            "processing pipelines on MPCDF gpu clusters (HPC)"
