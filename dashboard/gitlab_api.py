@@ -33,7 +33,7 @@ class GitLabAPI:
         given state, but only gets the first page of results (get_all=False).
         This is because we don't want to make too many requests at once.
         """
-        issues = self.project.issues.list(state=state, get_all=True)
+        issues = self.project.issues.list(state=state, get_all=False)
         return issues
 
     @functools.lru_cache(maxsize=500, typed=True)
@@ -51,23 +51,20 @@ class GitLabAPI:
 
     def get_issues_meta(self, state):
         issues = self.get_issues(state)
-        meta_data = []
-        for issue in issues:
-            issue_meta = issue.asdict()
-            required_meta = {
-                "name": issue_meta["title"],
-                "id": issue_meta["id"],
-                "iid": issue_meta["iid"],
-                "author": issue_meta["author"]["username"],
-                "web_url": issue_meta["web_url"]
+        return [
+            {
+                "name": issue.title,
+                "id": issue.id,
+                "iid": issue.iid,
+                "author": issue.author["username"],
+                "web_url": issue.web_url,
             }
-            meta_data.append(required_meta)
-        return meta_data
+            for issue in issues
+        ]
 
     def get_project_members(self):
         members = self.project.members.list(all=True, include_inherited=True)
-        mem_usernames = [m.name for m in members]
-        return mem_usernames
+        return [member.name for member in members]
 
     def get_simple_template(self):
         simple_path = ".gitlab/issue_templates/pipeline_request_simple.md"
