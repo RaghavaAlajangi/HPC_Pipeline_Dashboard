@@ -218,7 +218,7 @@ def simple_request_submission_popup(_, cached_simp_temp, close, popup):
         gitlab_obj.run_pipeline(cached_simp_temp)
         return not popup, dash.no_update
     if close:
-        return not popup, "/hpc-pipelines"
+        return not popup, "/hpc-pipeline-dashboard"
     else:
         return popup, dash.no_update
 

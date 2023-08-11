@@ -13,7 +13,7 @@ PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \
 GITLAB_LOGO_URL = "https://about.gitlab.com/images/press" \
                   "/logo/png/gitlab-icon-rgb.png"
 
-PATHNAME_PREFIX = "/hpc-pipelines/"
+PATHNAME_PREFIX = "/hpc-pipeline-dashboard/"
 
 
 def wrong_page(pathname):
@@ -43,8 +43,8 @@ def sidebar_menu():
                     "Note:",
                     paragraph_comp(
                         text="Please be aware that running a pipeline is "
-                             "computationally expensive so please do not trigger or "
-                             "create unnecessary pipelines!",
+                             "computationally expensive so please do not "
+                             "trigger or create unnecessary pipelines!",
                         comp_id="dummy2", indent=1
                     ),
                 ],
@@ -57,13 +57,13 @@ def sidebar_menu():
                     dbc.Nav(
                         [
                             dbc.NavLink("Home",
-                                        href="/hpc-pipelines/",
+                                        href=PATHNAME_PREFIX,
                                         id="home_active"),
                             dbc.NavLink("Simple request",
-                                        href="/hpc-pipelines/simple_request",
+                                        href=f"{PATHNAME_PREFIX}simple_request",
                                         id="simple_request_active"),
                             dbc.NavLink("Advanced request",
-                                        href="/hpc-pipelines/advanced_request",
+                                        href=f"{PATHNAME_PREFIX}advanced_request",
                                         id="advanced_request_active"),
                         ],
                         vertical=True,
@@ -135,11 +135,11 @@ app.layout = html.Div(
     Input("url", "pathname"),
 )
 def render_page_content(pathname):
-    if pathname == "/hpc-pipelines/":
+    if pathname == PATHNAME_PREFIX:
         return main_layout(), True, False, False
-    elif pathname == "/hpc-pipelines/simple_request":
+    elif pathname == f"{PATHNAME_PREFIX}simple_request":
         return simple_request(), False, True, False
-    elif pathname == "/hpc-pipelines/advanced_request":
+    elif pathname == f"{PATHNAME_PREFIX}advanced_request":
         return advanced_request(), False, False, True
     # Return a 404 message, if user tries to reach undefined page
     return wrong_page(pathname)
