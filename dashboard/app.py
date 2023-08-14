@@ -1,4 +1,5 @@
 import dash
+import os
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
@@ -13,7 +14,7 @@ PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \
 GITLAB_LOGO_URL = "https://about.gitlab.com/images/press" \
                   "/logo/png/gitlab-icon-rgb.png"
 
-PATHNAME_PREFIX = "/hpc-pipeline-dashboard/"
+PATHNAME_PREFIX = os.getenv("PATHNAME_PREFIX")
 
 
 def wrong_page(pathname):
