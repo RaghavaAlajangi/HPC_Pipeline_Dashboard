@@ -1,5 +1,5 @@
 jobs:
   - name: generate-cache
     command: python /app/resources/cache_handler.py
-      #    schedule: "* * * * *"
-    schedule: "@reboot"
+    schedule: "0 */2 * * *"
+    #schedule: "@reboot"
