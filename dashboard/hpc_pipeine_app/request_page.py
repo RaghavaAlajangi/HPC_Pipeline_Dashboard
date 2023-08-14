@@ -1,4 +1,5 @@
 import dash
+import os
 from dash.exceptions import PreventUpdate
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
@@ -218,7 +219,7 @@ def simple_request_submission_popup(_, cached_simp_temp, close, popup):
         gitlab_obj.run_pipeline(cached_simp_temp)
         return not popup, dash.no_update
     if close:
-        return not popup, "/hpc-pipeline-dashboard"
+        return not popup, os.getenv("BASENAME_PREFIX")
     else:
         return popup, dash.no_update
 
