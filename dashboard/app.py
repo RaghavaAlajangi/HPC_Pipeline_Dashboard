@@ -14,7 +14,7 @@ PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \
 GITLAB_LOGO_URL = "https://about.gitlab.com/images/press" \
                   "/logo/png/gitlab-icon-rgb.png"
 
-PATHNAME_PREFIX = os.getenv("PATHNAME_PREFIX")
+PATHNAME_PREFIX = os.getenv("BASENAME_PREFIX")
 
 
 def wrong_page(pathname):
@@ -103,7 +103,7 @@ def main_content_block():
 
 # Initialise the app
 app = dash.Dash(
-    #assets_folder="assets",
+    #assets_folder="tmp/assets/",
     suppress_callback_exceptions=True,
     routes_pathname_prefix=PATHNAME_PREFIX,
     requests_pathname_prefix=PATHNAME_PREFIX,
