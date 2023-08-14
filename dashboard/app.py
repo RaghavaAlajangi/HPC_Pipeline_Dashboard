@@ -103,7 +103,7 @@ def main_content_block():
 
 # Initialise the app
 app = dash.Dash(
-    assets_folder="assets",
+    #assets_folder="assets",
     suppress_callback_exceptions=True,
     routes_pathname_prefix=PATHNAME_PREFIX,
     requests_pathname_prefix=PATHNAME_PREFIX,
