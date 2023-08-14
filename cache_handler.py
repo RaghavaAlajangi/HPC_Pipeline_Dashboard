@@ -4,8 +4,8 @@ import pickle
 import os
 import time
 
-HSM_PATH = Path(__file__).parents[2] / "HSMFS"
-RESOURCE_PATH = Path(__file__).parents[1] / "resources"
+HSM_PATH = Path(__file__).parents[1] / "HSMFS"
+RESOURCE_PATH = Path(__file__).parents[0] / "resources"
 
 
 class HSMDataProcessor:
@@ -64,9 +64,10 @@ class HSMDataProcessor:
                 modified_time = dt.fromtimestamp(
                     modified_time).strftime(
                     "%d-%b-%Y %I.%M %p")
-
+                file_path_list = list(fpath.split("/"))
+                file_path_list[0] = "HSMFS:"
                 entry = {
-                    "filepath": fpath.split("/"),
+                    "filepath": file_path_list,
                     "dateModified": modified_time
                 }
                 chunk_data.append(entry)

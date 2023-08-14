@@ -1,7 +1,7 @@
 FROM python:alpine as cron
 RUN pip install yacron
 COPY crontab.yaml /tmp/crontab.yaml
-COPY resources/cache_handler.py /app/resources/cache_handler.py
+COPY cache_handler.py /app/cache_handler.py
 ENTRYPOINT ["yacron"]
 CMD ["-c", "/tmp/crontab.yaml"]
 
