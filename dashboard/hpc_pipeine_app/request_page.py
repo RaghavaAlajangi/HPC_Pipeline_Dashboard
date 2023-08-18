@@ -1,9 +1,8 @@
 import dash
 import os
-from dash.exceptions import PreventUpdate
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc, ALL
+from dash import callback, Input, Output, State, dcc
 
 from ..gitlab_api import get_gitlab_obj
 from .utils import update_simple_template
@@ -99,7 +98,7 @@ def simple_request():
                 middle=True
             ),
             line_breaks(times=4),
-            display_paths_comp(comp_id="upload_show"),
+            display_paths_comp(comp_id="show_grid"),
             line_breaks(times=4),
             button_comp(label="Create pipeline",
                         disabled=True,
@@ -116,41 +115,6 @@ def simple_request():
         is_open=True,
         className="my-toast"
     )
-
-
-@callback(
-    Output("store_input_paths", "data"),
-    Output("input_group_drop", "value"),
-    Output("input_group_text", "value"),
-    Input("input_group_button", "n_clicks"),
-    Input("input_group_drop", "value"),
-    Input("input_group_text", "value"),
-    Input({"type": "remove_file", "index": ALL}, "n_clicks"),
-    Input({"type": "remove_file", "index": ALL}, "key"),
-    State("store_input_paths", "data")
-)
-def store_input_group_paths(_, drop_input, text_input,
-                            remove_buttons, button_keys, cached_paths):
-    button_trigger = [p["prop_id"] for p in cc.triggered][0]
-    if text_input is not None and text_input != "" and drop_input is not None:
-
-        if "input_group_button" in button_trigger:
-            input_path = f"{drop_input}: {text_input}"
-            cached_paths.append(input_path)
-            return cached_paths, None, None
-        else:
-            raise PreventUpdate
-
-    elif 1 in remove_buttons:
-        index = remove_buttons.index(1)
-        key = button_keys[index][0]
-        if key in cached_paths:
-            cached_paths.remove(key)
-            return [cached_paths, drop_input, text_input]
-        else:
-            raise PreventUpdate
-    else:
-        return [cached_paths, drop_input, text_input]
 
 
 @callback(
@@ -337,6 +301,7 @@ def advanced_request():
             line_breaks(times=2),
             group_accordion(
                 [
+                    # Title section
                     dbc.AccordionItem(
                         [
                             input_with_dropdown(
@@ -352,7 +317,7 @@ def advanced_request():
                         ],
                         title="Title (required)",
                     ),
-
+                    # dcevent version section
                     dbc.AccordionItem(
                         [
                             checklist_comp(
@@ -363,9 +328,10 @@ def advanced_request():
                         ],
                         title="dcevent version",
                     ),
-
+                    # Segmentation section
                     dbc.AccordionItem(
                         [
+                            # MLUNet segmentor section
                             checklist_comp(
                                 comp_id="mlunet_id",
                                 options=["mlunet"],
@@ -373,7 +339,7 @@ def advanced_request():
                             ),
 
                             divider_line_comp(),
-
+                            # Legacy segmentor section
                             checklist_comp(
                                 comp_id="legacy_id",
                                 options=["legacy: Legacy thresholding"
@@ -398,11 +364,14 @@ def advanced_request():
 
                             divider_line_comp(),
 
-                            checklist_comp(comp_id="watershed_id",
-                                           options=[
-                                               "watershed: Watershed algorithm"],
-                                           defaults=[
-                                               "watershed: Watershed algorithm"]),
+                            # Watershed segmentor section
+                            checklist_comp(
+                                comp_id="watershed_id",
+                                options=[
+                                    "watershed: Watershed algorithm"],
+                                defaults=[
+                                    "watershed: Watershed algorithm"]
+                            ),
 
                             groupby_rows(
                                 [wtrshd_clrbo_param, wtrshd_clrbo_sbar]),
@@ -413,6 +382,7 @@ def advanced_request():
 
                             divider_line_comp(),
 
+                            # STD segmentor section
                             checklist_comp(
                                 comp_id="std_id",
                                 options=["std: Standard-deviation-"
@@ -531,7 +501,8 @@ def advanced_request():
                 middle=True
             ),
             line_breaks(times=4),
-            display_paths_comp(comp_id="upload_show"),
+            display_paths_comp(comp_id="show_grid"),
+            line_breaks(times=4),
             button_comp(label="Create pipeline",
                         disabled=True,
                         comp_id="create_advanced_pipeline_button"),

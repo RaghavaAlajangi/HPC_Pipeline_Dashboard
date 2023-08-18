@@ -1,10 +1,12 @@
 from pathlib import Path
 import pickle
 
+import dash
 import dash_ag_grid as dag
+from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
-from dash import (callback, Input, Output, State, dcc, html, ALL, ctx, Patch)
+from dash import (callback, Input, Output, State, dcc, html, ctx)
 
 from ..components import text_input_comp
 
@@ -44,6 +46,7 @@ def determine_chunk_to_load(filter_value):
 def create_hsm_grid():
     return html.Div(
         [
+            html.Div(id="dummy_div"),
             dcc.Store(id="store_input_paths", data=[]),
             text_input_comp(comp_id="grid_filter",
                             placeholder="Filter with name...",
@@ -53,120 +56,116 @@ def create_hsm_grid():
                 className="ag-theme-alpine-dark",
                 columnDefs=[
                     {"field": "dateModified"},
+                    # {"field": "rtdc_path",
+                    #  "headerCheckboxSelection": True,
+                    #  "headerCheckboxSelectionFilteredOnly": True,
+                    #  "checkboxSelection": True,
+                    #  }
                 ],
                 defaultColDef={
                     "flex": 1,
                     "sortable": True,
+                    "resizable": True,
+                    "filter": True
                 },
                 dashGridOptions={
                     "autoGroupColumnDef": {
                         "headerName": "HSMFS Drive",
-                        "minWidth": 150,
                         "cellRendererParams": {
                             "suppressCount": True,
                             "checkbox": True,
                         },
                     },
-                    "groupDefaultExpanded": 6,
+                    "enableCellTextSelection": True,
+                    "ensureDomOrder": True,
+                    "loadingOverlayComponent": "CustomLoadingOverlayForHSM",
+                    "loadingOverlayComponentParams": {
+                        "loadingMessage": "One moment please...",
+                        "color": "yellow",
+                    },
+                    "groupDefaultExpanded": 3,
                     "getDataPath": {"function": "getDataPath(params)"},
                     "treeData": True,
                     "animateRows": True,
                     "rowSelection": "multiple",
                     "groupSelectsChildren": True,
                     "suppressRowClickSelection": True,
+                    # "suppressAggFuncInHeader": True,
+                    "groupSelectsFiltered": True,
+
                     # no blue highlight
                     "suppressRowHoverHighlight": True,
                 },
+                rowData=load_data_chunk(1),
                 enableEnterpriseModules=True,
-                style={"height": 600}
-            ),
-            dbc.Pagination(
-                id="grid_pagination",
-                min_value=1,
-                max_value=1,
-                active_page=1,
-                first_last=True,
-                previous_next=True,
-                fully_expanded=False,
-                style={"justify-content": "center"},
+                style={"height": 600},
+                # getRowId="params.data.filepath",
             )
         ]
     )
 
 
 def display_paths_comp(comp_id):
-    return html.Div(
-        className="row justify-content-center",
-        children=[
-            html.Div(
-                dbc.Button(
-                    [
-                        "Selected files:",
-                        dbc.Badge(id="num_files", color="danger",
-                                  text_color="dark", className="ms-1"),
-                    ],
-                    color="info",
-                ),
-                style={"marginLeft": "0px", "width": "80%"}
-            ),
-            dbc.Card(
-                id=comp_id,
-                body=True,
-                style={"max-height": "25rem", "width": "80%",
-                       "overflow-y": "scroll"},
-            )
-        ]
+    show_btn = dbc.Button(
+        [
+            "Selected files:",
+            dbc.Badge(id="num_files", color="danger", text_color="dark",
+                      className="ms-1"),
+        ],
+        color="info",
+        style={"margin-right": "10px"}
+    )
+    remove_btn = dbc.Button("Remove Selected", id="remove_entries",
+                            color="info")
+
+    show_grid = dag.AgGrid(
+        id=comp_id,
+        className="ag-theme-alpine-dark",
+        columnDefs=[{"field": "filepath", "checkboxSelection": True,
+                     "headerCheckboxSelection": True}],
+        style={"width": "100%", "height": 400},
+        dashGridOptions={
+            "autoGroupColumnDef": {
+                "headerName": "filepath",
+                "cellRendererParams": {
+                    "suppressCount": True,
+                    "checkbox": True,
+                },
+            },
+            "loadingOverlayComponent": "CustomLoadingOverlayForShow",
+            "loadingOverlayComponentParams": {
+                "loadingMessage": "Nothing to show....",
+                "color": "red",
+            },
+            "animateRows": True,
+            "rowSelection": "multiple",
+            "suppressRowClickSelection": True,
+            # no blue highlight
+            "suppressRowHoverHighlight": True,
+        },
+        # rowData=rowdata,
+        defaultColDef={"resizable": True, "sortable": True,
+                       "filter": True},
+        columnSize="sizeToFit",
+        # getRowId="params.data.filepath"
     )
 
-
-def convert_paths_to_buttons(paths):
-    return [
-        dbc.Row(
-            [
-                html.Li(
-                    [
-                        dbc.Button(
-                            "X",
-                            n_clicks=0,
-                            key=[name],
-                            style={"width": "20px", "height": "20px",
-                                   "padding": "0px", "margin-right": "5px"},
-                            class_name="btn btn-danger btn-sm",
-                            id={"type": "remove_file", "index": name}
-                        ),
-                        html.Span(name)
-                    ]
-                ),
+    return html.Div(
+        [
+            dbc.Row([
+                dbc.Col(show_btn, width="auto"),
+                dbc.Col(remove_btn, width="auto"),
             ],
-            style={"flexWrap": "nowrap"}
-        ) for name in paths
-    ]
-
-
-@callback(
-    Output("grid_pagination", "max_value"),
-    Input("grid_pagination", "max_value")
-)
-def update_max_value(current_page):
-    # Replace this with your logic to calculate the new max_value
-    num_chunks = len(
-        [f for f in CHUNK_DIR.glob("chunk_num_*.pkl") if f.is_file()])
-    # new_max_value = 10
-    return num_chunks
-
-
-@callback(
-    Output("hsm_grid", "rowData"),
-    Input("grid_filter", "value"),
-    Input("grid_pagination", "active_page"),
-)
-def update_grid_data(filter_value, selected_chunk_page):
-    if filter_value:
-        chunk_id = determine_chunk_to_load(filter_value)
-    else:
-        chunk_id = selected_chunk_page
-
-    return load_data_chunk(chunk_id)
+                justify="center"
+            ),
+            dbc.Row([
+                dbc.Col(show_grid, width=9),
+            ],
+                justify="center"
+            )
+        ],
+        className="row justify-content-center"
+    )
 
 
 @callback(
@@ -180,19 +179,74 @@ def update_pagination_page(filter_value):
 
 
 @callback(
-    Output("upload_show", "children"),
+    Output("show_grid", "rowData"),
     Output("num_files", "children"),
     Input("hsm_grid", "selectedRows"),
     Input("store_input_paths", "data"),
 )
-def display_selected_paths(selected_rows, stored_input):
+def display_selected_paths(hsm_selection, stored_input):
     original_paths = [] + stored_input
-    if selected_rows:
+    if hsm_selection:
         # Get the list of user selected hsmfs paths (each path is a list
         # of strings) and join them with "/"
-        selected_paths = ["/".join(s["filepath"]) for s in selected_rows]
+        selected_paths = ["/".join(s["filepath"]) for s in hsm_selection]
         original_paths = original_paths + selected_paths
-    return convert_paths_to_buttons(original_paths), len(original_paths)
+    if original_paths:
+        rowdata = [{"filepath": i} for i in original_paths]
+        return rowdata, len(original_paths)
+    else:
+        rowdata = [{"filepath": i} for i in original_paths]
+        return rowdata, len(original_paths)
+
+
+@callback(
+    Output("store_input_paths", "data"),
+    Output("input_group_drop", "value"),
+    Output("input_group_text", "value"),
+    Input("input_group_button", "n_clicks"),
+    Input("input_group_drop", "value"),
+    Input("input_group_text", "value"),
+    State("show_grid", "selectedRows"),
+    Input("remove_entries", "n_clicks"),
+    State("store_input_paths", "data"),
+    prevent_initial_call=True
+)
+def store_input_group_paths(click_button, drop_input, text_input,
+                            show_selection, remove_click, cached_paths):
+    button_triggered = cc.triggered[0]["prop_id"].split(".")[0]
+
+    if button_triggered == "input_group_button":
+        if text_input and drop_input:
+            input_path = f"{drop_input}: {text_input}"
+            cached_paths.append(input_path)
+            return cached_paths, None, None
+    elif button_triggered == "remove_entries" and show_selection:
+        cached_paths = [path for path in cached_paths if
+                        path not in (sentry["filepath"] for sentry in
+                                     show_selection)]
+        return cached_paths, drop_input, text_input
+    raise PreventUpdate
+
+
+@callback(
+    # Output("show_grid", "rowTransaction"),
+    Output("hsm_grid", "selectedRows"),
+    Input("remove_entries", "n_clicks"),
+    State("show_grid", "selectedRows"),
+    State("hsm_grid", "selectedRows"),
+)
+def update_grids_rowdata(click, show_selection, hsm_selection):
+    if ctx.triggered_id != "remove_entries" or show_selection is None:
+        return dash.no_update
+
+    # Filter out matching entries from hms_selection. If a matching filepath
+    # is found, the corresponding entry is removed from the "hsm_grid"
+    # selection.
+
+    selection_paths = [dic["filepath"] for dic in show_selection]
+    updated_hsm_selection = [hs for hs in hsm_selection if
+                             hs["rtdc_path"] not in selection_paths]
+    return updated_hsm_selection
 
 
 @callback(
@@ -203,20 +257,3 @@ def display_selected_paths(selected_rows, stored_input):
 def update_filter(filter_value, gridOptions):
     gridOptions["quickFilterText"] = filter_value
     return gridOptions
-
-
-@callback(
-    Output("hsm_grid", "selectedRows"),
-    Input({"type": "remove_file", "index": ALL}, "n_clicks"),
-    State("hsm_grid", "selectedRows"),
-    prevent_initial_call=True
-)
-def remove_paths_from_list(remove_buttons, selected_rows):
-    if sum(remove_buttons) > 0 and selected_rows is not None:
-        selects = Patch()
-        for x in range(len(selected_rows) - 1, -1, -1):
-            if all(i in ctx.triggered_id.index.split("/") for i in
-                   selected_rows[x]["filepath"]):
-                del selects[x]
-        return selects
-    raise PreventUpdate
