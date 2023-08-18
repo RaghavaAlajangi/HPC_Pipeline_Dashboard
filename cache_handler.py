@@ -68,7 +68,8 @@ class HSMDataProcessor:
                 file_path_list[0] = "HSMFS:"
                 entry = {
                     "filepath": file_path_list,
-                    "dateModified": modified_time
+                    "dateModified": modified_time,
+                    # "rtdc_path": "/".join(file_path_list)
                 }
                 chunk_data.append(entry)
 
@@ -96,6 +97,6 @@ class HSMDataProcessor:
 
 
 if __name__ == "__main__":
-    CHUNK_SIZE = 200
+    CHUNK_SIZE = 2000000
     processor = HSMDataProcessor(HSM_PATH, CHUNK_SIZE, RESOURCE_PATH)
     processor.process_drive()

@@ -56,11 +56,6 @@ def create_hsm_grid():
                 className="ag-theme-alpine-dark",
                 columnDefs=[
                     {"field": "dateModified"},
-                    # {"field": "rtdc_path",
-                    #  "headerCheckboxSelection": True,
-                    #  "headerCheckboxSelectionFilteredOnly": True,
-                    #  "checkboxSelection": True,
-                    #  }
                 ],
                 defaultColDef={
                     "flex": 1,
@@ -187,9 +182,11 @@ def update_pagination_page(filter_value):
 def display_selected_paths(hsm_selection, stored_input):
     original_paths = [] + stored_input
     if hsm_selection:
+        thesh = 100
         # Get the list of user selected hsmfs paths (each path is a list
         # of strings) and join them with "/"
-        selected_paths = ["/".join(s["filepath"]) for s in hsm_selection]
+        selected_paths = ["/".join(s["filepath"]) for s in
+                          hsm_selection[:thesh]]
         original_paths = original_paths + selected_paths
     if original_paths:
         rowdata = [{"filepath": i} for i in original_paths]
@@ -245,7 +242,7 @@ def update_grids_rowdata(click, show_selection, hsm_selection):
 
     selection_paths = [dic["filepath"] for dic in show_selection]
     updated_hsm_selection = [hs for hs in hsm_selection if
-                             hs["rtdc_path"] not in selection_paths]
+                             "/".join(hs["filepath"]) not in selection_paths]
     return updated_hsm_selection
 
 
@@ -257,3 +254,14 @@ def update_grids_rowdata(click, show_selection, hsm_selection):
 def update_filter(filter_value, gridOptions):
     gridOptions["quickFilterText"] = filter_value
     return gridOptions
+
+
+@callback(
+    Output("remove_entries", "disabled"),
+    Input("show_grid", "selectedRows"),
+)
+def update_filter(show_selection):
+    if show_selection:
+        return False
+    else:
+        return True
