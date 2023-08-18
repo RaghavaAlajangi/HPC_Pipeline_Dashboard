@@ -1,4 +1,5 @@
 import os
+import math
 
 import gitlab
 
@@ -16,22 +17,20 @@ class GitLabAPI:
         gitlab_obj = gitlab.Gitlab(url=url, private_token=token)
         gitlab_obj.auth()
         self.project = gitlab_obj.projects.get(project_num)
+        self.issues_per_page = 20
 
-    def get_issues(self, state):
-        """
-        It takes a state as an argument and returns all issues in that state.
-        The function uses the project's list method to get all issues in the
-        given state, but only gets the first page of results (get_all=False).
-        This is because we don't want to make too many requests at once.
-        """
-        issues = self.project.issues.list(state=state, get_all=False)
-        return issues
+    def get_issues_per_page(self, state, page):
+        """Fetch issues list per page in a state"""
+        return self.project.issues.list(state=state, page=page, get_all=False,
+                                        per_page=self.issues_per_page)
+
+    def get_num_pages(self, state):
+        """Compute the total number of issue pages in a state"""
+        num_issues = len(self.project.issues.list(state=state, get_all=True))
+        return math.ceil(num_issues / self.issues_per_page)
 
     def get_comments(self, issue_iid):
-        """
-        It takes an issue_iid as input and returns a list of comments
-        associated with that issue.
-        """
+        """Fetch comments of an issues"""
         issue = self.project.issues.get(issue_iid)
         issue_notes = issue.notes.list(get_all=True)
         return [n.asdict()["body"] for n in issue_notes]
@@ -39,8 +38,8 @@ class GitLabAPI:
     def get_issue_obj(self, issue_iid):
         return self.project.issues.get(issue_iid)
 
-    def get_issues_meta(self, state):
-        issues = self.get_issues(state)
+    def get_issues_meta(self, state, page):
+        issues = self.get_issues_per_page(state, page)
         return [
             {
                 "name": issue.title,
