@@ -12,6 +12,9 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
                           dropdown_searchbar_comp, popup_comp, button_comp,
                           divider_line_comp, line_breaks, input_with_dropdown)
 
+BASENAME_PREFIX = os.getenv("BASENAME_PREFIX")
+
+# BASENAME_PREFIX = "/test/"
 gitlab_obj = get_gitlab_obj()
 
 
@@ -183,7 +186,7 @@ def simple_request_submission_popup(_, cached_simp_temp, close, popup):
         gitlab_obj.run_pipeline(cached_simp_temp)
         return not popup, dash.no_update
     if close:
-        return not popup, os.getenv("BASENAME_PREFIX")
+        return not popup, BASENAME_PREFIX
     else:
         return popup, dash.no_update
 
