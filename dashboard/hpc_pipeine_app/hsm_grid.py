@@ -12,7 +12,6 @@ from ..components import text_input_comp
 
 DATA_DIR = Path(__file__).parents[2] / "resources"
 CHUNK_DIR = DATA_DIR / "hsm_chunk_dir"
-CHUNK_IDX_PATH = DATA_DIR / "hsm_chunk_index.pkl"
 
 
 def load_data_chunk(chunk_id):
@@ -20,25 +19,6 @@ def load_data_chunk(chunk_id):
     if (CHUNK_DIR / f"chunk_num_{chunk_id}.pkl").exists():
         with open(CHUNK_DIR / f"chunk_num_{chunk_id}.pkl", "rb") as file:
             return pickle.load(file)
-    else:
-        return None
-
-
-def determine_chunk_to_load(filter_value):
-    if CHUNK_IDX_PATH.exists():
-        with open(str(CHUNK_IDX_PATH), "rb") as f:
-            index_file = pickle.load(f)
-
-        # Convert the filter value to lowercase for case-insensitive matching
-        filter_value_lower = filter_value.lower()
-
-        # Search for the filter value in the index and retrieve the first match
-        for key in index_file.keys():
-            if filter_value_lower in key.lower():
-                return list(index_file[key])[0]
-
-        # If not found, return the default chunk
-        return 0
     else:
         return None
 
@@ -71,6 +51,7 @@ def create_hsm_grid():
                             "checkbox": True,
                         },
                     },
+                    # Enable row copying
                     "enableCellTextSelection": True,
                     "ensureDomOrder": True,
                     "loadingOverlayComponent": "CustomLoadingOverlayForHSM",
@@ -82,13 +63,16 @@ def create_hsm_grid():
                     "getDataPath": {"function": "getDataPath(params)"},
                     "treeData": True,
                     "animateRows": True,
+                    # Select multiple rows
                     "rowSelection": "multiple",
+                    # Select children rows with group selection
                     "groupSelectsChildren": True,
+                    # Disable row selection by clicking
                     "suppressRowClickSelection": True,
-                    # "suppressAggFuncInHeader": True,
+                    "suppressAggFuncInHeader": True,
+                    # Select only filtered rows
                     "groupSelectsFiltered": True,
-
-                    # no blue highlight
+                    # No blue highlight
                     "suppressRowHoverHighlight": True,
                 },
                 rowData=load_data_chunk(1),
@@ -123,7 +107,7 @@ def display_paths_comp(comp_id):
             "autoGroupColumnDef": {
                 "headerName": "filepath",
                 "cellRendererParams": {
-                    "suppressCount": True,
+                    "suppressCount": False,
                     "checkbox": True,
                 },
             },
@@ -137,10 +121,10 @@ def display_paths_comp(comp_id):
             "suppressRowClickSelection": True,
             # no blue highlight
             "suppressRowHoverHighlight": True,
+            "suppressAggFuncInHeader": True,
         },
         # rowData=rowdata,
-        defaultColDef={"resizable": True, "sortable": True,
-                       "filter": True},
+        defaultColDef={"resizable": True, "sortable": True, "filter": True},
         columnSize="sizeToFit",
         # getRowId="params.data.filepath"
     )
@@ -164,16 +148,6 @@ def display_paths_comp(comp_id):
 
 
 @callback(
-    Output("grid_pagination", "active_page"),
-    Input("grid_filter", "value"),
-)
-def update_pagination_page(filter_value):
-    if filter_value:
-        return determine_chunk_to_load(filter_value)
-    raise PreventUpdate
-
-
-@callback(
     Output("show_grid", "rowData"),
     Output("num_files", "children"),
     Input("hsm_grid", "selectedRows"),
@@ -182,11 +156,9 @@ def update_pagination_page(filter_value):
 def display_selected_paths(hsm_selection, stored_input):
     original_paths = [] + stored_input
     if hsm_selection:
-        thesh = 100
         # Get the list of user selected hsmfs paths (each path is a list
         # of strings) and join them with "/"
-        selected_paths = ["/".join(s["filepath"]) for s in
-                          hsm_selection[:thesh]]
+        selected_paths = ["/".join(s["filepath"]) for s in hsm_selection]
         original_paths = original_paths + selected_paths
     if original_paths:
         rowdata = [{"filepath": i} for i in original_paths]
@@ -226,7 +198,6 @@ def store_input_group_paths(click_button, drop_input, text_input,
 
 
 @callback(
-    # Output("show_grid", "rowTransaction"),
     Output("hsm_grid", "selectedRows"),
     Input("remove_entries", "n_clicks"),
     State("show_grid", "selectedRows"),
