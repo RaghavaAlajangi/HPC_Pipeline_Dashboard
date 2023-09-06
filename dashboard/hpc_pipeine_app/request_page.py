@@ -90,9 +90,9 @@ def simple_request():
                 ],
                 middle=True
             ),
-            line_breaks(times=4),
+            line_breaks(times=3),
             display_paths_comp(comp_id="show_grid"),
-            line_breaks(times=4),
+            line_breaks(times=3),
             button_comp(label="Create pipeline",
                         disabled=True,
                         comp_id="create_simple_pipeline_button"),
@@ -454,41 +454,51 @@ def advanced_request():
                                     comp_id="ngate_ongate_id",
                                     label="online_gates:",
                                     options=["True", "False"],
-                                    defaults=["False"]
+                                    defaults=["False"],
+                                    gap=2
                                 ),
                                 form_group_input(
                                     comp_id="ngate_thrmsk_id",
                                     label="size_thresh_mask:",
                                     min=0, max=10, step=1,
-                                    default=5
+                                    default=5, gap=2
                                 ),
                             ],
                                 id="ngate_options"
-                            ),
-
-                            divider_line_comp(),
-
-                            checklist_comp(
-                                comp_id="repro_id",
-                                options=["--reproduce=False"],
-                                defaults=[]
                             )
                         ],
+                        title="Available gating options",
+                    ),
+
+                    dbc.AccordionItem(
+                        checklist_comp(
+                            comp_id="repro_id",
+                            options=["--reproduce=False"],
+                            defaults=[]
+                        ),
                         title="Further Options",
                     ),
 
                     dbc.AccordionItem(
                         [
                             checklist_comp(
-                                comp_id="dcml_ver_id",
-                                options=["dcml version"],
-                                defaults=["dcml version"]
-                            ),
-                            checklist_comp(
                                 comp_id="classifier_id",
                                 options=["Classification Model"],
                                 defaults=["Classification Model"]
                             ),
+                            html.Ul(
+                                form_group_dropdown(
+                                    comp_id="classifier_model_ckp_id",
+                                    label="model_path:",
+                                    box_width=21,
+                                    options=[
+                                        "bloody-bunny_g1_bacae: Bloody Bunny"],
+                                    defaults=[
+                                        "bloody-bunny_g1_bacae: Bloody Bunny"]
+                                ),
+                                id="classifier_options"
+                            ),
+
                         ],
                         title="Prediction",
                     ),
@@ -502,13 +512,13 @@ def advanced_request():
                 ],
                 middle=True
             ),
-            line_breaks(times=4),
+            line_breaks(times=3),
             display_paths_comp(comp_id="show_grid"),
             line_breaks(times=4),
             button_comp(label="Create pipeline",
                         disabled=True,
                         comp_id="create_advanced_pipeline_button"),
-
+            line_breaks(times=5),
             dcc.Store(id="store_advanced_template")
 
         ],
@@ -594,6 +604,17 @@ def toggle_sparsemed_options(sparsemed_opt):
 )
 def toggle_ngate_options(ngate_opt):
     if len(ngate_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
+    Output("classifier_options", "style"),
+    Input("classifier_id", "value"),
+)
+def toggle_bb_options(classifier_model_ckp):
+    if len(classifier_model_ckp) == 1:
         return {"display": "block"}
     else:
         return {"display": "none"}
