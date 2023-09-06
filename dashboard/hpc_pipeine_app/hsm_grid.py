@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from dash import (callback, Input, Output, State, dcc, html)
 
-from ..components import text_input_comp
+from ..components import text_input_comp, input_with_dropdown, line_breaks
 
 DATA_DIR = Path(__file__).parents[2] / "resources"
 CHUNK_DIR = DATA_DIR / "hsm_chunk_dir"
@@ -28,6 +28,16 @@ def create_hsm_grid():
         [
             html.Div(id="dummy_div"),
             dcc.Store(id="store_input_paths", data=[]),
+            line_breaks(times=1),
+            input_with_dropdown(
+                comp_id="input_group",
+                drop_options=["DVC", "DCOR"],
+                dropdown_holder="Source",
+                input_holder="Enter DVC path or DCOR Id "
+                             "or Circle or Dataset etc...",
+                width=80
+            ),
+            line_breaks(times=2),
             text_input_comp(comp_id="grid_filter",
                             placeholder="Filter with name...",
                             width=30, middle=False),
@@ -56,7 +66,7 @@ def create_hsm_grid():
                     "ensureDomOrder": True,
                     "loadingOverlayComponent": "CustomLoadingOverlayForHSM",
                     "loadingOverlayComponentParams": {
-                        "loadingMessage": "One moment please...",
+                        "loadingMessage": "HSM drive is being updated...",
                         "color": "yellow",
                     },
                     "groupDefaultExpanded": 3,
@@ -229,7 +239,7 @@ def update_filter(filter_value, gridOptions):
     Output("remove_entries", "disabled"),
     Input("show_grid", "selectedRows"),
 )
-def update_filter(show_selection):
+def toggle_remove_entries_button(show_selection):
     if show_selection:
         return False
     else:

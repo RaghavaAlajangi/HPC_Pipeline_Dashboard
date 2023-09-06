@@ -82,16 +82,6 @@ def simple_request():
                     ),
                     dbc.AccordionItem(
                         [
-                            line_breaks(times=1),
-                            input_with_dropdown(
-                                comp_id="input_group",
-                                drop_options=["DVC", "DCOR"],
-                                dropdown_holder="Source",
-                                input_holder="Enter DVC path or DCOR Id "
-                                             "or Circle or Dataset etc...",
-                                width=80
-                            ),
-                            line_breaks(times=2),
                             create_hsm_grid(),
                             line_breaks(times=2),
                         ],
@@ -504,16 +494,6 @@ def advanced_request():
                     ),
                     dbc.AccordionItem(
                         [
-                            line_breaks(times=1),
-                            input_with_dropdown(
-                                comp_id="input_group",
-                                drop_options=["DVC", "DCOR"],
-                                dropdown_holder="Source",
-                                input_holder="Enter DVC path or DCOR Id "
-                                             "or Circle or Dataset etc...",
-                                width=80
-                            ),
-                            line_breaks(times=2),
                             create_hsm_grid(),
                             line_breaks(times=2),
                         ],
