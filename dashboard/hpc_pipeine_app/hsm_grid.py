@@ -6,7 +6,7 @@ import dash_ag_grid as dag
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
-from dash import (callback, Input, Output, State, dcc, html, ctx)
+from dash import (callback, Input, Output, State, dcc, html)
 
 from ..components import text_input_comp
 
@@ -203,17 +203,15 @@ def store_input_group_paths(click_button, drop_input, text_input,
     State("show_grid", "selectedRows"),
     State("hsm_grid", "selectedRows"),
 )
-def update_grids_rowdata(click, show_selection, hsm_selection):
-    if ctx.triggered_id != "remove_entries" or show_selection is None:
+def update_hsm_grid_rowdata(click, show_selection, hsm_selection):
+    if not click or not show_selection or not hsm_selection:
         return dash.no_update
-
-    # Filter out matching entries from hms_selection. If a matching filepath
-    # is found, the corresponding entry is removed from the "hsm_grid"
-    # selection.
-
-    selection_paths = [dic["filepath"] for dic in show_selection]
+    # Filter out matching entries from hms_selection. If a matching
+    # filepath is found, the corresponding entry is removed from the
+    # "hsm_grid" selection.
+    selected_paths = set(dic["filepath"] for dic in show_selection)
     updated_hsm_selection = [hs for hs in hsm_selection if
-                             "/".join(hs["filepath"]) not in selection_paths]
+                             "/".join(hs["filepath"]) not in selected_paths]
     return updated_hsm_selection
 
 
