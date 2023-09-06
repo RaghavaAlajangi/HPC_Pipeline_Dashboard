@@ -296,7 +296,7 @@ def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
         style = {"marginLeft": f"{indent}rem"}
     else:
         style = {}
-    return html.P(id=comp_id, children=text, style=style)
+    return dbc.Label(id=comp_id, children=text, style=style)
 
 
 def progressbar_comp(comp_id, width=80):

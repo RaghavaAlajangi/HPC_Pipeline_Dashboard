@@ -2,15 +2,15 @@ import dash
 import os
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc
+from dash import callback, html, Input, Output, State, dcc
 
 from ..gitlab_api import get_gitlab_obj
 from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, display_paths_comp
 from ..components import (header_comp, paragraph_comp, checklist_comp,
-                          groupby_rows, num_searchbar_comp, group_accordion,
-                          dropdown_searchbar_comp, popup_comp, button_comp,
-                          divider_line_comp, line_breaks, input_with_dropdown)
+                          group_accordion, popup_comp, button_comp,
+                          divider_line_comp, line_breaks, input_with_dropdown,
+                          form_group_dropdown, form_group_input)
 
 BASENAME_PREFIX = os.getenv("BASENAME_PREFIX")
 
@@ -64,7 +64,7 @@ def simple_request():
                             checklist_comp(
                                 comp_id="simp_classifier_id",
                                 options=["MNet", "Bloody-Bunny"],
-                                defaults=["MNet"]
+                                defaults=["Bloody-Bunny"]
                             )
                         ],
                         title="Prediction",
@@ -192,104 +192,6 @@ def simple_request_submission_popup(_, cached_simp_temp, close, popup):
 
 
 def advanced_request():
-    legacy_thresh_param = paragraph_comp(text="thresh:")
-    legacy_thresh_sbar = num_searchbar_comp(comp_id="legacy_thresh_id",
-                                            min=-10, max=10, step=1,
-                                            default=-6)
-    legacy_blur_param = paragraph_comp(text="blur:")
-    legacy_blur_sbar = num_searchbar_comp(comp_id="legacy_blur_id",
-                                          min=0, max=10, step=1, default=0)
-
-    legacy_binop_param = paragraph_comp(text="binaryops:")
-    legacy_binop_sbar = num_searchbar_comp(comp_id="legacy_binop_id",
-                                           min=0, max=10, step=1, default=5)
-
-    legacy_difme_param = paragraph_comp(text="diff_method:")
-    legacy_difme_sbar = num_searchbar_comp(comp_id="legacy_difme_id",
-                                           min=0, max=10, step=1, default=1)
-
-    legacy_clrbo_param = paragraph_comp(text="clear_border:")
-    legacy_clrbo_sbar = dropdown_searchbar_comp(comp_id="legacy_clrbo_id",
-                                                options=["True", "False"],
-                                                defaults=["True"])
-
-    legacy_filho_param = paragraph_comp(text="fill_holes:")
-    legacy_filho_sbar = dropdown_searchbar_comp(comp_id="legacy_filho_id",
-                                                options=["True", "False"],
-                                                defaults=["True"])
-
-    legacy_cldis_param = paragraph_comp(text="close_disk:")
-    legacy_cldis_sbar = num_searchbar_comp(comp_id="legacy_cldis_id",
-                                           min=0, max=10, step=1, default=5)
-
-    wtrshd_clrbo_param = paragraph_comp(text="clear_border:")
-    wtrshd_clrbo_sbar = dropdown_searchbar_comp(comp_id="wtrshd_clrbo_id",
-                                                options=["True", "False"],
-                                                defaults=["True"])
-
-    wtrshd_filho_param = paragraph_comp(text="fill_holes:")
-    wtrshd_filho_sbar = dropdown_searchbar_comp(comp_id="wtrshd_filho_id",
-                                                options=["True", "False"],
-                                                defaults=["True"])
-
-    wtrshd_cldis_param = paragraph_comp(text="close_disk:")
-    wtrshd_cldis_sbar = num_searchbar_comp(comp_id="wtrshd_cldis_id",
-                                           min=0, max=10, step=1, default=5)
-
-    std_clrbo_param = paragraph_comp(text="clear_border:")
-    std_clrbo_sbar = dropdown_searchbar_comp(comp_id="std_clrbo_id",
-                                             options=["True", "False"],
-                                             defaults=["True"])
-
-    std_filho_param = paragraph_comp(text="fill_holes:")
-    std_filho_sbar = dropdown_searchbar_comp(comp_id="std_filho_id",
-                                             options=["True", "False"],
-                                             defaults=["True"])
-
-    std_cldis_param = paragraph_comp(text="close_disk:")
-    std_cldis_sbar = num_searchbar_comp(comp_id="std_cldis_id",
-                                        min=0, max=10, step=1, default=5)
-
-    rollmed_ksize_param = paragraph_comp(text="kernel_size:")
-    rollmed_ksize_sbar = num_searchbar_comp(comp_id="rollmed_ksize_id",
-                                            min=50, max=500, step=10,
-                                            default=100)
-
-    rollmed_bsize_param = paragraph_comp(text="batch_size:")
-    rollmed_bsize_sbar = num_searchbar_comp(comp_id="rollmed_bsize_id",
-                                            min=100, max=100000, step=100,
-                                            default=10000)
-
-    sparsemed_ksize_param = paragraph_comp(text="kernel_size:")
-    sparsemed_ksize_sbar = num_searchbar_comp(comp_id="sparsemed_ksize_id",
-                                              min=50, max=500, step=10,
-                                              default=100)
-
-    sparsemed_bsize_param = paragraph_comp(text="batch_size:")
-    sparsemed_bsize_sbar = num_searchbar_comp(comp_id="sparsemed_bsize_id",
-                                              min=100, max=100000, step=100,
-                                              default=10000)
-
-    sparsemed_thrcln_param = paragraph_comp(text="thresh_cleansing:")
-    sparsemed_thrcln_sbar = num_searchbar_comp(comp_id="sparsemed_thrcln_id",
-                                               min=0, max=1, step=1,
-                                               default=0)
-
-    sparsemed_frcln_param = paragraph_comp(text="frac_cleansing:")
-    sparsemed_frcln_sbar = num_searchbar_comp(comp_id="sparsemed_frcln_id",
-                                              min=0, max=1, step=0.1,
-                                              default=0.8)
-
-    ngate_ongate_param = paragraph_comp(text="online_gates:")
-    ngate_ongate_sbar = dropdown_searchbar_comp(comp_id="ngate_ongate_id",
-                                                options=["True", "False"],
-                                                defaults=["False"])
-
-    ngate_thrmsk_param = paragraph_comp(text="size_thresh_mask:")
-    ngate_thrmsk_sbar = num_searchbar_comp(comp_id="ngate_thrmsk_id",
-                                           min=0, max=10, step=1,
-                                           default=5)
-
     return dbc.Toast(
         [
             popup_comp(comp_id="advanced_popup"),
@@ -341,47 +243,106 @@ def advanced_request():
                                 defaults=["mlunet"]
                             ),
 
+                            html.Ul(
+                                form_group_dropdown(
+                                    comp_id="mlunet_model_ckp_id",
+                                    label="model_path:",
+                                    box_width=18,
+                                    options=[
+                                        "unet-double-d3-f3_g1_81bbe.ckp",
+                                        "unet-double-d3-f3_g2_cwfas.ckp"],
+                                    defaults=[
+                                        "unet-double-d3-f3_g1_81bbe.ckp"]
+
+                                ),
+                                id="mlunet_options"
+                            ),
+
                             divider_line_comp(),
                             # Legacy segmentor section
                             checklist_comp(
                                 comp_id="legacy_id",
                                 options=["legacy: Legacy thresholding"
                                          " with OpenCV"],
-                                defaults=["legacy: Legacy thresholding"
-                                          " with OpenCV"]
+                                defaults=[]
                             ),
+                            html.Ul([
+                                form_group_input(
+                                    comp_id="legacy_thresh_id",
+                                    label="thresh:",
+                                    min=-10, max=10, step=1,
+                                    default=-6
+                                ),
+                                form_group_input(
+                                    comp_id="legacy_blur_id",
+                                    label="blur:",
+                                    min=0, max=10, step=1,
+                                    default=0
+                                ),
+                                form_group_input(
+                                    comp_id="legacy_binop_id",
+                                    label="binaryops:",
+                                    min=0, max=10, step=1,
+                                    default=5
+                                ),
+                                form_group_input(
+                                    comp_id="legacy_difme_id",
+                                    label="diff_method:",
+                                    min=0, max=10, step=1,
+                                    default=1
+                                ),
+                                form_group_dropdown(
+                                    comp_id="legacy_clrbo_id",
+                                    label="clear_border:",
+                                    options=["True", "False"],
+                                    defaults=["True"]
+                                ),
+                                form_group_dropdown(
+                                    comp_id="legacy_filho_id",
+                                    label="fill_holes:",
+                                    options=["True", "False"],
+                                    defaults=["True"]
+                                ),
 
-                            groupby_rows(
-                                [legacy_thresh_param, legacy_thresh_sbar]),
-                            groupby_rows([legacy_blur_param, legacy_blur_sbar]),
-                            groupby_rows(
-                                [legacy_binop_param, legacy_binop_sbar]),
-                            groupby_rows(
-                                [legacy_difme_param, legacy_difme_sbar]),
-                            groupby_rows(
-                                [legacy_clrbo_param, legacy_clrbo_sbar]),
-                            groupby_rows(
-                                [legacy_filho_param, legacy_filho_sbar]),
-                            groupby_rows(
-                                [legacy_cldis_param, legacy_cldis_sbar]),
+                                form_group_input(
+                                    comp_id="legacy_cldis_id",
+                                    label="close_disk:",
+                                    min=0, max=10, step=1,
+                                    default=5
+                                ),
+                            ],
+                                id="legacy_options"
+                            ),
 
                             divider_line_comp(),
 
-                            # Watershed segmentor section
                             checklist_comp(
                                 comp_id="watershed_id",
-                                options=[
-                                    "watershed: Watershed algorithm"],
-                                defaults=[
-                                    "watershed: Watershed algorithm"]
+                                options=["watershed: Watershed algorithm"],
+                                defaults=[]
                             ),
-
-                            groupby_rows(
-                                [wtrshd_clrbo_param, wtrshd_clrbo_sbar]),
-                            groupby_rows(
-                                [wtrshd_filho_param, wtrshd_filho_sbar]),
-                            groupby_rows(
-                                [wtrshd_cldis_param, wtrshd_cldis_sbar]),
+                            html.Ul([
+                                form_group_dropdown(
+                                    comp_id="wtrshd_clrbo_id",
+                                    label="clear_border:",
+                                    options=["True", "False"],
+                                    defaults=["True"]
+                                ),
+                                form_group_dropdown(
+                                    comp_id="wtrshd_filho_id",
+                                    label="fill_holes:",
+                                    options=["True", "False"],
+                                    defaults=["True"]
+                                ),
+                                form_group_input(
+                                    comp_id="wtrshd_cldis_id",
+                                    label="close_disk:",
+                                    min=0, max=10, step=1,
+                                    default=5
+                                ),
+                            ],
+                                id="watershed_options"
+                            ),
 
                             divider_line_comp(),
 
@@ -390,14 +351,31 @@ def advanced_request():
                                 comp_id="std_id",
                                 options=["std: Standard-deviation-"
                                          "based thresholding"],
-                                defaults=[
-                                    "std: Standard-deviation-based "
-                                    "thresholding"]
+                                defaults=[]
+                            ),
+                            html.Ul([
+                                form_group_dropdown(
+                                    comp_id="std_clrbo_id",
+                                    label="clear_border:",
+                                    options=["True", "False"],
+                                    defaults=["True"]
+                                ),
+                                form_group_dropdown(
+                                    comp_id="std_filho_id",
+                                    label="fill_holes:",
+                                    options=["True", "False"],
+                                    defaults=["True"]
+                                ),
+                                form_group_input(
+                                    comp_id="std_cldis_id",
+                                    label="close_disk:",
+                                    min=0, max=10, step=1,
+                                    default=5
+                                ),
+                            ],
+                                id="std_options"
                             ),
 
-                            groupby_rows([std_clrbo_param, std_clrbo_sbar]),
-                            groupby_rows([std_filho_param, std_filho_sbar]),
-                            groupby_rows([std_cldis_param, std_cldis_sbar]),
                         ],
                         title="Segmentation Algorithm",
                     ),
@@ -413,10 +391,22 @@ def advanced_request():
                                     "background image computation"]
                             ),
 
-                            groupby_rows(
-                                [rollmed_ksize_param, rollmed_ksize_sbar]),
-                            groupby_rows(
-                                [rollmed_bsize_param, rollmed_bsize_sbar]),
+                            html.Ul([
+                                form_group_input(
+                                    comp_id="rollmed_ksize_id",
+                                    label="kernel_size:",
+                                    min=50, max=500, step=10,
+                                    default=100
+                                ),
+                                form_group_input(
+                                    comp_id="rollmed_bsize_id",
+                                    label="batch_size:",
+                                    min=100, max=100000, step=100,
+                                    default=10000
+                                ),
+                            ],
+                                id="rollmed_options"
+                            ),
 
                             divider_line_comp(),
 
@@ -425,20 +415,38 @@ def advanced_request():
                                 options=["sparsemed: Sparse median "
                                          "background correction with "
                                          "cleansing"],
-                                defaults=["sparsemed: Sparse median "
-                                          "background correction with "
-                                          "cleansing"]
+                                defaults=[]
                             ),
 
-                            groupby_rows(
-                                [sparsemed_ksize_param, sparsemed_ksize_sbar]),
-                            groupby_rows(
-                                [sparsemed_bsize_param, sparsemed_bsize_sbar]),
-                            groupby_rows(
-                                [sparsemed_thrcln_param,
-                                 sparsemed_thrcln_sbar]),
-                            groupby_rows(
-                                [sparsemed_frcln_param, sparsemed_frcln_sbar]),
+                            html.Ul([
+                                form_group_input(
+                                    comp_id="sparsemed_ksize_id",
+                                    label="kernel_size:",
+                                    min=50, max=500, step=10,
+                                    default=100
+                                ),
+                                form_group_input(
+                                    comp_id="sparsemed_bsize_id",
+                                    label="batch_size:",
+                                    min=100, max=100000, step=100,
+                                    default=10000
+                                ),
+                                form_group_input(
+                                    comp_id="sparsemed_thrcln_id",
+                                    label="thresh_cleansing:",
+                                    min=0, max=1, step=1,
+                                    default=0
+                                ),
+                                form_group_input(
+                                    comp_id="sparsemed_frcln_id",
+                                    label="frac_cleansing:",
+                                    min=0, max=1, step=0.1,
+                                    default=0.8
+                                ),
+                            ],
+                                id="sparsemed_options"
+                            ),
+
                         ],
                         title="Background Correction / Subtraction Method",
                     ),
@@ -451,17 +459,29 @@ def advanced_request():
                                 defaults=["norm gating"]
                             ),
 
-                            groupby_rows(
-                                [ngate_ongate_param, ngate_ongate_sbar]),
-                            groupby_rows(
-                                [ngate_thrmsk_param, ngate_thrmsk_sbar]),
+                            html.Ul([
+                                form_group_dropdown(
+                                    comp_id="ngate_ongate_id",
+                                    label="online_gates:",
+                                    options=["True", "False"],
+                                    defaults=["False"]
+                                ),
+                                form_group_input(
+                                    comp_id="ngate_thrmsk_id",
+                                    label="size_thresh_mask:",
+                                    min=0, max=10, step=1,
+                                    default=5
+                                ),
+                            ],
+                                id="ngate_options"
+                            ),
 
                             divider_line_comp(),
 
                             checklist_comp(
                                 comp_id="repro_id",
                                 options=["--reproduce=False"],
-                                defaults=["--reproduce=False"]
+                                defaults=[]
                             )
                         ],
                         title="Further Options",
@@ -474,7 +494,6 @@ def advanced_request():
                                 options=["dcml version"],
                                 defaults=["dcml version"]
                             ),
-
                             checklist_comp(
                                 comp_id="classifier_id",
                                 options=["Classification Model"],
@@ -524,20 +543,80 @@ def advanced_request():
 
 
 @callback(
-    [Output("legacy_thresh_id", "disabled"),
-     Output("legacy_blur_id", "disabled"),
-     Output("legacy_binop_id", "disabled"),
-     Output("legacy_difme_id", "disabled"),
-     Output("legacy_clrbo_id", "disabled"),
-     Output("legacy_filho_id", "disabled"),
-     Output("legacy_cldis_id", "disabled")],
+    Output("mlunet_options", "style"),
+    Input("mlunet_id", "value"),
+)
+def toggle_mlunet_options(mlunet_opt):
+    if len(mlunet_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
+    Output("legacy_options", "style"),
     Input("legacy_id", "value"),
 )
-def toggle_advanced_legacy_params(segm_legacy_opt):
-    if len(segm_legacy_opt) == 1:
-        return [False] * 7
+def toggle_legacy_options(legacy_opt):
+    if len(legacy_opt) == 1:
+        return {"display": "block"}
     else:
-        return [True] * 7
+        return {"display": "none"}
+
+
+@callback(
+    Output("watershed_options", "style"),
+    Input("watershed_id", "value"),
+)
+def toggle_watershed_options(watershed_opt):
+    if len(watershed_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
+    Output("std_options", "style"),
+    Input("std_id", "value"),
+)
+def toggle_std_options(std_opt):
+    if len(std_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
+    Output("rollmed_options", "style"),
+    Input("rollmed_id", "value"),
+)
+def toggle_rollmed_options(rollmed_opt):
+    if len(rollmed_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
+    Output("sparsemed_options", "style"),
+    Input("sparsemed_id", "value"),
+)
+def toggle_sparsemed_options(sparsemed_opt):
+    if len(sparsemed_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
+    Output("ngate_options", "style"),
+    Input("ngate_id", "value"),
+)
+def toggle_ngate_options(ngate_opt):
+    if len(ngate_opt) == 1:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
 
 
 @callback(
