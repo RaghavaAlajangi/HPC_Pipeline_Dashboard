@@ -230,7 +230,7 @@ def groupby_rows(components, width=2):
     return dbc.Row(rows)
 
 
-def group_accordion(accord_items, middle=False, comp_id="none"):
+def group_accordion(children, middle=False, comp_id="none"):
     """
     The group_accordion function takes a list of accordion items and
     returns an HTML Div element containing the accordion. The middle
@@ -249,9 +249,9 @@ def group_accordion(accord_items, middle=False, comp_id="none"):
     -------
     The accordion items
     """
-    accord_items = [a for a in accord_items]
+    accord_items = [a for a in children]
     return html.Div(
-        dbc.Accordion(accord_items,
+        dbc.Accordion(children=accord_items,
                       id=comp_id,
                       className="my-accordion"
                       ),
