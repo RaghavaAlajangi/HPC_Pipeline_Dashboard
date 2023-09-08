@@ -1,7 +1,6 @@
-import dash
 import os
 import dash_bootstrap_components as dbc
-from dash import Input, Output, dcc, html
+from dash import Dash, Input, Output, dcc, html
 
 from .components import (groupby_columns, line_breaks, paragraph_comp)
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
@@ -43,9 +42,9 @@ def sidebar_menu():
                     html.I(className="bi bi-exclamation-triangle-fill me-2"),
                     "Note:",
                     paragraph_comp(
-                        text="Please be aware that running a pipeline is "
-                             "computationally expensive so please do not "
-                             "trigger or create unnecessary pipelines!",
+                        text="Running a pipeline is computationally expensive"
+                             " so please do not trigger or create unnecessary"
+                             " pipelines!",
                         comp_id="dummy2", indent=1
                     ),
                 ],
@@ -102,8 +101,7 @@ def main_content_block():
 
 
 # Initialise the app
-app = dash.Dash(
-    #assets_folder="tmp/assets/",
+app = Dash(
     suppress_callback_exceptions=True,
     routes_pathname_prefix=PATHNAME_PREFIX,
     requests_pathname_prefix=PATHNAME_PREFIX,
@@ -143,4 +141,4 @@ def render_page_content(pathname):
     elif pathname == f"{PATHNAME_PREFIX}advanced_request":
         return advanced_request(), False, False, True
     # Return a 404 message, if user tries to reach undefined page
-    return wrong_page(pathname)
+    return wrong_page(pathname), False, False, False
