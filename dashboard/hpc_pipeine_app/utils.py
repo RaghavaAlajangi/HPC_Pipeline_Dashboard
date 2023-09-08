@@ -1,12 +1,15 @@
+import re
+
+
 def update_simple_template(params, rtdc_paths, template):
     # Uncheck all the boxes in the template before update
     template = template.replace("[x]", "[ ]")
 
-    for p_nrm in params:
-        p_low = p_nrm.lower()
-        if p_low in template.lower() or p_nrm in template:
-            template = template.replace(f"[ ] {p_nrm}", f"[x] {p_nrm}")
-            template = template.replace(f"[ ] {p_low}", f"[x] {p_low}")
+    for param in params:
+        param_lower = param.lower()
+        if param_lower in template.lower() or param in template:
+            template = re.sub(re.escape(f"[ ] {param}"), f"[x] {param}",
+                              template, flags=re.IGNORECASE)
 
     template = template.split("- **Data to Process**")[0]
     template = template + "- **Data to Process**"
