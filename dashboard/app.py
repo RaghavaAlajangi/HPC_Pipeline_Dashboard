@@ -1,19 +1,10 @@
-import os
 import dash_bootstrap_components as dbc
 from dash import Dash, Input, Output, dcc, html
 
 from .components import (groupby_columns, line_breaks, paragraph_comp)
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
-
-DBC_CSS = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap"
-           "-templates@V1.0.1/dbc.min.css")
-
-PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \
-                   "hpc_pipeline_dashboard"
-GITLAB_LOGO_URL = "https://about.gitlab.com/images/press" \
-                  "/logo/png/gitlab-icon-rgb.png"
-
-PATHNAME_PREFIX = os.getenv("BASENAME_PREFIX")
+from .global_variables import (DBC_CSS, PROJECT_REPO_URL, GITLAB_LOGO_URL,
+                               PATHNAME_PREFIX)
 
 
 def wrong_page(pathname):
