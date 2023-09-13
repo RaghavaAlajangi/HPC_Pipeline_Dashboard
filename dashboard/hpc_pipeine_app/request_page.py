@@ -2,7 +2,7 @@ from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash import callback, html, Input, Output, State, dcc, no_update, ALL
 
-from .utils import update_simple_template
+from .utils import update_simple_template, update_advanced_template
 from .hsm_grid import create_hsm_grid, display_paths_comp
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
@@ -239,7 +239,7 @@ def advanced_request():
                                         box_width=18,
                                         options=[
                                             "unet-double-d3-f3_g1_81bbe.ckp",
-                                            "unet-double-d3-f3_g2_cwfas.ckp"],
+                                            "dummy.ckp"],
                                         default="unet-double-d3-f3_g1_81bbe.ckp"
                                     )
                                 ]
@@ -400,7 +400,7 @@ def advanced_request():
                                         comp_id={"type": "rollmed_param",
                                                  "index": 2},
                                         label="batch_size",
-                                        min=100, max=90000, step=1000,
+                                        min=0, max=100000, step=1000,
                                         default=10000
                                     )
                                 ]
@@ -465,14 +465,13 @@ def advanced_request():
                                         label="online_gates",
                                         options=["True", "False"],
                                         default="False",
-                                        gap=2
                                     ),
                                     form_group_input(
                                         comp_id={"type": "ngate_param",
                                                  "index": 2},
                                         label="size_thresh_mask",
                                         min=0, max=10, step=1,
-                                        default=5, gap=2
+                                        default=5
                                     )
                                 ]
                             )
@@ -526,14 +525,14 @@ def advanced_request():
                         disabled=True,
                         comp_id="create_advanced_pipeline_button"),
             line_breaks(times=5),
-            dcc.Store(id="store_advanced_template", data=[]),
-            dcc.Store(id="store_mlunet_params", data=[]),
-            dcc.Store(id="store_legacy_params", data=[]),
-            dcc.Store(id="store_watershed_params", data=[]),
-            dcc.Store(id="store_std_params", data=[]),
-            dcc.Store(id="store_rollmed_params", data=[]),
-            dcc.Store(id="store_sparsemed_params", data=[]),
-            dcc.Store(id="store_ngate_params", data=[]),
+            dcc.Store(id="store_advanced_template"),
+            dcc.Store(id="store_mlunet_params", data={}),
+            dcc.Store(id="store_legacy_params", data={}),
+            dcc.Store(id="store_watershed_params", data={}),
+            dcc.Store(id="store_std_params", data={}),
+            dcc.Store(id="store_rollmed_params", data={}),
+            dcc.Store(id="store_sparsemed_params", data={}),
+            dcc.Store(id="store_ngate_params", data={}),
         ]
     )
 
@@ -546,17 +545,11 @@ def advanced_request():
     Input("mlunet_modelpath", "value"),
 )
 def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
-    model_path = f"{mpath_key}={mpath_value}"
-
-    # str_part = f"""
-    #     - [x] mlunet: UNET
-    #       - [x] {model_path}
-    # """
-
+    model_path = {mpath_key: mpath_value}
     if len(mlunet_opt) == 1:
-        return [*mlunet_opt, model_path], {"display": "block"}
+        return {mlunet_opt[0]: model_path}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
@@ -567,11 +560,12 @@ def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
     Input({"type": "legacy_param", "index": ALL}, "value"),
 )
 def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
-    legacy_params = [f"{lk}={lv}" for lk, lv in zip(leg_keys, leg_values)]
+    legacy_params = {k: v for k, v in zip(leg_keys, leg_values)}
+
     if len(legacy_opt) == 1:
-        return [*legacy_opt, *legacy_params], {"display": "block"}
+        return {legacy_opt[0]: legacy_params}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
@@ -582,11 +576,11 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
     Input({"type": "watershed_param", "index": ALL}, "value"),
 )
 def toggle_watershed_options(watershed_opt, water_keys, water_values):
-    water_params = [f"{lk}={lv}" for lk, lv in zip(water_keys, water_values)]
+    water_params = {k: v for k, v in zip(water_keys, water_values)}
     if len(watershed_opt) == 1:
-        return [*watershed_opt, *water_params], {"display": "block"}
+        return {watershed_opt[0]: water_params}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
@@ -597,11 +591,11 @@ def toggle_watershed_options(watershed_opt, water_keys, water_values):
     Input({"type": "std_param", "index": ALL}, "value"),
 )
 def toggle_std_options(std_opt, std_keys, std_values):
-    std_params = [f"{lk}={lv}" for lk, lv in zip(std_keys, std_values)]
+    std_params = {k: v for k, v in zip(std_keys, std_values)}
     if len(std_opt) == 1:
-        return [*std_opt, *std_params], {"display": "block"}
+        return {std_opt[0]: std_params}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
@@ -612,12 +606,11 @@ def toggle_std_options(std_opt, std_keys, std_values):
     Input({"type": "rollmed_param", "index": ALL}, "value"),
 )
 def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
-    rollmed_params = [f"{lk}={lv}" for lk, lv in
-                      zip(rollmed_keys, rollmed_values)]
+    rollmed_params = {k: v for k, v in zip(rollmed_keys, rollmed_values)}
     if len(rollmed_opt) == 1:
-        return [*rollmed_opt, *rollmed_params], {"display": "block"}
+        return {rollmed_opt[0]: rollmed_params}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
@@ -628,12 +621,11 @@ def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
     Input({"type": "sparsemed_param", "index": ALL}, "value"),
 )
 def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
-    sparsemed_params = [f"{lk}={lv}" for lk, lv in
-                        zip(sparsemed_keys, sparsemed_values)]
+    sparsemed_params = {k: v for k, v in zip(sparsemed_keys, sparsemed_values)}
     if len(sparsemed_opt) == 1:
-        return [*sparsemed_opt, *sparsemed_params], {"display": "block"}
+        return {sparsemed_opt[0]: sparsemed_params}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
@@ -644,17 +636,21 @@ def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
     Input({"type": "ngate_param", "index": ALL}, "value"),
 )
 def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
-    ngate_params = [f"{lk}={lv}" for lk, lv in zip(ngate_keys, ngate_values)]
+    ngate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
     if len(ngate_opt) == 1:
-        return [*ngate_opt, *ngate_params], {"display": "block"}
+        return {ngate_opt[0]: ngate_params}, {"display": "block"}
     else:
-        return [], {"display": "none"}
+        return {}, {"display": "none"}
 
 
 @callback(
     Output("store_advanced_template", "data"),
     Input("advanced_title_text", "value"),
+
     Input("dcevent_ver_id", "value"),
+    Input("repro_id", "value"),
+    Input("classifier_id", "value"),
+    Input("adv_postana_id", "value"),
 
     Input("store_mlunet_params", "data"),
     Input("store_legacy_params", "data"),
@@ -664,18 +660,17 @@ def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
     Input("store_sparsemed_params", "data"),
     Input("store_ngate_params", "data"),
 
-    Input("repro_id", "value"),
-    Input("classifier_id", "value"),
-    Input("adv_postana_id", "value"),
     Input("hsm_grid", "selectedRows"),
     Input("store_input_paths", "data")
 )
 def collect_advanced_pipeline_params(*args):
     advanced_title = args[0]
-    params = [item for sublist in args[1:-2] for item in sublist]
-    selected_rows, stored_input = args[-2:]
+    params = [item for sublist in args[1:5] for item in sublist]
+    params_dict = {params: {} for params in params}
+    for d in args[5:-2]:
+        params_dict.update(d)
 
-    # print(params)
+    selected_rows, stored_input = args[-2:]
 
     rtdc_files = [] + stored_input
     if selected_rows:
@@ -685,13 +680,12 @@ def collect_advanced_pipeline_params(*args):
             rtdc_files.append(new_path)
 
     pipeline_template = {}
+
     if advanced_title is not None and len(rtdc_files) != 0:
-        simple_template = gitlab_obj.get_advanced_template()
+        advanced_template = gitlab_obj.get_advanced_template()
         pipeline_template["title"] = advanced_title
-        description = update_simple_template(params,
-                                             rtdc_files,
-                                             simple_template)
-        print(description)
+        description = update_advanced_template(params_dict, rtdc_files,
+                                               advanced_template)
         pipeline_template["description"] = description
         return pipeline_template
 
