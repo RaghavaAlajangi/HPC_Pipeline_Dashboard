@@ -149,6 +149,48 @@ def dropdown_searchbar_comp(comp_id, options, defaults):
     )
 
 
+def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=2):
+    options = [{"label": op, "value": op} for op in sorted(options)]
+    dropdown = dbc.Select(
+        id=comp_id,
+        disabled=False,
+        options=options,
+        value=default,
+        key=label,
+        style={"width": f"{box_width}rem"}
+    )
+    return dbc.Form(
+        dbc.Row(
+            [
+                dbc.Label(label, width=gap),
+                dbc.Col(dropdown),
+            ]
+        )
+    )
+
+
+def form_group_input(comp_id, label, min, max, step, default, box_width=6,
+                     gap=2):
+    input = dbc.Input(
+        id=comp_id,
+        disabled=False,
+        min=min, max=max, step=step,
+        value=default,
+        type="number",
+        key=label,
+        placeholder="Enter a number...",
+        style={"width": f"{box_width}rem"}
+    )
+    return dbc.Form(
+        dbc.Row(
+            [
+                dbc.Label(label, width=gap),
+                dbc.Col(input),
+            ]
+        )
+    )
+
+
 def groupby_columns(components, width=10):
     """
     The groupby_columns function takes a list of components and returns
@@ -189,7 +231,7 @@ def groupby_rows(components, width=2):
     return dbc.Row(rows)
 
 
-def group_accordion(accord_items, middle=False, comp_id="none"):
+def group_accordion(children, middle=False, comp_id="none"):
     """
     The group_accordion function takes a list of accordion items and
     returns an HTML Div element containing the accordion. The middle
@@ -208,9 +250,9 @@ def group_accordion(accord_items, middle=False, comp_id="none"):
     -------
     The accordion items
     """
-    accord_items = [a for a in accord_items]
+    accord_items = [a for a in children]
     return html.Div(
-        dbc.Accordion(accord_items,
+        dbc.Accordion(children=accord_items,
                       id=comp_id,
                       className="my-accordion"
                       ),
@@ -296,7 +338,7 @@ def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
         style = {"marginLeft": f"{indent}rem"}
     else:
         style = {}
-    return html.P(id=comp_id, children=text, style=style)
+    return dbc.Label(id=comp_id, children=text, style=style)
 
 
 def progressbar_comp(comp_id, width=80):

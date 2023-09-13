@@ -6,9 +6,9 @@ import dash_ag_grid as dag
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
-from dash import (callback, Input, Output, State, dcc, html, ctx)
+from dash import (callback, Input, Output, State, dcc, html)
 
-from ..components import text_input_comp
+from ..components import text_input_comp, input_with_dropdown, line_breaks
 
 DATA_DIR = Path(__file__).parents[2] / "resources"
 CHUNK_DIR = DATA_DIR / "hsm_chunk_dir"
@@ -28,6 +28,16 @@ def create_hsm_grid():
         [
             html.Div(id="dummy_div"),
             dcc.Store(id="store_input_paths", data=[]),
+            line_breaks(times=1),
+            input_with_dropdown(
+                comp_id="input_group",
+                drop_options=["DVC", "DCOR"],
+                dropdown_holder="Source",
+                input_holder="Enter DVC path or DCOR Id "
+                             "or Circle or Dataset etc...",
+                width=80
+            ),
+            line_breaks(times=2),
             text_input_comp(comp_id="grid_filter",
                             placeholder="Filter with name...",
                             width=30, middle=False),
@@ -56,7 +66,7 @@ def create_hsm_grid():
                     "ensureDomOrder": True,
                     "loadingOverlayComponent": "CustomLoadingOverlayForHSM",
                     "loadingOverlayComponentParams": {
-                        "loadingMessage": "One moment please...",
+                        "loadingMessage": "HSM drive is being updated...",
                         "color": "yellow",
                     },
                     "groupDefaultExpanded": 3,
@@ -203,17 +213,15 @@ def store_input_group_paths(click_button, drop_input, text_input,
     State("show_grid", "selectedRows"),
     State("hsm_grid", "selectedRows"),
 )
-def update_grids_rowdata(click, show_selection, hsm_selection):
-    if ctx.triggered_id != "remove_entries" or show_selection is None:
+def update_hsm_grid_rowdata(click, show_selection, hsm_selection):
+    if not click or not show_selection or not hsm_selection:
         return dash.no_update
-
-    # Filter out matching entries from hms_selection. If a matching filepath
-    # is found, the corresponding entry is removed from the "hsm_grid"
-    # selection.
-
-    selection_paths = [dic["filepath"] for dic in show_selection]
+    # Filter out matching entries from hms_selection. If a matching
+    # filepath is found, the corresponding entry is removed from the
+    # "hsm_grid" selection.
+    selected_paths = set(dic["filepath"] for dic in show_selection)
     updated_hsm_selection = [hs for hs in hsm_selection if
-                             "/".join(hs["filepath"]) not in selection_paths]
+                             "/".join(hs["filepath"]) not in selected_paths]
     return updated_hsm_selection
 
 
@@ -231,7 +239,7 @@ def update_filter(filter_value, gridOptions):
     Output("remove_entries", "disabled"),
     Input("show_grid", "selectedRows"),
 )
-def update_filter(show_selection):
+def toggle_remove_entries_button(show_selection):
     if show_selection:
         return False
     else:
