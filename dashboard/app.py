@@ -110,7 +110,8 @@ server = app.server
 app.layout = html.Div(
     [
         dcc.Location(id="url"),
-        dcc.Location(id="refresh_app", refresh=True),
+        dcc.Location(id="refresh_simple", refresh=True),
+        dcc.Location(id="refresh_advanced", refresh=True),
         sidebar_menu(),
         main_content_block(),
     ]
