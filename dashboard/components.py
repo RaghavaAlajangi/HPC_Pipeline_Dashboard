@@ -149,14 +149,14 @@ def dropdown_searchbar_comp(comp_id, options, defaults):
     )
 
 
-def form_group_dropdown(comp_id, label, options, defaults, box_width=6, gap=1):
+def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=1):
     options = [{"label": op, "value": op} for op in sorted(options)]
-    defaults = [op for op in sorted(defaults)]
     dropdown = dbc.Select(
         id=comp_id,
         disabled=False,
         options=options,
-        value=defaults,
+        value=default,
+        key=label,
         style={"width": f"{box_width}rem"}
     )
     return dbc.Form(
@@ -177,6 +177,7 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
         min=min, max=max, step=step,
         value=default,
         type="number",
+        key=label,
         placeholder="Enter a number...",
         style={"width": f"{box_width}rem"}
     )

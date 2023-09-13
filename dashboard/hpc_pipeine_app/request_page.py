@@ -1,10 +1,7 @@
-import dash
-import os
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
-from dash import callback, html, Input, Output, State, dcc
+from dash import callback, html, Input, Output, State, dcc, no_update, ALL
 
-from ..gitlab_api import get_gitlab_obj
 from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, display_paths_comp
 from ..components import (header_comp, paragraph_comp, checklist_comp,
@@ -12,10 +9,7 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
                           divider_line_comp, line_breaks, input_with_dropdown,
                           form_group_dropdown, form_group_input)
 
-BASENAME_PREFIX = os.getenv("BASENAME_PREFIX")
-
-# BASENAME_PREFIX = "/test/"
-gitlab_obj = get_gitlab_obj()
+from ..global_variables import PATHNAME_PREFIX, gitlab_obj
 
 
 def simple_request():
@@ -161,21 +155,20 @@ def toggle_simple_create_pipeline_button(title, selected_rows, stored_input):
 
 @callback(
     Output("simple_popup", "is_open"),
-    Output("refresh_app", "pathname"),
+    Output("refresh_simple", "pathname"),
     Input("create_simple_pipeline_button", "n_clicks"),
     Input("store_simple_template", "data"),
     Input("simple_popup_close", "n_clicks"),
     State("simple_popup", "is_open")
 )
-def simple_request_submission_popup(_, cached_simp_temp, close, popup):
+def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(cached_simp_temp)
-        return not popup, dash.no_update
-    if close:
-        return not popup, BASENAME_PREFIX
-    else:
-        return popup, dash.no_update
+        return not popup, no_update
+    if close_popup:
+        return not popup, PATHNAME_PREFIX
+    return popup, no_update
 
 
 def advanced_request():
@@ -234,21 +227,20 @@ def advanced_request():
                             # MLUNet segmentor section
                             checklist_comp(
                                 comp_id="mlunet_id",
-                                options=["mlunet"],
-                                defaults=["mlunet"]
+                                options=["mlunet: UNET"],
+                                defaults=["mlunet: UNET"]
                             ),
                             html.Ul(
                                 id="mlunet_options",
                                 children=[
                                     form_group_dropdown(
-                                        comp_id="mlunet_model_ckp_id",
-                                        label="model_path:",
+                                        comp_id="mlunet_modelpath",
+                                        label="model_path",
                                         box_width=18,
                                         options=[
                                             "unet-double-d3-f3_g1_81bbe.ckp",
                                             "unet-double-d3-f3_g2_cwfas.ckp"],
-                                        defaults=[
-                                            "unet-double-d3-f3_g1_81bbe.ckp"]
+                                        default="unet-double-d3-f3_g1_81bbe.ckp"
                                     )
                                 ]
                             ),
@@ -266,50 +258,50 @@ def advanced_request():
                                     form_group_input(
                                         comp_id={"type": "legacy_param",
                                                  "index": 1},
-                                        label="thresh:",
+                                        label="thresh",
                                         min=-10, max=10, step=1,
                                         default=-6
                                     ),
                                     form_group_input(
                                         comp_id={"type": "legacy_param",
                                                  "index": 2},
-                                        label="blur:",
+                                        label="blur",
                                         min=0, max=10, step=1,
                                         default=0
                                     ),
                                     form_group_input(
                                         comp_id={"type": "legacy_param",
                                                  "index": 3},
-                                        label="binaryops:",
+                                        label="binaryops",
                                         min=0, max=10, step=1,
                                         default=5
                                     ),
                                     form_group_input(
                                         comp_id={"type": "legacy_param",
                                                  "index": 4},
-                                        label="diff_method:",
+                                        label="diff_method",
                                         min=0, max=10, step=1,
                                         default=1
                                     ),
                                     form_group_dropdown(
                                         comp_id={"type": "legacy_param",
                                                  "index": 5},
-                                        label="clear_border:",
+                                        label="clear_border",
                                         options=["True", "False"],
-                                        defaults=["True"]
+                                        default="True"
                                     ),
                                     form_group_dropdown(
                                         comp_id={"type": "legacy_param",
                                                  "index": 6},
-                                        label="fill_holes:",
+                                        label="fill_holes",
                                         options=["True", "False"],
-                                        defaults=["True"]
+                                        default="True"
                                     ),
 
                                     form_group_input(
                                         comp_id={"type": "legacy_param",
                                                  "index": 7},
-                                        label="close_disk:",
+                                        label="closing_disk",
                                         min=0, max=10, step=1,
                                         default=5
                                     ),
@@ -325,23 +317,23 @@ def advanced_request():
                                 id="watershed_options",
                                 children=[
                                     form_group_dropdown(
-                                        comp_id={"type": "watershd_param",
+                                        comp_id={"type": "watershed_param",
                                                  "index": 1},
-                                        label="clear_border:",
+                                        label="clear_border",
                                         options=["True", "False"],
-                                        defaults=["True"]
+                                        default="True"
                                     ),
                                     form_group_dropdown(
-                                        comp_id={"type": "watershd_param",
+                                        comp_id={"type": "watershed_param",
                                                  "index": 2},
-                                        label="fill_holes:",
+                                        label="fill_holes",
                                         options=["True", "False"],
-                                        defaults=["True"]
+                                        default="True"
                                     ),
                                     form_group_input(
-                                        comp_id={"type": "watershd_param",
+                                        comp_id={"type": "watershed_param",
                                                  "index": 3},
-                                        label="close_disk:",
+                                        label="closing_disk",
                                         min=0, max=10, step=1,
                                         default=5
                                     ),
@@ -361,21 +353,21 @@ def advanced_request():
                                     form_group_dropdown(
                                         comp_id={"type": "std_param",
                                                  "index": 1},
-                                        label="clear_border:",
+                                        label="clear_border",
                                         options=["True", "False"],
-                                        defaults=["True"]
+                                        default="True"
                                     ),
                                     form_group_dropdown(
                                         comp_id={"type": "std_param",
                                                  "index": 2},
-                                        label="fill_holes:",
+                                        label="fill_holes",
                                         options=["True", "False"],
-                                        defaults=["True"]
+                                        default="True"
                                     ),
                                     form_group_input(
                                         comp_id={"type": "std_param",
                                                  "index": 3},
-                                        label="close_disk:",
+                                        label="closing_disk",
                                         min=0, max=10, step=1,
                                         default=5
                                     )
@@ -391,9 +383,8 @@ def advanced_request():
                                 options=["rollmed: Rolling median "
                                          "RT-DC background image "
                                          "computation"],
-                                defaults=[
-                                    "rollmed: Rolling median RT-DC "
-                                    "background image computation"]
+                                defaults=["rollmed: Rolling median RT-DC "
+                                          "background image computation"]
                             ),
                             html.Ul(
                                 id="rollmed_options",
@@ -401,15 +392,15 @@ def advanced_request():
                                     form_group_input(
                                         comp_id={"type": "rollmed_param",
                                                  "index": 1},
-                                        label="kernel_size:",
+                                        label="kernel_size",
                                         min=50, max=500, step=10,
                                         default=100
                                     ),
                                     form_group_input(
                                         comp_id={"type": "rollmed_param",
                                                  "index": 2},
-                                        label="batch_size:",
-                                        min=100, max=100000, step=100,
+                                        label="batch_size",
+                                        min=100, max=90000, step=1000,
                                         default=10000
                                     )
                                 ]
@@ -428,28 +419,28 @@ def advanced_request():
                                     form_group_input(
                                         comp_id={"type": "sparsemed_param",
                                                  "index": 1},
-                                        label="kernel_size:",
+                                        label="kernel_size",
                                         min=50, max=500, step=10,
-                                        default=100
+                                        default=200
                                     ),
                                     form_group_input(
                                         comp_id={"type": "sparsemed_param",
                                                  "index": 2},
-                                        label="batch_size:",
-                                        min=100, max=100000, step=100,
-                                        default=10000
+                                        label="split_time",
+                                        min=1, max=30, step=1,
+                                        default=1
                                     ),
                                     form_group_input(
                                         comp_id={"type": "sparsemed_param",
                                                  "index": 3},
-                                        label="thresh_cleansing:",
-                                        min=0, max=1, step=1,
+                                        label="thresh_cleansing",
+                                        min=0, max=1, step=0.1,
                                         default=0
                                     ),
                                     form_group_input(
                                         comp_id={"type": "sparsemed_param",
                                                  "index": 4},
-                                        label="frac_cleansing:",
+                                        label="frac_cleansing",
                                         min=0, max=1, step=0.1,
                                         default=0.8
                                     )
@@ -471,15 +462,15 @@ def advanced_request():
                                     form_group_dropdown(
                                         comp_id={"type": "ngate_param",
                                                  "index": 1},
-                                        label="online_gates:",
+                                        label="online_gates",
                                         options=["True", "False"],
-                                        defaults=["False"],
+                                        default="False",
                                         gap=2
                                     ),
                                     form_group_input(
                                         comp_id={"type": "ngate_param",
                                                  "index": 2},
-                                        label="size_thresh_mask:",
+                                        label="size_thresh_mask",
                                         min=0, max=10, step=1,
                                         default=5, gap=2
                                     )
@@ -492,32 +483,29 @@ def advanced_request():
                         children=[
                             checklist_comp(
                                 comp_id="repro_id",
-                                options=["--reproduce=False"],
+                                options=["--reproduce"],
                                 defaults=[]
                             )
                         ]
                     ),
                     dbc.AccordionItem(
-                        title="Prediction",
+                        title="Classification Model",
                         children=[
                             checklist_comp(
                                 comp_id="classifier_id",
-                                options=["Classification Model"],
-                                defaults=["Classification Model"]
-                            ),
-                            html.Ul(
-                                id="classifier_options",
-                                children=[
-                                    form_group_dropdown(
-                                        comp_id="classifier_model_ckp_id",
-                                        label="model_path:",
-                                        box_width=21,
-                                        options=[
-                                            "bloody-bunny_g1_bacae: Bloody Bunny"],
-                                        defaults=[
-                                            "bloody-bunny_g1_bacae: Bloody Bunny"]
-                                    )
-                                ]
+                                options=["bloody-bunny_g1_bacae: Bloody Bunny"],
+                                defaults=["bloody-bunny_g1_bacae: Bloody Bunny"]
+                            )
+                        ]
+                    ),
+                    dbc.AccordionItem(
+                        title="Post Analysis",
+                        children=[
+                            checklist_comp(
+                                comp_id="adv_postana_id",
+                                options=["Benchmarking",
+                                         "Scatter Plot"],
+                                defaults=["Scatter Plot"]
                             )
                         ]
                     ),
@@ -538,179 +526,208 @@ def advanced_request():
                         disabled=True,
                         comp_id="create_advanced_pipeline_button"),
             line_breaks(times=5),
-            dcc.Store(id="store_advanced_template")
+            dcc.Store(id="store_advanced_template", data=[]),
+            dcc.Store(id="store_mlunet_params", data=[]),
+            dcc.Store(id="store_legacy_params", data=[]),
+            dcc.Store(id="store_watershed_params", data=[]),
+            dcc.Store(id="store_std_params", data=[]),
+            dcc.Store(id="store_rollmed_params", data=[]),
+            dcc.Store(id="store_sparsemed_params", data=[]),
+            dcc.Store(id="store_ngate_params", data=[]),
         ]
     )
 
 
 @callback(
+    Output("store_mlunet_params", "data"),
     Output("mlunet_options", "style"),
     Input("mlunet_id", "value"),
+    Input("mlunet_modelpath", "key"),
+    Input("mlunet_modelpath", "value"),
 )
-def toggle_mlunet_options(mlunet_opt):
+def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
+    model_path = f"{mpath_key}={mpath_value}"
+
+    # str_part = f"""
+    #     - [x] mlunet: UNET
+    #       - [x] {model_path}
+    # """
+
     if len(mlunet_opt) == 1:
-        return {"display": "block"}
+        return [*mlunet_opt, model_path], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
+    Output("store_legacy_params", "data"),
     Output("legacy_options", "style"),
     Input("legacy_id", "value"),
+    Input({"type": "legacy_param", "index": ALL}, "key"),
+    Input({"type": "legacy_param", "index": ALL}, "value"),
 )
-def toggle_legacy_options(legacy_opt):
+def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
+    legacy_params = [f"{lk}={lv}" for lk, lv in zip(leg_keys, leg_values)]
     if len(legacy_opt) == 1:
-        return {"display": "block"}
+        return [*legacy_opt, *legacy_params], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
+    Output("store_watershed_params", "data"),
     Output("watershed_options", "style"),
     Input("watershed_id", "value"),
+    Input({"type": "watershed_param", "index": ALL}, "key"),
+    Input({"type": "watershed_param", "index": ALL}, "value"),
 )
-def toggle_watershed_options(watershed_opt):
+def toggle_watershed_options(watershed_opt, water_keys, water_values):
+    water_params = [f"{lk}={lv}" for lk, lv in zip(water_keys, water_values)]
     if len(watershed_opt) == 1:
-        return {"display": "block"}
+        return [*watershed_opt, *water_params], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
+    Output("store_std_params", "data"),
     Output("std_options", "style"),
     Input("std_id", "value"),
+    Input({"type": "std_param", "index": ALL}, "key"),
+    Input({"type": "std_param", "index": ALL}, "value"),
 )
-def toggle_std_options(std_opt):
+def toggle_std_options(std_opt, std_keys, std_values):
+    std_params = [f"{lk}={lv}" for lk, lv in zip(std_keys, std_values)]
     if len(std_opt) == 1:
-        return {"display": "block"}
+        return [*std_opt, *std_params], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
+    Output("store_rollmed_params", "data"),
     Output("rollmed_options", "style"),
     Input("rollmed_id", "value"),
+    Input({"type": "rollmed_param", "index": ALL}, "key"),
+    Input({"type": "rollmed_param", "index": ALL}, "value"),
 )
-def toggle_rollmed_options(rollmed_opt):
+def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
+    rollmed_params = [f"{lk}={lv}" for lk, lv in
+                      zip(rollmed_keys, rollmed_values)]
     if len(rollmed_opt) == 1:
-        return {"display": "block"}
+        return [*rollmed_opt, *rollmed_params], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
+    Output("store_sparsemed_params", "data"),
     Output("sparsemed_options", "style"),
     Input("sparsemed_id", "value"),
+    Input({"type": "sparsemed_param", "index": ALL}, "key"),
+    Input({"type": "sparsemed_param", "index": ALL}, "value"),
 )
-def toggle_sparsemed_options(sparsemed_opt):
+def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
+    sparsemed_params = [f"{lk}={lv}" for lk, lv in
+                        zip(sparsemed_keys, sparsemed_values)]
     if len(sparsemed_opt) == 1:
-        return {"display": "block"}
+        return [*sparsemed_opt, *sparsemed_params], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
+    Output("store_ngate_params", "data"),
     Output("ngate_options", "style"),
     Input("ngate_id", "value"),
+    Input({"type": "ngate_param", "index": ALL}, "key"),
+    Input({"type": "ngate_param", "index": ALL}, "value"),
 )
-def toggle_ngate_options(ngate_opt):
+def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
+    ngate_params = [f"{lk}={lv}" for lk, lv in zip(ngate_keys, ngate_values)]
     if len(ngate_opt) == 1:
-        return {"display": "block"}
+        return [*ngate_opt, *ngate_params], {"display": "block"}
     else:
-        return {"display": "none"}
+        return [], {"display": "none"}
 
 
 @callback(
-    Output("classifier_options", "style"),
+    Output("store_advanced_template", "data"),
+    Input("advanced_title_text", "value"),
+    Input("dcevent_ver_id", "value"),
+
+    Input("store_mlunet_params", "data"),
+    Input("store_legacy_params", "data"),
+    Input("store_watershed_params", "data"),
+    Input("store_std_params", "data"),
+    Input("store_rollmed_params", "data"),
+    Input("store_sparsemed_params", "data"),
+    Input("store_ngate_params", "data"),
+
+    Input("repro_id", "value"),
     Input("classifier_id", "value"),
+    Input("adv_postana_id", "value"),
+    Input("hsm_grid", "selectedRows"),
+    Input("store_input_paths", "data")
 )
-def toggle_bb_options(classifier_model_ckp):
-    if len(classifier_model_ckp) == 1:
-        return {"display": "block"}
-    else:
-        return {"display": "none"}
+def collect_advanced_pipeline_params(*args):
+    advanced_title = args[0]
+    params = [item for sublist in args[1:-2] for item in sublist]
+    selected_rows, stored_input = args[-2:]
+
+    # print(params)
+
+    rtdc_files = [] + stored_input
+    if selected_rows:
+        selected_paths = [s["filepath"] for s in selected_rows]
+        for path_parts in selected_paths:
+            new_path = "/".join(path_parts)
+            rtdc_files.append(new_path)
+
+    pipeline_template = {}
+    if advanced_title is not None and len(rtdc_files) != 0:
+        simple_template = gitlab_obj.get_advanced_template()
+        pipeline_template["title"] = advanced_title
+        description = update_simple_template(params,
+                                             rtdc_files,
+                                             simple_template)
+        print(description)
+        pipeline_template["description"] = description
+        return pipeline_template
 
 
 @callback(
     Output("advanced_popup", "is_open"),
+    Output("refresh_advanced", "pathname"),
     Input("create_advanced_pipeline_button", "n_clicks"),
+    Input("store_advanced_template", "data"),
+    Input("advanced_popup_close", "n_clicks"),
     State("advanced_popup", "is_open")
 )
-def advanced_request_submission_popup(click, popup):
-    if click:
-        return not popup
-    return popup
-
-# @callback(Output("create_advanced_pipeline_button", "disabled"),
-#           Input("advanced_title_text", "value"),
-#           Input("hsm_grid", "selectedRows"),
-#           Input("store_input_paths", "data"))
-# def toggle_advanced_create_pipeline_button(title, selected_rows, stored_input):
-#     print(title)
-#     rtdc_files = [] + stored_input
-#     if selected_rows:
-#         selected_paths = [s["filepath"] for s in selected_rows]
-#         for path_parts in selected_paths:
-#             new_path = "/".join(path_parts)
-#             rtdc_files.append(new_path)
-#     if title is None or title == "":
-#         return True
-#     elif len(rtdc_files) == 0:
-#         return True
-#     else:
-#         return False
+def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
+    button_trigger = [p["prop_id"] for p in cc.triggered][0]
+    if "create_advanced_pipeline_button" in button_trigger:
+        gitlab_obj.run_pipeline(cached_adv_temp)
+        return not popup, no_update
+    if close_popup:
+        return not popup, PATHNAME_PREFIX
+    return popup, no_update
 
 
-# @callback(
-#     Output("store_advanced_template", "data"),
-#     Input("advanced_title_text", "value"),
-#     Input("dcevent_ver_id", "value"),
-#     Input("mlunet_id", "value"),
-#     Input("legacy_id", "value"),
-#     Input("legacy_thresh_id", "value"),
-#     Input("legacy_blur_id", "value"),
-#     Input("legacy_binop_id", "value"),
-#     Input("legacy_difme_id", "value"),
-#     Input("legacy_clrbo_id", "value"),
-#     Input("legacy_filho_id", "value"),
-#     Input("legacy_cldis_id", "value"),
-#     Input("wtrshd_clrbo_id", "value"),
-#     Input("wtrshd_filho_id", "value"),
-#     Input("wtrshd_cldis_id", "value"),
-#     Input("std_clrbo_id", "value"),
-#     Input("std_filho_id", "value"),
-#     Input("std_cldis_id", "value"),
-#     Input("rollmed_ksize_id", "value"),
-#     Input("rollmed_bsize_id", "value"),
-#     Input("sparsemed_ksize_id", "value"),
-#     Input("sparsemed_bsize_id", "value"),
-#     Input("sparsemed_thrcln_id", "value"),
-#     Input("sparsemed_frcln_id", "value"),
-#     Input("ngate_ongate_id", "value"),
-#     Input("ngate_thrmsk_id", "value"),
-#
-#     Input("simp_segm_id", "value"),
-#     Input("simp_classifier_id", "value"),
-#     Input("simp_postana_id", "value"),
-#     Input("hsm_grid", "selectedRows"),
-#     Input("store_input_paths", "data")
-# )
-# def collect_advanced_pipeline_params(*args):
-#     print(args)
-#     # params = simple_segment + simple_classifier + simple_postana
-#     # rtdc_files = [] + stored_input
-#     # if selected_rows:
-#     #     selected_paths = [s["filepath"] for s in selected_rows]
-#     #     for path_parts in selected_paths:
-#     #         new_path = "/".join(path_parts)
-#     #         rtdc_files.append(new_path)
-#     #
-#     # pipeline_template = {}
-#     # if simple_title is not None and len(rtdc_files) != 0:
-#     #     simple_template = gitlab_obj.get_simple_template()
-#     #     pipeline_template["title"] = simple_title
-#     #     description = update_simple_template(params,
-#     #                                          rtdc_files,
-#     #                                          simple_template)
-#     #     pipeline_template["description"] = description
-#     #     return pipeline_template
+@callback(Output("create_advanced_pipeline_button", "disabled"),
+          Input("advanced_title_text", "value"),
+          Input("hsm_grid", "selectedRows"),
+          Input("store_input_paths", "data"))
+def toggle_advanced_create_pipeline_button(title, selected_rows, stored_input):
+    rtdc_files = [] + stored_input
+    if selected_rows:
+        selected_paths = [s["filepath"] for s in selected_rows]
+        for path_parts in selected_paths:
+            new_path = "/".join(path_parts)
+            rtdc_files.append(new_path)
+    if title is None or title == "":
+        return True
+    elif len(rtdc_files) == 0:
+        return True
+    else:
+        return False
