@@ -7,15 +7,13 @@ from ..components import (
     header_comp, button_comp, chat_box, loading_comp, web_link,
     progressbar_comp, divider_line_comp
 )
-from ..gitlab_api import get_gitlab_obj
+from ..global_variables import gitlab_obj
 
 PROGRESS_COMMENTS = [
     "STATE: setup",
     "STATE: queued",
     "STATE: done"
 ]
-
-gitlab_obj = get_gitlab_obj()
 
 
 def open_close_tab_layout(pipelines):
@@ -148,7 +146,7 @@ def show_pipeline_comments(accord_item, match_id):
     Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
     State({"type": "accord_item_stop", "index": MATCH}, "disabled")
 )
-def cancel_pipeline(accord_item, click, enable_click):
+def cancel_pipeline(accord_item, click, enable):
     if accord_item:
         issue_iid = int(accord_item.split("item")[1])
         issue_obj = gitlab_obj.get_issue_obj(issue_iid)
@@ -156,7 +154,7 @@ def cancel_pipeline(accord_item, click, enable_click):
             issue_obj.notes.create({"body": "Cancel"})
             issue_obj.state_event = "close"
             issue_obj.save()
-            return True
+            return not enable
     raise PreventUpdate
 
 
