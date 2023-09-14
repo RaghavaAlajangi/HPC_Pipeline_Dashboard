@@ -1,6 +1,7 @@
 # HPC_Pipeline_Dashboard
 
-A web interface to create a data processing pipelines (issues) on HPC_Pipeline_requests repo
+A web interface to create a data processing pipelines (issues) on
+HPC_Pipeline_requests repo
 
 ## Installation
 
@@ -9,23 +10,29 @@ A web interface to create a data processing pipelines (issues) on HPC_Pipeline_r
 ```bash
 git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
 ```
+
 ### Install prerequisites for deployment
-- Make sure you have `Docker Desktop` installed on your computer. 
-- To install, go to [Official Docker page](https://docs.docker.com/get-docker/). This step might require administration rights.
-- Contact IT to have a developer account on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
+
+- Make sure you have `Docker Desktop` installed on your computer.
+- To install, go to [Official Docker page](https://docs.docker.com/get-docker/).
+  This step might require administration rights.
+- Contact IT to have a developer account
+  on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
 
 ## Test webapp locally
 
-### Build the docker Image:  
+### Build the docker Image:
+
 - Open `command prompt` in administrative mode
 - Check weather you ``Docker`` installed or not.
-- Change directory: ``cd <path/to/repo>``    
+- Change directory: ``cd <path/to/repo>``
 
 ```bash
 docker build -t hpc-pipeline-dashboard .
 ```
 
 ### Run the docker image:
+
 ```bash
 # Test the app locally by running the below command
 
@@ -46,9 +53,12 @@ docker run -p 8050:8050 ^
  hpc-pipeline-dashboard
 ```
 
-- Open a browser and try reaching the following address. http://localhost:8050/hpc-pipeline-dashboard/. This should start the app.
+- Open a browser and try reaching the following
+  address. http://localhost:8050/hpc-pipeline-dashboard/. This should start the
+  app.
 - If container runs properly, the changes can be pushed for deployment.
 - Look up for running container ID and stop it.
+
 ```bash
 docker ps -a
 
@@ -56,6 +66,7 @@ docker stop <containerID>
 ```
 
 ### Committing the changes:
+
 ```bash
 # Add your changes:
 git add .
@@ -70,11 +81,13 @@ git rev-parse --short HEAD
 ## Deploy the webapp on server:
 
 - Login to harbor-intranet using your developer credentials:
+
 ```bash
 docker login harbor.intranet.mpl.mpg.de
 ```
 
 - Tag both your commit and latest versions:
+
 ```bash
 # Tag commit
 docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcommitID
@@ -83,12 +96,22 @@ docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipe
 docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
 ```
 
+- Push both your commit and latest versions:
 
- - Push both your commit and latest versions:
 ```bash
 # Tag commit
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcommitID
 
 # Tag latest
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
+```
+
+## Assessing Docker images and containers
+
+```bash
+# You can get into the docker image and test weather it is created properly.
+docker run -it hpc-pipeline-dashboard /bin/bash
+
+# You can get into the running docker container and test weather it is running properly.
+docker exec -it <container_ID> /bin/bash
 ```
