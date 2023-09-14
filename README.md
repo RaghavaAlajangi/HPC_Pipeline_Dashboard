@@ -2,46 +2,56 @@
 
 A web interface to create a data processing pipelines (issues) on HPC_Pipeline_requests repo
 
-## Run dashboard
+## Installation
+
+### Clone the repository
 
 ```bash
-python -m dashboard
+git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
 ```
+### Install prerequisites for deployment
+- Make sure you have `Docker Desktop` installed on your computer. 
+- To install, go to [Official Docker page](https://docs.docker.com/get-docker/). This step might require administration rights.
+- Contact IT to have a developer account on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
 
-## Before the deployment:
+## Test webapp locally
 
-- Make sure you have `Docker Desktop` installed on your computer. To install, go to [Official Docker page](https://docs.docker.com/get-docker/). 
-This step might require administration rights.
-- Sign in to [MPL harbor](https://harbor.intranet.mpl.mpg.de/) with MPL credentials and contact IT to have a developer account for your app
-
-## Preparation for deployment:
-
-### Build a docker Image:  
+### Build the docker Image:  
 - Open `command prompt` in administrative mode
 - Check weather you ``Docker`` installed or not.
 - Change directory: ``cd <path/to/repo>``    
 
 ```bash
-docker build -t <name_of_your_docker_image> .
-
 docker build -t hpc-pipeline-dashboard .
 ```
 
-### Run the container:
+### Run the docker image:
 ```bash
-docker run -p 8050:8050  <name_of_your_docker_image>
+# Test the app locally by running the below command
 
-docker run -p 8050:8050  hpc-pipeline-dashboard
+# Windows command prompt:
+docker run -p 8050:8050 ^
+-e REPO_URL=<GITLAB_URL> ^
+-e REPO_TOKEN=<REPO_TOKEN> ^
+-e PROJECT_NUM=<PROJECT_NUMNER> ^
+-e BASENAME_PREFIX="/hpc-pipeline-dashboard/" ^
+ hpc-pipeline-dashboard
+ 
+ # Bash command prompt
+ docker run -p 8050:8050 \
+-e REPO_URL=<GITLAB_URL> \
+-e REPO_TOKEN=<REPO_TOKEN> \
+-e PROJECT_NUM=<PROJECT_NUMNER> \
+-e BASENAME_PREFIX="/hpc-pipeline-dashboard/" \
+ hpc-pipeline-dashboard
 ```
 
 - Open a browser and try reaching the following address. http://localhost:8050/hpc-pipeline-dashboard/. This should start the app.
-- If it runs in the container properly, the changes can be pushed for deployment.
-- Look up the container ID of the running container either by using ``Docker Desktop`` or by `docker ps` command.
+- If container runs properly, the changes can be pushed for deployment.
+- Look up for running container ID and stop it.
 ```bash
 docker ps -a
-```
-- Copy the container ID and stop it by running the following command:
-```bash
+
 docker stop <containerID>
 ```
 
@@ -49,13 +59,15 @@ docker stop <containerID>
 ```bash
 # Add your changes:
 git add .
+
 # Commit your changes:
 git commit -m "My message"
+
 # Get the last commit ID (sort form) and copy it:
 git rev-parse --short HEAD
 ```
 
-## Pushing the changes:
+## Deploy the webapp on server:
 
 - Login to harbor-intranet using your developer credentials:
 ```bash
