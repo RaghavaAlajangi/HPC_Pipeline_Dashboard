@@ -106,12 +106,24 @@ docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcom
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
 ```
 
-## Assessing Docker images and containers
+## Useful Docker commands
 
 ```bash
-# You can get into the docker image and test weather it is created properly.
-docker run -it hpc-pipeline-dashboard /bin/bash
+# To see created docker images
+docker images
 
-# You can get into the running docker container and test weather it is running properly.
+# To see running containers
+docker ps -a
+
+# Run an image
+docker run <image_name>
+
+#Stop container
+docker stop <container_ID>
+
+# Get into the image and test weather it is created properly.
+docker run -it <image_name> /bin/bash
+
+# Get into the running container and test weather it is running properly.
 docker exec -it <container_ID> /bin/bash
 ```
