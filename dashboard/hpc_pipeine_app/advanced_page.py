@@ -12,7 +12,7 @@ from ..global_variables import PATHNAME_PREFIX, gitlab_obj
 
 
 def advanced_request():
-    """Create advanced request page"""
+    """Creates advanced request page"""
     return dbc.Toast(
         id="advanced_request_toast",
         header="Advanced pipeline request",
@@ -580,8 +580,8 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
 )
 def toggle_advanced_create_pipeline_button(title, selected_rows,
                                            stored_dcor_paths):
-    """Activate create pipeline button only when issue title and data paths
-    are put in the template"""
+    """Activates create pipeline button only when the issue title and data
+    paths are put in the template"""
     rtdc_files = [] + stored_dcor_paths
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]

@@ -1,5 +1,4 @@
 from dash import callback_context as cc
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash import callback, Input, Output, State, dcc, no_update, html
 
@@ -13,6 +12,7 @@ from ..global_variables import PATHNAME_PREFIX, gitlab_obj
 
 
 def simple_request():
+    """Creates simple request page"""
     return dbc.Toast(
         id="simple_request_toast",
         header="Simple pipeline request",
@@ -110,13 +110,15 @@ def simple_request():
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
     Input("hsm_grid", "selectedRows"),
-    Input("store_input_paths", "data")
+    Input("store_dcor_paths", "data")
 )
 def collect_simple_pipeline_params(simple_title, simple_segment,
                                    simple_classifier, simple_postana,
-                                   selected_rows, stored_input):
+                                   selected_rows, stored_dcor_paths):
+    """Collect all the user selected parameters. Then, it updates the simple
+    issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
-    rtdc_files = [] + stored_input
+    rtdc_files = [] + stored_dcor_paths
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]
         for path_parts in selected_paths:
@@ -138,10 +140,13 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
     Output("create_simple_pipeline_button", "disabled"),
     Input("simple_title_text", "value"),
     Input("hsm_grid", "selectedRows"),
-    Input("store_input_paths", "data")
+    Input("store_dcor_paths", "data")
 )
-def toggle_simple_create_pipeline_button(title, selected_rows, stored_input):
-    rtdc_files = [] + stored_input
+def toggle_simple_create_pipeline_button(title, selected_rows,
+                                         stored_dcor_paths):
+    """Activates create pipeline button only when the issue title and data
+    paths are put in the template"""
+    rtdc_files = [] + stored_dcor_paths
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]
         for path_parts in selected_paths:
@@ -164,6 +169,8 @@ def toggle_simple_create_pipeline_button(title, selected_rows, stored_input):
     State("simple_popup", "is_open")
 )
 def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
+    """Show a popup when user clicks on create pipeline button. Then, user
+    is asked to close the popup. Once it closed, page redirects to home page"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(cached_simp_temp)
