@@ -1,6 +1,7 @@
 from dash import callback_context as cc
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc, no_update
+from dash import callback, Input, Output, State, dcc, no_update, html
 
 from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, display_paths_comp
@@ -80,13 +81,15 @@ def simple_request():
                     ),
                     dbc.AccordionItem(
                         title="Data to Process",
+                        item_id="hsm_accord",
                         children=[
                             create_hsm_grid(),
                             line_breaks(times=2),
                         ]
                     )
                 ],
-                middle=True
+                middle=True,
+                comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
             display_paths_comp(comp_id="show_grid"),

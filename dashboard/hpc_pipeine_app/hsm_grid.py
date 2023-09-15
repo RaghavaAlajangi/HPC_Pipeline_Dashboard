@@ -85,13 +85,25 @@ def create_hsm_grid():
                     # No blue highlight
                     "suppressRowHoverHighlight": True,
                 },
-                rowData=load_data_chunk(1),
+                # rowData=load_data_chunk(1),
                 enableEnterpriseModules=True,
                 style={"height": 600},
                 # getRowId="params.data.filepath",
             )
         ]
     )
+
+
+@callback(
+    Output("hsm_grid", "rowData"),
+    Input("pipeline_accord", "active_item"),
+)
+def load_hms_grid_data(pipeline_active_accord):
+    """ Show HSMFS grid only when user clicks on `Data to process` accord"""
+    if pipeline_active_accord == "hsm_accord":
+        return load_data_chunk(1)
+    else:
+        return None
 
 
 def display_paths_comp(comp_id):
@@ -162,6 +174,7 @@ def display_paths_comp(comp_id):
     Output("num_files", "children"),
     Input("hsm_grid", "selectedRows"),
     Input("store_input_paths", "data"),
+    prevent_initial_call=True
 )
 def display_selected_paths(hsm_selection, stored_input):
     original_paths = [] + stored_input
@@ -212,6 +225,7 @@ def store_input_group_paths(click_button, drop_input, text_input,
     Input("remove_entries", "n_clicks"),
     State("show_grid", "selectedRows"),
     State("hsm_grid", "selectedRows"),
+    prevent_initial_call=True
 )
 def update_hsm_grid_rowdata(click, show_selection, hsm_selection):
     if not click or not show_selection or not hsm_selection:
@@ -229,6 +243,7 @@ def update_hsm_grid_rowdata(click, show_selection, hsm_selection):
     Output("hsm_grid", "dashGridOptions"),
     Input("grid_filter", "value"),
     State("hsm_grid", "dashGridOptions"),
+    prevent_initial_call=True
 )
 def update_filter(filter_value, gridOptions):
     gridOptions["quickFilterText"] = filter_value

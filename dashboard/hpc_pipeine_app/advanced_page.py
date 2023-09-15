@@ -1,4 +1,5 @@
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 from dash import callback_context as cc
 from dash import callback, Input, Output, State, no_update, html, dcc, ALL
 
@@ -350,13 +351,15 @@ def advanced_request():
                     ),
                     dbc.AccordionItem(
                         title="Data to Process",
+                        item_id="hsm_accord",
                         children=[
                             create_hsm_grid(),
                             line_breaks(times=2),
                         ]
                     )
                 ],
-                middle=True
+                middle=True,
+                comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
             display_paths_comp(comp_id="show_grid"),
@@ -375,6 +378,18 @@ def advanced_request():
             dcc.Store(id="store_ngate_params", data={}),
         ]
     )
+
+
+@callback(
+    Output("hsm_accord", "children"),
+    Input("advanced_accord", "active_item")
+)
+def toggle_hsm_grid(advanced_accord_item):
+    print(advanced_accord_item)
+    if advanced_accord_item:
+        return [create_hsm_grid(), line_breaks(times=2)]
+
+    raise PreventUpdate
 
 
 @callback(
