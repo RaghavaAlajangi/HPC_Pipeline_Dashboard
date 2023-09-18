@@ -17,7 +17,8 @@ PROGRESS_COMMENTS = [
 
 
 def open_close_tab_layout(pipelines):
-    return dbc.Card(
+    """Create open and close tab layout"""
+    return html.Div(
         [
             line_breaks(times=2),
             html.Div(
@@ -31,6 +32,7 @@ def open_close_tab_layout(pipelines):
 
 
 def main_layout():
+    """Create home page layout"""
     return dbc.Card(
         [
             dbc.CardHeader(
@@ -63,6 +65,7 @@ def main_layout():
 
 
 def create_accord_item_for_issue(isu, active_tab):
+    """Create an accordion item for a given issue"""
     web_url = isu["web_url"]
     return dbc.AccordionItem(
         [
@@ -101,6 +104,7 @@ def create_accord_item_for_issue(isu, active_tab):
 
 
 def get_issues_accord(active_tab, issue_data):
+    """Take GitLab issue list and create a group of accordion items"""
     return group_accordion(
         [create_accord_item_for_issue(isu, active_tab) for isu in issue_data],
         middle=True, comp_id="issue_accord"
@@ -113,6 +117,7 @@ def get_issues_accord(active_tab, issue_data):
     Input("issues_pagination", "active_page"),
 )
 def switch_tabs(active_tab, page):
+    """Allow user to switch between opened and closed tabs"""
     issue_meta = gitlab_obj.get_issues_meta(active_tab, page)
     issues = get_issues_accord(active_tab, issue_meta)
     return open_close_tab_layout(issues)
@@ -126,6 +131,8 @@ def switch_tabs(active_tab, page):
     State({"type": "accord_item_div", "index": MATCH}, "id")
 )
 def show_pipeline_comments(accord_item, match_id):
+    """Show the content of an issue only when the user clicks on issue
+    accordian item otherwise do not load"""
     if accord_item:
         issue_iid = int(accord_item.split("item")[1])
         comments = gitlab_obj.get_comments(issue_iid)
@@ -147,6 +154,7 @@ def show_pipeline_comments(accord_item, match_id):
     State({"type": "accord_item_stop", "index": MATCH}, "disabled")
 )
 def cancel_pipeline(accord_item, click, enable):
+    """Close GitLab issue and disable cancel button once it is clicked"""
     if accord_item:
         issue_iid = int(accord_item.split("item")[1])
         issue_obj = gitlab_obj.get_issue_obj(issue_iid)
@@ -163,4 +171,5 @@ def cancel_pipeline(accord_item, click, enable):
     Input("tabs", "active_tab"),
 )
 def update_pagination_max_value(active_tab):
+    """Get the no of pages from GitLab and update the pagination max value"""
     return gitlab_obj.get_num_pages(active_tab)

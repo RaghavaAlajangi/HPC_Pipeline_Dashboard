@@ -1,9 +1,9 @@
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc, no_update, html
+from dash import callback, Input, Output, State, dcc, no_update
 
 from .utils import update_simple_template
-from .hsm_grid import create_hsm_grid, display_paths_comp
+from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
                           line_breaks, input_with_dropdown)
@@ -92,7 +92,7 @@ def simple_request():
                 comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
-            display_paths_comp(comp_id="show_grid"),
+            create_show_grid(comp_id="show_grid"),
             line_breaks(times=3),
             button_comp(label="Create pipeline",
                         disabled=True,

@@ -3,7 +3,7 @@ from dash import callback_context as cc
 from dash import callback, Input, Output, State, no_update, html, dcc, ALL
 
 from .utils import update_advanced_template
-from .hsm_grid import create_hsm_grid, display_paths_comp
+from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, input_with_dropdown,
                           line_breaks, form_group_dropdown, form_group_input,
@@ -362,7 +362,7 @@ def advanced_request():
                 comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
-            display_paths_comp(comp_id="show_grid"),
+            create_show_grid(comp_id="show_grid"),
             line_breaks(times=4),
             button_comp(label="Create pipeline",
                         disabled=True,
