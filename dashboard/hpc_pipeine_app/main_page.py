@@ -157,11 +157,8 @@ def cancel_pipeline(accord_item, click, enable):
     """Close GitLab issue and disable cancel button once it is clicked"""
     if accord_item:
         issue_iid = int(accord_item.split("item")[1])
-        issue_obj = gitlab_obj.get_issue_obj(issue_iid)
         if click:
-            issue_obj.notes.create({"body": "Cancel"})
-            issue_obj.state_event = "close"
-            issue_obj.save()
+            gitlab_obj.cancel_pipeline(issue_iid)
             return not enable
     raise PreventUpdate
 

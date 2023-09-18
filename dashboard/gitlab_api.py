@@ -78,3 +78,9 @@ class GitLabAPI:
     def run_pipeline(self, pipeline_request):
         new_pipeline = self.project.issues.create(pipeline_request)
         return new_pipeline.notes.create({"body": "Go"})
+
+    def cancel_pipeline(self, issue_iid):
+        issue_obj = self.get_issue_obj(issue_iid)
+        issue_obj.notes.create({"body": "Cancel"})
+        issue_obj.state_event = "close"
+        issue_obj.save()
