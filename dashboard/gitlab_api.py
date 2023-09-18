@@ -1,11 +1,6 @@
-import os
 import math
 
 import gitlab
-
-repo_url = os.getenv("REPO_URL")
-repo_token = os.getenv("REPO_TOKEN")
-project_num = os.getenv("PROJECT_NUM")
 
 
 class GitLabAPI:
@@ -57,21 +52,16 @@ class GitLabAPI:
 
     def get_simple_template(self):
         simple_path = ".gitlab/issue_templates/pipeline_request_simple.md"
-        simple_template = self.project.files.get(simple_path, ref='main')
+        simple_template = self.project.files.get(simple_path, ref="main")
         simple_template = simple_template.decode().decode()
         return simple_template
 
     def get_advanced_template(self):
         advanced_path = ".gitlab/issue_templates/pipeline_request_advanced.md"
-        advanced_template = self.project.files.get(advanced_path, ref='main')
+        advanced_template = self.project.files.get(advanced_path, ref="main")
         advanced_template = advanced_template.decode().decode()
         return advanced_template
 
     def run_pipeline(self, pipeline_request):
         new_pipeline = self.project.issues.create(pipeline_request)
-        return new_pipeline.notes.create({"body": "GO"})
-
-
-def get_gitlab_obj():
-    """Creates and returns a GitLabAPI object"""
-    return GitLabAPI(repo_url, repo_token, project_num)
+        return new_pipeline.notes.create({"body": "Go"})

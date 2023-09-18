@@ -47,15 +47,21 @@ def sidebar_menu():
                     line_breaks(times=1),
                     dbc.Nav(
                         [
-                            dbc.NavLink("Home",
-                                        href=PATHNAME_PREFIX,
-                                        id="home_active"),
-                            dbc.NavLink("Simple request",
-                                        href=f"{PATHNAME_PREFIX}simple_request",
-                                        id="simple_request_active"),
-                            dbc.NavLink("Advanced request",
-                                        href=f"{PATHNAME_PREFIX}advanced_request",
-                                        id="advanced_request_active"),
+                            dbc.NavLink(
+                                "Home",
+                                href=PATHNAME_PREFIX,
+                                id="home_active"
+                            ),
+                            dbc.NavLink(
+                                "Simple request",
+                                href=f"{PATHNAME_PREFIX}simple_request",
+                                id="simple_request_active"
+                            ),
+                            dbc.NavLink(
+                                "Advanced request",
+                                href=f"{PATHNAME_PREFIX}advanced_request",
+                                id="advanced_request_active"
+                            ),
                         ],
                         vertical=True,
                         pills=True,

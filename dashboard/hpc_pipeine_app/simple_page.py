@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import callback, Input, Output, State, dcc, no_update
 
 from .utils import update_simple_template
-from .hsm_grid import create_hsm_grid, display_paths_comp
+from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
                           line_breaks, input_with_dropdown)
@@ -12,6 +12,7 @@ from ..global_variables import PATHNAME_PREFIX, gitlab_obj
 
 
 def simple_request():
+    """Creates simple request page"""
     return dbc.Toast(
         id="simple_request_toast",
         header="Simple pipeline request",
@@ -80,16 +81,18 @@ def simple_request():
                     ),
                     dbc.AccordionItem(
                         title="Data to Process",
+                        item_id="hsm_accord",
                         children=[
                             create_hsm_grid(),
                             line_breaks(times=2),
                         ]
                     )
                 ],
-                middle=True
+                middle=True,
+                comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
-            display_paths_comp(comp_id="show_grid"),
+            create_show_grid(comp_id="show_grid"),
             line_breaks(times=3),
             button_comp(label="Create pipeline",
                         disabled=True,
@@ -107,13 +110,15 @@ def simple_request():
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
     Input("hsm_grid", "selectedRows"),
-    Input("store_input_paths", "data")
+    Input("store_dcor_paths", "data")
 )
 def collect_simple_pipeline_params(simple_title, simple_segment,
                                    simple_classifier, simple_postana,
-                                   selected_rows, stored_input):
+                                   selected_rows, stored_dcor_paths):
+    """Collect all the user selected parameters. Then, it updates the simple
+    issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
-    rtdc_files = [] + stored_input
+    rtdc_files = [] + stored_dcor_paths
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]
         for path_parts in selected_paths:
@@ -135,10 +140,13 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
     Output("create_simple_pipeline_button", "disabled"),
     Input("simple_title_text", "value"),
     Input("hsm_grid", "selectedRows"),
-    Input("store_input_paths", "data")
+    Input("store_dcor_paths", "data")
 )
-def toggle_simple_create_pipeline_button(title, selected_rows, stored_input):
-    rtdc_files = [] + stored_input
+def toggle_simple_create_pipeline_button(title, selected_rows,
+                                         stored_dcor_paths):
+    """Activates create pipeline button only when the issue title and data
+    paths are put in the template"""
+    rtdc_files = [] + stored_dcor_paths
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]
         for path_parts in selected_paths:
@@ -161,6 +169,8 @@ def toggle_simple_create_pipeline_button(title, selected_rows, stored_input):
     State("simple_popup", "is_open")
 )
 def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
+    """Show a popup when user clicks on create pipeline button. Then, user
+    is asked to close the popup. Once it closed, page redirects to home page"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(cached_simp_temp)

@@ -3,7 +3,7 @@ from dash import callback_context as cc
 from dash import callback, Input, Output, State, no_update, html, dcc, ALL
 
 from .utils import update_advanced_template
-from .hsm_grid import create_hsm_grid, display_paths_comp
+from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, input_with_dropdown,
                           line_breaks, form_group_dropdown, form_group_input,
@@ -12,6 +12,7 @@ from ..global_variables import PATHNAME_PREFIX, gitlab_obj
 
 
 def advanced_request():
+    """Creates advanced request page"""
     return dbc.Toast(
         id="advanced_request_toast",
         header="Advanced pipeline request",
@@ -350,16 +351,18 @@ def advanced_request():
                     ),
                     dbc.AccordionItem(
                         title="Data to Process",
+                        item_id="hsm_accord",
                         children=[
                             create_hsm_grid(),
                             line_breaks(times=2),
                         ]
                     )
                 ],
-                middle=True
+                middle=True,
+                comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
-            display_paths_comp(comp_id="show_grid"),
+            create_show_grid(comp_id="show_grid"),
             line_breaks(times=4),
             button_comp(label="Create pipeline",
                         disabled=True,
@@ -385,6 +388,8 @@ def advanced_request():
     Input("mlunet_modelpath", "value"),
 )
 def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
+    """Toggle mlunet segmentation options with mlunet switch, selected options
+    will be cached"""
     model_path = {mpath_key: mpath_value}
     if len(mlunet_opt) == 1:
         return {mlunet_opt[0]: model_path}, {"display": "block"}
@@ -400,6 +405,8 @@ def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
     Input({"type": "legacy_param", "index": ALL}, "value"),
 )
 def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
+    """Toggle legacy segmentation options with legacy switch, selected options
+    will be cached"""
     legacy_params = {k: v for k, v in zip(leg_keys, leg_values)}
 
     if len(legacy_opt) == 1:
@@ -416,6 +423,8 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
     Input({"type": "watershed_param", "index": ALL}, "value"),
 )
 def toggle_watershed_options(watershed_opt, water_keys, water_values):
+    """Toggle watershed segmentation options with watershed switch, selected
+    options will be cached"""
     water_params = {k: v for k, v in zip(water_keys, water_values)}
     if len(watershed_opt) == 1:
         return {watershed_opt[0]: water_params}, {"display": "block"}
@@ -431,6 +440,8 @@ def toggle_watershed_options(watershed_opt, water_keys, water_values):
     Input({"type": "std_param", "index": ALL}, "value"),
 )
 def toggle_std_options(std_opt, std_keys, std_values):
+    """Toggle std segmentation options with std switch, selected options
+    will be cached"""
     std_params = {k: v for k, v in zip(std_keys, std_values)}
     if len(std_opt) == 1:
         return {std_opt[0]: std_params}, {"display": "block"}
@@ -446,6 +457,8 @@ def toggle_std_options(std_opt, std_keys, std_values):
     Input({"type": "rollmed_param", "index": ALL}, "value"),
 )
 def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
+    """Toggle rolling median background correction options with rolling
+    median switch, selected options will be cached"""
     rollmed_params = {k: v for k, v in zip(rollmed_keys, rollmed_values)}
     if len(rollmed_opt) == 1:
         return {rollmed_opt[0]: rollmed_params}, {"display": "block"}
@@ -461,6 +474,8 @@ def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
     Input({"type": "sparsemed_param", "index": ALL}, "value"),
 )
 def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
+    """Toggle sparse median background correction options with sparse
+    median switch, selected options will be cached"""
     sparsemed_params = {k: v for k, v in zip(sparsemed_keys, sparsemed_values)}
     if len(sparsemed_opt) == 1:
         return {sparsemed_opt[0]: sparsemed_params}, {"display": "block"}
@@ -476,6 +491,8 @@ def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
     Input({"type": "ngate_param", "index": ALL}, "value"),
 )
 def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
+    """Toggle norm gating options with norm gating switch, selected options
+    will be cached"""
     ngate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
     if len(ngate_opt) == 1:
         return {ngate_opt[0]: ngate_params}, {"display": "block"}
@@ -486,12 +503,12 @@ def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
 @callback(
     Output("store_advanced_template", "data"),
     Input("advanced_title_text", "value"),
-
+    # Direct options
     Input("dcevent_ver_id", "value"),
     Input("repro_id", "value"),
     Input("classifier_id", "value"),
     Input("adv_postana_id", "value"),
-
+    # Cached options
     Input("store_mlunet_params", "data"),
     Input("store_legacy_params", "data"),
     Input("store_watershed_params", "data"),
@@ -499,28 +516,33 @@ def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
     Input("store_rollmed_params", "data"),
     Input("store_sparsemed_params", "data"),
     Input("store_ngate_params", "data"),
-
+    # Data to process
     Input("hsm_grid", "selectedRows"),
-    Input("store_input_paths", "data")
+    Input("store_dcor_paths", "data")
 )
 def collect_advanced_pipeline_params(*args):
+    """Collect all the user selected and cached parameters. Then, it updates
+    the advanced issue template. Updated template will be cached"""
+    # Get the title of the request
     advanced_title = args[0]
+    # Get the params value list and convert it to a dictionary
     params = [item for sublist in args[1:5] for item in sublist]
     params_dict = {params: {} for params in params}
+    # Get the cached selections and update the dictionary
     for d in args[5:-2]:
         params_dict.update(d)
-
-    selected_rows, stored_input = args[-2:]
-
-    rtdc_files = [] + stored_input
-    if selected_rows:
-        selected_paths = [s["filepath"] for s in selected_rows]
+    # Get the data paths
+    selected_hsm_paths, stored_dcor_paths = args[-2:]
+    # Get the rtdc_files list
+    rtdc_files = [] + stored_dcor_paths
+    if selected_hsm_paths:
+        selected_paths = [s["filepath"] for s in selected_hsm_paths]
         for path_parts in selected_paths:
             new_path = "/".join(path_parts)
             rtdc_files.append(new_path)
 
     pipeline_template = {}
-
+    # if there is no title and data paths to process, don't update the template
     if advanced_title is not None and len(rtdc_files) != 0:
         advanced_template = gitlab_obj.get_advanced_template()
         pipeline_template["title"] = advanced_title
@@ -539,6 +561,8 @@ def collect_advanced_pipeline_params(*args):
     State("advanced_popup", "is_open")
 )
 def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
+    """Show a popup when user clicks on create pipeline button. Then, user
+    is asked to close the popup. Once it closed, page redirects to home page"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_advanced_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(cached_adv_temp)
@@ -548,12 +572,17 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     return popup, no_update
 
 
-@callback(Output("create_advanced_pipeline_button", "disabled"),
-          Input("advanced_title_text", "value"),
-          Input("hsm_grid", "selectedRows"),
-          Input("store_input_paths", "data"))
-def toggle_advanced_create_pipeline_button(title, selected_rows, stored_input):
-    rtdc_files = [] + stored_input
+@callback(
+    Output("create_advanced_pipeline_button", "disabled"),
+    Input("advanced_title_text", "value"),
+    Input("hsm_grid", "selectedRows"),
+    Input("store_dcor_paths", "data")
+)
+def toggle_advanced_create_pipeline_button(title, selected_rows,
+                                           stored_dcor_paths):
+    """Activates create pipeline button only when the issue title and data
+    paths are put in the template"""
+    rtdc_files = [] + stored_dcor_paths
     if selected_rows:
         selected_paths = [s["filepath"] for s in selected_rows]
         for path_parts in selected_paths:
