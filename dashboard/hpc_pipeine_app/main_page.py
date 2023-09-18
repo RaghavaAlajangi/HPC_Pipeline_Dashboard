@@ -135,11 +135,11 @@ def show_pipeline_comments(accord_item, match_id):
     accordian item otherwise do not load"""
     if accord_item:
         issue_iid = int(accord_item.split("item")[1])
-        comments = gitlab_obj.get_comments(issue_iid)
-        match_len = len(set(PROGRESS_COMMENTS).intersection(comments))
+        notes = gitlab_obj.get_comments(issue_iid)
+        match_len = len(set(PROGRESS_COMMENTS).intersection(notes["comments"]))
         progress = (match_len / len(PROGRESS_COMMENTS)) * 100
 
-        comment_cards = chat_box(comments if comments else ["No Activity!"])
+        comment_cards = chat_box(notes)
 
         if issue_iid == match_id["index"]:
             return comment_cards, progress, f"{progress:.1f} %"

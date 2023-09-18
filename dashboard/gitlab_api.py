@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import math
 
 import gitlab
@@ -25,10 +26,22 @@ class GitLabAPI:
         return math.ceil(num_issues / self.issues_per_page)
 
     def get_comments(self, issue_iid):
-        """Fetch comments of an issues"""
+        """Fetch comments with dates of an issue"""
         issue = self.project.issues.get(issue_iid)
         issue_notes = issue.notes.list(get_all=True)
-        return [n.asdict()["body"] for n in issue_notes]
+        # Define the GMT+0200 timezone offset
+        gmt_offset = timedelta(hours=2)
+
+        comments, dates = [], []
+        for note in issue_notes:
+            time_stamp = datetime.strptime(note.created_at,
+                                           "%Y-%m-%dT%H:%M:%S.%fZ")
+            # Add the GMT offset to the timestamp
+            new_time_stamp = time_stamp + gmt_offset
+            formatted_time = new_time_stamp.strftime("%I:%M%p, %d-%b-%Y")
+            comments.append(note.body)
+            dates.append(formatted_time)
+        return {"comments": comments, "dates": dates}
 
     def get_issue_obj(self, issue_iid):
         return self.project.issues.get(issue_iid)

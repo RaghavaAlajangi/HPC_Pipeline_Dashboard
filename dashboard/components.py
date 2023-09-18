@@ -12,38 +12,34 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     )
 
 
-def chat_box(chat, gap=15):
-    """
-    The chat_box function takes a list of messages and returns a Div
-    containing a Card for each message. The Card is styled to look like
-    the chat box in WhatsApp, with rounded corners and no border. Each
-    message is passed through the web_link_check function before being
-    added to the card.
-    Parameters
-    ----------
-    chat
-        Pass the chat data to the function
-    gap
-        Set the margin-bottom of each message
-    Returns
-    -------
-    A div object that contains a list of messages
-    """
-    comments = [html.Div(
-        dbc.Card([
-            dbc.CardBody(web_link_check(msg), style={"padding": "0"})
-        ],
+def chat_box(messages, gap=15):
+    comment_cards = []
+
+    for comment, date in zip(messages["comments"], messages["dates"]):
+        comment_card = dbc.Card(
+            [
+                dbc.CardBody(web_link_check(comment), style={"padding": "0"}),
+                dbc.Badge(
+                    date,
+                    color="secondary",
+                    text_color="white",
+                    className="position-absolute bottom-0 start-100",
+                ),
+            ],
             className="message-box",
-        ),
-        style={"margin-bottom": f"{gap}px", "border": "0"},
+            style={"margin-bottom": f"{gap}px", "border": "0"},
+        )
+        comment_cards.append(comment_card)
+
+    return dbc.Card(
+        dbc.CardBody(comment_cards),
+        style={
+            "max-height": "30rem",
+            "width": "100%",
+            "overflow-y": "scroll",
+            "overflowX": "hidden",
+        },
     )
-        for msg in chat]
-    return dbc.Card(comments, body=True,
-                    style={"max-height": "30rem",
-                           "width": "100%",
-                           "overflow-y": "scroll",
-                           "overflowX": "hidden"},
-                    )
 
 
 def checklist_comp(comp_id, options, defaults):

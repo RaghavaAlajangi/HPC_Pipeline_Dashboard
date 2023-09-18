@@ -155,6 +155,7 @@ a:hover {
     position: relative;
     padding: 1rem;
     width: fit-content;
+    max-width: 65rem;
     height: fit-content;
     background-color: #017b50;
 }
