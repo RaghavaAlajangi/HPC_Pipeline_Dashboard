@@ -85,7 +85,7 @@ def advanced_request(refresh_path):
                                 children=[
                                     form_group_dropdown(
                                         comp_id="mlunet_modelpath",
-                                        label="model_path",
+                                        label="model_file",
                                         box_width=18,
                                         options=segm_ckp_list,
                                         # This is first ever checkpoint from
@@ -400,9 +400,9 @@ def advanced_request(refresh_path):
 def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
     """Toggle mlunet segmentation options with mlunet switch, selected options
     will be cached"""
-    model_path = {mpath_key: mpath_value}
+    model_file = {mpath_key: mpath_value}
     if len(mlunet_opt) == 1:
-        return {mlunet_opt[0]: model_path}, {"display": "block"}
+        return {mlunet_opt[0]: model_file}, {"display": "block"}
     else:
         return {}, {"display": "none"}
 
