@@ -115,9 +115,7 @@ server = app.server
 # Build the layout of the app
 app.layout = html.Div(
     [
-        dcc.Location(id="url"),
-        dcc.Location(id="refresh_simple", refresh=True),
-        dcc.Location(id="refresh_advanced", refresh=True),
+        dcc.Location(id="url", refresh=False),
         sidebar_menu(),
         main_content_block(),
     ]
@@ -135,8 +133,8 @@ def render_page_content(pathname):
     if pathname == PATHNAME_PREFIX:
         return main_layout(), True, False, False
     elif pathname == f"{PATHNAME_PREFIX}simple_request":
-        return simple_request(), False, True, False
+        return simple_request(pathname), False, True, False
     elif pathname == f"{PATHNAME_PREFIX}advanced_request":
-        return advanced_request(), False, False, True
+        return advanced_request(pathname), False, False, True
     # Return a 404 message, if user tries to reach undefined page
     return wrong_page(pathname), False, False, False

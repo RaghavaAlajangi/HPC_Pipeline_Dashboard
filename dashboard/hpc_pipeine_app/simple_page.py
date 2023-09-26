@@ -1,6 +1,6 @@
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc, no_update
+from dash import callback, Input, Output, State, dcc
 
 from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
@@ -8,10 +8,10 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
                           line_breaks, input_with_dropdown)
 
-from ..global_variables import PATHNAME_PREFIX, gitlab_obj
+from ..global_variables import gitlab_obj
 
 
-def simple_request():
+def simple_request(refresh_path):
     """Creates simple request page"""
     return dbc.Toast(
         id="simple_request_toast",
@@ -22,7 +22,8 @@ def simple_request():
         is_open=True,
         className="my-toast",
         children=[
-            popup_comp(comp_id="simple_popup"),
+            popup_comp(comp_id="simple_popup", refresh_path=refresh_path,
+                       text="Pipeline request has been submitted!"),
             line_breaks(times=1),
             header_comp("⦿ Pipeline for segmentation and/or classification "
                         "(prediction) and analysis of data.", indent=40),
@@ -37,7 +38,7 @@ def simple_request():
                         children=[
                             input_with_dropdown(
                                 comp_id="simple_title",
-                                # drop_options=gitlab_obj.get_project_members(),
+                                # drop_options=request_gitlab.get_project_members(),
                                 drop_options=["eoghan", "max", "nadia",
                                               "paul", "raghava"],
                                 dropdown_holder="User",
@@ -162,7 +163,6 @@ def toggle_simple_create_pipeline_button(title, selected_rows,
 
 @callback(
     Output("simple_popup", "is_open"),
-    Output("refresh_simple", "pathname"),
     Input("create_simple_pipeline_button", "n_clicks"),
     Input("store_simple_template", "data"),
     Input("simple_popup_close", "n_clicks"),
@@ -170,11 +170,11 @@ def toggle_simple_create_pipeline_button(title, selected_rows,
 )
 def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
-    is asked to close the popup. Once it closed, page redirects to home page"""
+    is asked to close the popup. When user closes page will be refreshed"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(cached_simp_temp)
-        return not popup, no_update
+        return not popup
     if close_popup:
-        return not popup, PATHNAME_PREFIX
-    return popup, no_update
+        return not popup
+    return popup

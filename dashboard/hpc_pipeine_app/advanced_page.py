@@ -8,10 +8,10 @@ from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, input_with_dropdown,
                           line_breaks, form_group_dropdown, form_group_input,
                           divider_line_comp)
-from ..global_variables import PATHNAME_PREFIX, gitlab_obj
+from ..global_variables import gitlab_obj
 
 
-def advanced_request():
+def advanced_request(refresh_path):
     """Creates advanced request page"""
     return dbc.Toast(
         id="advanced_request_toast",
@@ -22,7 +22,8 @@ def advanced_request():
         is_open=True,
         className="my-toast",
         children=[
-            popup_comp(comp_id="advanced_popup"),
+            popup_comp(comp_id="advanced_popup", refresh_path=refresh_path,
+                       text="Pipeline request has been submitted!"),
             line_breaks(times=1),
             header_comp("⦿ Pipeline for segmentation and/or classification "
                         "(prediction) and analysis of data.", indent=40),
@@ -554,7 +555,6 @@ def collect_advanced_pipeline_params(*args):
 
 @callback(
     Output("advanced_popup", "is_open"),
-    Output("refresh_advanced", "pathname"),
     Input("create_advanced_pipeline_button", "n_clicks"),
     Input("store_advanced_template", "data"),
     Input("advanced_popup_close", "n_clicks"),
@@ -562,14 +562,14 @@ def collect_advanced_pipeline_params(*args):
 )
 def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
-    is asked to close the popup. Once it closed, page redirects to home page"""
+    is asked to close the popup. When user closes page will be refreshed"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_advanced_pipeline_button" in button_trigger:
         gitlab_obj.run_pipeline(cached_adv_temp)
         return not popup, no_update
     if close_popup:
-        return not popup, PATHNAME_PREFIX
-    return popup, no_update
+        return not popup
+    return popup
 
 
 @callback(
