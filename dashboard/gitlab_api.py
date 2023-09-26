@@ -44,9 +44,11 @@ class GitLabAPI:
         return {"comments": comments, "dates": dates}
 
     def get_issue_obj(self, issue_iid):
+        """Fetch the issue object based on issue iid"""
         return self.project.issues.get(issue_iid)
 
     def get_issues_meta(self, state, page):
+        """Fetch the metadata of issues in a page"""
         issues = self.get_issues_per_page(state, page)
         return [
             {
@@ -60,26 +62,30 @@ class GitLabAPI:
         ]
 
     def get_project_members(self):
+        """Fetch the members list of a repository"""
         members = self.project.members.list(all=True, include_inherited=True)
         return [member.name for member in members]
 
-    def get_simple_template(self):
-        simple_path = ".gitlab/issue_templates/pipeline_request_simple.md"
-        simple_template = self.project.files.get(simple_path, ref="main")
-        simple_template = simple_template.decode().decode()
-        return simple_template
+    def read_file(self, path):
+        """Fetch the file content of a specified repository path"""
+        file = self.project.files.get(path, ref="main")
+        file_content = file.decode().decode()
+        return file_content
 
-    def get_advanced_template(self):
-        advanced_path = ".gitlab/issue_templates/pipeline_request_advanced.md"
-        advanced_template = self.project.files.get(advanced_path, ref="main")
-        advanced_template = advanced_template.decode().decode()
-        return advanced_template
+    def get_dvc_filelist_from_dir(self, path):
+        """Fetch DVC file list from a specified repository path without .dvc
+        extension"""
+        folder_contents = self.project.repository_tree(path=path)
+        return [item["name"].split(".dvc")[0] for item in folder_contents if
+                ".dvc" in item["name"]]
 
     def run_pipeline(self, pipeline_request):
+        """Trigger a pipeline by creating `Go` comment in an issue"""
         new_pipeline = self.project.issues.create(pipeline_request)
         return new_pipeline.notes.create({"body": "Go"})
 
     def cancel_pipeline(self, issue_iid):
+        """Stop a pipeline by creating `Close` comment in an issue"""
         issue_obj = self.get_issue_obj(issue_iid)
         issue_obj.notes.create({"body": "Cancel"})
         issue_obj.state_event = "close"

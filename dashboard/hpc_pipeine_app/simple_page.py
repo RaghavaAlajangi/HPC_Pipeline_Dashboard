@@ -11,7 +11,7 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
 from ..global_variables import request_gitlab
 
 # Fetch the simple request template from request repo
-simple_template = request_gitlab.get_file_content(
+simple_template = request_gitlab.read_file(
     path=".gitlab/issue_templates/pipeline_request_simple.md")
 
 
