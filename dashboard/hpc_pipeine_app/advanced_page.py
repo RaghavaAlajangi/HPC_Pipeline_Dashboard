@@ -527,8 +527,7 @@ def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
     Input("store_sparsemed_params", "data"),
     Input("store_ngate_params", "data"),
     # Data to process
-    Input("hsm_grid", "selectedRows"),
-    Input("store_dcor_paths", "data")
+    Input("show_grid", "selectedRows")
 )
 def collect_advanced_pipeline_params(*args):
     """Collect all the user selected and cached parameters. Then, it updates
@@ -542,20 +541,14 @@ def collect_advanced_pipeline_params(*args):
     for d in args[5:-2]:
         params_dict.update(d)
     # Get the data paths
-    selected_hsm_paths, stored_dcor_paths = args[-2:]
-    # Get the rtdc_files list
-    rtdc_files = [] + stored_dcor_paths
-    if selected_hsm_paths:
-        selected_paths = [s["filepath"] for s in selected_hsm_paths]
-        for path_parts in selected_paths:
-            new_path = "/".join(path_parts)
-            rtdc_files.append(new_path)
+    selected_data_paths = args[-1]
 
-    pipeline_template = {}
-    # if there is no title and data paths to process, don't update the template
-    if advanced_title is not None and len(rtdc_files) != 0:
-        # advanced_template = request_gitlab.get_advanced_template()
-        pipeline_template["title"] = advanced_title
+    # Update the template, only when is a title and data paths to process
+    if advanced_title and selected_data_paths:
+        rtdc_files = [s["filepath"] for s in selected_data_paths]
+        # Create a template dict with title
+        pipeline_template = {"title": advanced_title}
+        # Update the advanced template from request repo
         description = update_advanced_template(params_dict, rtdc_files,
                                                advanced_template)
         pipeline_template["description"] = description
@@ -573,7 +566,7 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
-    if "create_advanced_pipeline_button" in button_trigger:
+    if "create_advanced_pipeline_button" in button_trigger and cached_adv_temp:
         request_gitlab.run_pipeline(cached_adv_temp)
         return not popup
     if close_popup:
@@ -584,22 +577,12 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
 @callback(
     Output("create_advanced_pipeline_button", "disabled"),
     Input("advanced_title_text", "value"),
-    Input("hsm_grid", "selectedRows"),
-    Input("store_dcor_paths", "data")
+    Input("show_grid", "selectedRows")
 )
-def toggle_advanced_create_pipeline_button(title, selected_rows,
-                                           stored_dcor_paths):
+def toggle_advanced_create_pipeline_button(title, selected_data_paths):
     """Activates create pipeline button only when the issue title and data
     paths are put in the template"""
-    rtdc_files = [] + stored_dcor_paths
-    if selected_rows:
-        selected_paths = [s["filepath"] for s in selected_rows]
-        for path_parts in selected_paths:
-            new_path = "/".join(path_parts)
-            rtdc_files.append(new_path)
-    if title is None or title == "":
-        return True
-    elif len(rtdc_files) == 0:
-        return True
-    else:
+    if selected_data_paths and title and title != "":
         return False
+    else:
+        return True

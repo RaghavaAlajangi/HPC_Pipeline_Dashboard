@@ -114,28 +114,22 @@ def simple_request(refresh_path):
     Input("simp_segm_id", "value"),
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
-    Input("hsm_grid", "selectedRows"),
-    Input("store_dcor_paths", "data")
+    Input("show_grid", "selectedRows")
 )
 def collect_simple_pipeline_params(simple_title, simple_segment,
                                    simple_classifier, simple_postana,
-                                   selected_rows, stored_dcor_paths):
+                                   selected_data_paths):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
-    rtdc_files = [] + stored_dcor_paths
-    if selected_rows:
-        selected_paths = [s["filepath"] for s in selected_rows]
-        for path_parts in selected_paths:
-            new_path = "/".join(path_parts)
-            rtdc_files.append(new_path)
 
-    pipeline_template = {}
-    if simple_title is not None and len(rtdc_files) != 0:
-        # simple_template = request_gitlab.get_simple_template()
-        pipeline_template["title"] = simple_title
-        description = update_simple_template(params,
-                                             rtdc_files,
+    # Update the template, only when is a title and data paths to process
+    if simple_title and selected_data_paths:
+        rtdc_files = [s["filepath"] for s in selected_data_paths]
+        # Create a template dict with title
+        pipeline_template = {"title": simple_title}
+        # Update the simple template from request repo
+        description = update_simple_template(params, rtdc_files,
                                              simple_template)
         pipeline_template["description"] = description
         return pipeline_template
@@ -144,25 +138,15 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
 @callback(
     Output("create_simple_pipeline_button", "disabled"),
     Input("simple_title_text", "value"),
-    Input("hsm_grid", "selectedRows"),
-    Input("store_dcor_paths", "data")
+    Input("show_grid", "selectedRows")
 )
-def toggle_simple_create_pipeline_button(title, selected_rows,
-                                         stored_dcor_paths):
+def toggle_simple_create_pipeline_button(title, selected_data_paths):
     """Activates create pipeline button only when the issue title and data
     paths are put in the template"""
-    rtdc_files = [] + stored_dcor_paths
-    if selected_rows:
-        selected_paths = [s["filepath"] for s in selected_rows]
-        for path_parts in selected_paths:
-            new_path = "/".join(path_parts)
-            rtdc_files.append(new_path)
-    if title is None or title == "":
-        return True
-    elif len(rtdc_files) == 0:
-        return True
-    else:
+    if selected_data_paths and title and title != "":
         return False
+    else:
+        return True
 
 
 @callback(
