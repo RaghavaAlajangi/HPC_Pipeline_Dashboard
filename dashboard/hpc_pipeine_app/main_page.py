@@ -5,9 +5,9 @@ from dash import html, callback, Input, Output, State, MATCH
 from ..components import (
     line_breaks, paragraph_comp, group_accordion, groupby_columns,
     header_comp, button_comp, chat_box, loading_comp, web_link,
-    progressbar_comp, divider_line_comp
+    progressbar_comp, divider_line_comp, popup_comp
 )
-from ..global_variables import gitlab_obj
+from ..global_variables import gitlab_obj, PATHNAME_PREFIX
 
 PROGRESS_COMMENTS = [
     "STATE: setup",
@@ -35,7 +35,7 @@ def main_layout():
     """Create home page layout"""
     return dbc.Card(
         [
-            dbc.CardHeader(
+            dbc.CardHeader([
                 dbc.Tabs(
                     [
                         dbc.Tab(label="Open requests", tab_id="opened",
@@ -44,23 +44,21 @@ def main_layout():
                                 active_label_style={"color": "#10e84a"}),
                     ],
                     id="tabs",
-                    active_tab="opened"
+                    active_tab="opened",
                 ),
+            ]),
+            dbc.Pagination(
+                id="issues_pagination",
+                min_value=1,
+                max_value=1,
+                active_page=1,
+                first_last=True,
+                previous_next=True,
+                fully_expanded=False,
+                style={"justify-content": "center"},
             ),
-            html.Div(
-                dbc.Pagination(
-                    id="issues_pagination",
-                    min_value=1,
-                    max_value=1,
-                    active_page=1,
-                    first_last=True,
-                    previous_next=True,
-                    fully_expanded=False,
-                    style={"justify-content": "center"},
-                )
-            ),
-            html.Div(id="tab_content")
-        ]
+            html.Div(id="tab_content"),
+        ],
     )
 
 
@@ -82,7 +80,14 @@ def create_accord_item_for_issue(isu, active_tab):
                     button_comp(
                         label="Stop Pipeline", type="danger",
                         comp_id={"type": "accord_item_stop",
-                                 "index": isu['iid']}
+                                 "index": isu['iid']},
+                        disabled=True
+                    ) if active_tab == "opened" else None,
+                    popup_comp(
+                        comp_id={"type": "stop_pipeline_popup",
+                                 "index": isu['iid']},
+                        refresh_path=PATHNAME_PREFIX,
+                        text="Pipeline request has been canceled!"
                     ) if active_tab == "opened" else None,
                     line_breaks(times=2) if active_tab == "opened" else None
                 ]
@@ -149,17 +154,33 @@ def show_pipeline_comments(accord_item, match_id):
 
 @callback(
     Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
+    Input({"type": "accord_item_div", "index": MATCH}, "children"),
+    State({"type": "accord_item_stop", "index": MATCH}, "disabled"),
+)
+def toggle_stop_pipeline_button(issue_content, disable):
+    """Enable the stop pipeline button in an issue only after the comments
+    of that issue are loaded"""
+    if isinstance(issue_content, dict):
+        return not disable
+    return disable
+
+
+@callback(
+    Output({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
     Input("issue_accord", "active_item"),
     Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
-    State({"type": "accord_item_stop", "index": MATCH}, "disabled")
+    Input({"type": "stop_pipeline_popup", "index": MATCH}, "n_clicks"),
+    State({"type": "stop_pipeline_popup", "index": MATCH}, "is_open")
 )
-def cancel_pipeline(accord_item, click, enable):
-    """Close GitLab issue and disable cancel button once it is clicked"""
-    if accord_item:
-        issue_iid = int(accord_item.split("item")[1])
-        if click:
+def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
+    """Cancel pipeline, close GitLab issue, and refresh page"""
+    if active_issue:
+        issue_iid = int(active_issue.split("item")[1])
+        if stop_issue:
             gitlab_obj.cancel_pipeline(issue_iid)
-            return not enable
+            return not popup
+    if close_popup:
+        return not popup
     raise PreventUpdate
 
 

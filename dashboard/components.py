@@ -344,30 +344,26 @@ def progressbar_comp(comp_id, width=80):
                         )
 
 
-def popup_comp(comp_id):
-    """
-    The popup_comp function is used to create a modal that will pop up when
-    the user clicks on the &quot;Submit&quot; button. The modal will display
-    a message indicating that their pipeline request has been submitted.
-    Parameters
-    ----------
-    comp_id
-        Identify the modal in the html
-    Returns
-    -------
-    A modal that is centered and has a white background
-    """
+def popup_comp(comp_id, refresh_path, text):
+    """Creates a modal (notification window) that will appear when the user
+    clicks on a targeted button. The refresh_path argument sets where we want
+    to redirect after the user closes out of this popup window."""
+
     return dbc.Modal([
         dbc.ModalHeader(
             dbc.ModalTitle("Pipeline Status"), close_button=False
         ),
-        dbc.ModalBody("Pipeline request has been submitted!"),
+        dbc.ModalBody(text),
         dbc.ModalFooter(
-            dbc.Button("Close",
-                       id=f"{comp_id}_close",
-                       className="ms-auto",
-                       n_clicks=0,
-                       )
+            html.A(
+                dbc.Button(
+                    "Close",
+                    id=f"{comp_id}_close",
+                    className="ms-auto",
+                    n_clicks=0,
+                ),
+                href=refresh_path
+            )
         ),
     ],
         id=comp_id,
