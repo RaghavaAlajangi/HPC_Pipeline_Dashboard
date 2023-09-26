@@ -8,7 +8,11 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
                           line_breaks, input_with_dropdown)
 
-from ..global_variables import gitlab_obj
+from ..global_variables import request_gitlab
+
+# Fetch the simple request template from request repo
+simple_template = request_gitlab.get_file_content(
+    path=".gitlab/issue_templates/pipeline_request_simple.md")
 
 
 def simple_request(refresh_path):
@@ -128,7 +132,7 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
 
     pipeline_template = {}
     if simple_title is not None and len(rtdc_files) != 0:
-        simple_template = gitlab_obj.get_simple_template()
+        # simple_template = request_gitlab.get_simple_template()
         pipeline_template["title"] = simple_title
         description = update_simple_template(params,
                                              rtdc_files,
@@ -173,7 +177,7 @@ def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
     is asked to close the popup. When user closes page will be refreshed"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
-        gitlab_obj.run_pipeline(cached_simp_temp)
+        request_gitlab.run_pipeline(cached_simp_temp)
         return not popup
     if close_popup:
         return not popup

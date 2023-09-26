@@ -7,7 +7,7 @@ from ..components import (
     header_comp, button_comp, chat_box, loading_comp, web_link,
     progressbar_comp, divider_line_comp, popup_comp
 )
-from ..global_variables import gitlab_obj, PATHNAME_PREFIX
+from ..global_variables import request_gitlab, PATHNAME_PREFIX
 
 PROGRESS_COMMENTS = [
     "STATE: setup",
@@ -123,7 +123,7 @@ def get_issues_accord(active_tab, issue_data):
 )
 def switch_tabs(active_tab, page):
     """Allow user to switch between opened and closed tabs"""
-    issue_meta = gitlab_obj.get_issues_meta(active_tab, page)
+    issue_meta = request_gitlab.get_issues_meta(active_tab, page)
     issues = get_issues_accord(active_tab, issue_meta)
     return open_close_tab_layout(issues)
 
@@ -140,7 +140,7 @@ def show_pipeline_comments(accord_item, match_id):
     accordian item otherwise do not load"""
     if accord_item:
         issue_iid = int(accord_item.split("item")[1])
-        notes = gitlab_obj.get_comments(issue_iid)
+        notes = request_gitlab.get_comments(issue_iid)
         match_len = len(set(PROGRESS_COMMENTS).intersection(notes["comments"]))
         progress = (match_len / len(PROGRESS_COMMENTS)) * 100
 
@@ -177,7 +177,7 @@ def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
     if active_issue:
         issue_iid = int(active_issue.split("item")[1])
         if stop_issue:
-            gitlab_obj.cancel_pipeline(issue_iid)
+            request_gitlab.cancel_pipeline(issue_iid)
             return not popup
     if close_popup:
         return not popup
@@ -190,4 +190,4 @@ def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
 )
 def update_pagination_max_value(active_tab):
     """Get the no of pages from GitLab and update the pagination max value"""
-    return gitlab_obj.get_num_pages(active_tab)
+    return request_gitlab.get_num_pages(active_tab)

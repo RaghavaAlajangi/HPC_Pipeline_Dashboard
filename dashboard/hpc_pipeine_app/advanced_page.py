@@ -1,6 +1,6 @@
 import dash_bootstrap_components as dbc
 from dash import callback_context as cc
-from dash import callback, Input, Output, State, no_update, html, dcc, ALL
+from dash import callback, Input, Output, State, html, dcc, ALL
 
 from .utils import update_advanced_template
 from .hsm_grid import create_hsm_grid, create_show_grid
@@ -8,7 +8,15 @@ from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, input_with_dropdown,
                           line_breaks, form_group_dropdown, form_group_input,
                           divider_line_comp)
-from ..global_variables import gitlab_obj
+from ..global_variables import request_gitlab, dvc_gitlab
+
+# Fetch the model checkpoint list from DVC repo
+segm_ckp_list = dvc_gitlab.get_model_ckp_list(
+    path="model_registry/segmentation")
+
+# Fetch the advanced request template from request repo
+advanced_template = request_gitlab.get_file_content(
+    path=".gitlab/issue_templates/pipeline_request_advanced.md")
 
 
 def advanced_request(refresh_path):
@@ -79,10 +87,11 @@ def advanced_request(refresh_path):
                                         comp_id="mlunet_modelpath",
                                         label="model_path",
                                         box_width=18,
-                                        options=[
-                                            "unet-double-d3-f3_g1_81bbe.ckp",
-                                            "dummy.ckp"],
-                                        default="unet-double-d3-f3_g1_81bbe.ckp"
+                                        options=segm_ckp_list,
+                                        # This is first ever checkpoint from
+                                        # segmentation group. Currently, it is
+                                        # hardcoded.
+                                        default="unet-228_g1_40c43.ckp"
                                     )
                                 ]
                             ),
@@ -545,7 +554,7 @@ def collect_advanced_pipeline_params(*args):
     pipeline_template = {}
     # if there is no title and data paths to process, don't update the template
     if advanced_title is not None and len(rtdc_files) != 0:
-        advanced_template = gitlab_obj.get_advanced_template()
+        # advanced_template = request_gitlab.get_advanced_template()
         pipeline_template["title"] = advanced_title
         description = update_advanced_template(params_dict, rtdc_files,
                                                advanced_template)
@@ -565,8 +574,8 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     is asked to close the popup. When user closes page will be refreshed"""
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_advanced_pipeline_button" in button_trigger:
-        gitlab_obj.run_pipeline(cached_adv_temp)
-        return not popup, no_update
+        request_gitlab.run_pipeline(cached_adv_temp)
+        return not popup
     if close_popup:
         return not popup
     return popup
