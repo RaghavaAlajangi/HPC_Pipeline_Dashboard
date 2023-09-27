@@ -19,17 +19,22 @@ git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
 - Contact IT to have a developer account
   on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
 
-## Test webapp locally
 
-### Build the docker Image:
+## Build App and Cron docker images:
 
-- Open `command prompt` in administrative mode
-- Check weather you ``Docker`` installed or not.
-- Change directory: ``cd <path/to/repo>``
-
+- Open `command prompt` in administrative mode<br><br>
+- Check weather you have ``Docker`` installed or not.<br><br>
+- Change directory: ``cd <path/to/repo>``<br><br>
+- Below command creates a docker image for the application
 ```bash
 docker build -t hpc-pipeline-dashboard .
 ```
+- Below command creates a docker image for the cron job
+```bash
+docker build -t hpc-pipeline-dashboard-cron --target cron .
+```
+
+## Test webapp locally
 
 ### Run the docker image:
 
