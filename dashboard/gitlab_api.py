@@ -2,6 +2,11 @@ from datetime import datetime, timedelta
 import math
 
 import gitlab
+from gitlab.exceptions import GitlabAuthenticationError
+
+
+class AuthenticationError(Exception):
+    pass
 
 
 class GitLabAPI:
@@ -10,10 +15,17 @@ class GitLabAPI:
         self.token = token
         self.project_num = project_num
 
-        gitlab_obj = gitlab.Gitlab(url=url, private_token=token)
-        gitlab_obj.auth()
-        self.project = gitlab_obj.projects.get(project_num)
-        self.issues_per_page = 20
+        try:
+            gitlab_obj = gitlab.Gitlab(url=url, private_token=token)
+            gitlab_obj.auth()
+            self.project = gitlab_obj.projects.get(project_num)
+            self.issues_per_page = 20
+        except GitlabAuthenticationError:
+            raise AuthenticationError(
+                "Authentication error. Your access token may be expired or "
+                "incorrect. Please update your access token in your GitLab "
+                "settings."
+            )
 
     def get_issues_per_page(self, state, page):
         """Fetch issues list per page in a state"""
