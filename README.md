@@ -41,6 +41,8 @@ docker run -p 8050:8050 ^
 -e REPO_URL=<GITLAB_URL> ^
 -e REPO_TOKEN=<REPO_TOKEN> ^
 -e PROJECT_NUM=<PROJECT_NUMNER> ^
+-e DVC_REPO_TOKEN=<DVC_REPO_TOKEN> ^
+-e DVC_REPO_PROJECT_NUM=<DVC_REPO_PROJECT_NUM> ^
 -e BASENAME_PREFIX="/hpc-pipeline-dashboard/" ^
  hpc-pipeline-dashboard
  
@@ -49,6 +51,8 @@ docker run -p 8050:8050 ^
 -e REPO_URL=<GITLAB_URL> \
 -e REPO_TOKEN=<REPO_TOKEN> \
 -e PROJECT_NUM=<PROJECT_NUMNER> \
+-e DVC_REPO_TOKEN=<DVC_REPO_TOKEN> \
+-e DVC_REPO_PROJECT_NUM=<DVC_REPO_PROJECT_NUM> \
 -e BASENAME_PREFIX="/hpc-pipeline-dashboard/" \
  hpc-pipeline-dashboard
 ```
