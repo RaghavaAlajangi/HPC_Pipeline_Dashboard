@@ -118,14 +118,14 @@ def simple_request(refresh_path):
 )
 def collect_simple_pipeline_params(simple_title, simple_segment,
                                    simple_classifier, simple_postana,
-                                   selected_data_paths):
+                                   selected_files):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
 
     # Update the template, only when is a title and data paths to process
-    if simple_title and selected_data_paths:
-        rtdc_files = [s["filepath"] for s in selected_data_paths]
+    if simple_title and selected_files:
+        rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
@@ -140,10 +140,10 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
     Input("simple_title_text", "value"),
     Input("show_grid", "selectedRows")
 )
-def toggle_simple_create_pipeline_button(title, selected_data_paths):
+def toggle_simple_create_pipeline_button(title, selected_files):
     """Activates create pipeline button only when the issue title and data
     paths are put in the template"""
-    if selected_data_paths and title and title != "":
+    if selected_files and title and title != "":
         return False
     else:
         return True

@@ -57,7 +57,8 @@ def update_advanced_template(params_dict, rtdc_files, template):
                     "kernel_size": 100,
                     "batch_size": 10000,
                 },
-                "sparsemed: Sparse median background correction with cleansing": {
+                "sparsemed: Sparse median background correction with "
+                "cleansing": {
                     "kernel_size": 2,
                     "split_time": 1.0,
                     "thresh_clean": 0,
@@ -83,7 +84,7 @@ def update_advanced_template(params_dict, rtdc_files, template):
         },
         "Data to Process": {}
     }
-
+    # Loop through sections and subsections to update the template
     for sec_head, sub1 in sections.items():
         template += f"\n- **{sec_head}**"
         for sub2, sub3 in sub1.items():
@@ -92,15 +93,21 @@ def update_advanced_template(params_dict, rtdc_files, template):
                 for sub4, defaults in sub3.items():
                     sub4_check = "x" if sub4 in params_dict else " "
                     template += f"\n    - [{sub4_check}] {sub4}"
+                    # Loop through hard-coded default values from above dict
                     for pkey, pval in defaults.items():
+                        # If the parameter value exists in params_dict, get it.
+                        # otherwise, get the default value.
                         curr_val = params_dict.get(sub4, {}).get(pkey, pval)
-                        template += f"\n      - [{sub4_check}] {pkey}={curr_val}"
+                        # Update template with tick, param name, and curr_value
+                        template += (f"\n      - [{sub4_check}] "
+                                     f"{pkey}={curr_val}")
                     template += "\n    <!-- option end -->"
             else:
                 sub2_check = "x" if sub2 in params_dict else " "
                 template += f"\n  - [{sub2_check}] {sub2}"
                 template += "\n    <!-- option end -->"
 
+    # Add user selected files to the template
     for path in rtdc_files:
         template += f"\n  - [x] {path}"
 

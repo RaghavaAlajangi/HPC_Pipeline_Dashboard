@@ -343,8 +343,10 @@ def advanced_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="classifier_id",
-                                options=["bloody-bunny_g1_bacae: Bloody Bunny"],
-                                defaults=["bloody-bunny_g1_bacae: Bloody Bunny"]
+                                options=["bloody-bunny_g1_bacae: "
+                                         "Bloody Bunny"],
+                                defaults=["bloody-bunny_g1_bacae: "
+                                          "Bloody Bunny"]
                             )
                         ]
                     ),
@@ -540,12 +542,12 @@ def collect_advanced_pipeline_params(*args):
     # Get the cached selections and update the dictionary
     for d in args[5:-2]:
         params_dict.update(d)
-    # Get the data paths
-    selected_data_paths = args[-1]
+    # Get the data files
+    selected_files = args[-1]
 
-    # Update the template, only when is a title and data paths to process
-    if advanced_title and selected_data_paths:
-        rtdc_files = [s["filepath"] for s in selected_data_paths]
+    # Update the template, only when is a title and data files to process
+    if advanced_title and selected_files:
+        rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": advanced_title}
         # Update the advanced template from request repo
@@ -579,10 +581,10 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     Input("advanced_title_text", "value"),
     Input("show_grid", "selectedRows")
 )
-def toggle_advanced_create_pipeline_button(title, selected_data_paths):
+def toggle_advanced_create_pipeline_button(title, selected_files):
     """Activates create pipeline button only when the issue title and data
-    paths are put in the template"""
-    if selected_data_paths and title and title != "":
+    files are put in the template"""
+    if selected_files and title and title != "":
         return False
     else:
         return True
