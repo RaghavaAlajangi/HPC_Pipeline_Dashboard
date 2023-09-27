@@ -2,6 +2,7 @@ import re
 
 
 def update_simple_template(params, rtdc_paths, template):
+    """Update th simple issue template with user selected options"""
     # Uncheck all the boxes in the template before update
     template = template.replace("[x]", "[ ]")
 
@@ -21,6 +22,7 @@ def update_simple_template(params, rtdc_paths, template):
 
 
 def update_advanced_template(params_dict, rtdc_files, template):
+    """Update th advanced issue template with user selected options"""
     # Get the parameter section of the template
     template = template.split("- **Segmentation**")[0]
     # Define the sections, subsections and their corresponding default values
