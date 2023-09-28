@@ -95,8 +95,8 @@ git rev-parse --short HEAD
 docker login harbor.intranet.mpl.mpg.de
 ```
 
+### Dashboard Image
 - Tag both your commit and latest versions:
-
 ```bash
 # Tag commit
 docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcommitID
@@ -104,7 +104,6 @@ docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipe
 # Tag latest
 docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
 ```
-
 - Push both your commit and latest versions:
 
 ```bash
@@ -113,6 +112,24 @@ docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcom
 
 # Tag latest
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
+```
+
+### Cron Image
+- Tag both your commit and latest versions:
+```bash
+# Tag commit
+docker tag hpc-pipeline-dashboard-cron harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:yourcommitID
+
+# Tag latest
+docker tag hpc-pipeline-dashboard-cron harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:latest
+```
+- Push both your commit and latest versions:
+```bash
+# Tag commit
+docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:yourcommitID
+
+# Tag latest
+docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:latest
 ```
 
 ## Useful Docker commands
