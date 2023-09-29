@@ -187,44 +187,11 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
     )
 
 
-def groupby_columns(components, width=10):
-    """
-    The groupby_columns function takes a list of components and returns
-    a row with the components grouped into columns. The width parameter is
-    optional, but defaults to 10. The function will group the components into
-    as many columns as needed to fit them all in one row.
-    Parameters
-    ----------
-    components
-        Pass in the components that will be grouped together
-    width
-        Set the width of each column in the row
-    Returns
-    -------
-    A row of column components
-    """
-    columns = dbc.Col([e for e in components], width=width)
-    return dbc.Row(columns)
-
-
-def groupby_rows(components, width=2):
-    """
-    The groupby_rows function takes a list of components and groups
-    them into rows. The width parameter specifies how many columns each
-    row should span. For example, if you have a list of 6 components and
-    want to group them into 3-column rows:
-    Parameters
-    ----------
-    components
-        Pass in the components to be grouped
-    width
-        Determine the width of each column in a row
-    Returns
-    -------
-    A row of components
-    """
-    rows = [dbc.Col(e, width=width) for e in components]
-    return dbc.Row(rows)
+def group_items(items, horizontal=False):
+    return dbc.ListGroup(
+        [dbc.ListGroupItem(item) for item in items],
+        horizontal=horizontal
+    )
 
 
 def group_accordion(children, middle=False, open_first=False, comp_id="none"):

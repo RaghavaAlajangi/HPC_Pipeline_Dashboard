@@ -3,9 +3,9 @@ import dash_bootstrap_components as dbc
 from dash import html, callback, Input, Output, State, MATCH
 
 from ..components import (
-    line_breaks, paragraph_comp, group_accordion, groupby_columns,
+    line_breaks, paragraph_comp, group_accordion, group_items,
     header_comp, button_comp, chat_box, loading_comp, web_link,
-    progressbar_comp, divider_line_comp, popup_comp
+    progressbar_comp, popup_comp
 )
 from ..global_variables import request_gitlab, PATHNAME_PREFIX
 
@@ -16,102 +16,119 @@ PROGRESS_COMMENTS = [
 ]
 
 
+def welcome_tab_content():
+    return [
+        line_breaks(2),
+        html.Div(
+            html.Img(src='assets/overview.PNG', alt='My Image',
+                     style={'width': '800px', 'height': '500px'}),
+            className="row justify-content-center"
+        ),
+        line_breaks(2),
+    ]
+
+
 def open_close_tab_layout(pipelines):
     """Create open and close tab layout"""
-    return html.Div(
-        [
-            line_breaks(times=2),
-            html.Div(
-                pipelines,
-                style={"max-height": "70rem", "overflow-y": "scroll",
-                       "overflow-x": "hidden"},
-            )
-        ],
-        style={"height": "80rem", "background-color": "#424447"}
-    )
+    return [
+        html.Div(
+            pipelines,
+            style={"max-height": "70rem", "overflow-y": "scroll",
+                   "overflow-x": "hidden"},
+
+        ),
+        line_breaks(2)
+    ]
 
 
 def main_layout():
     """Create home page layout"""
+
+    pagination = dbc.Pagination(
+        id="issues_pagination",
+        min_value=1,
+        max_value=1,
+        active_page=1,
+        first_last=True,
+        previous_next=True,
+        fully_expanded=False,
+        style={"justify-content": "center"},
+    )
+
     return dbc.Card(
         [
-            dbc.CardHeader([
-                dbc.Tabs(
-                    [
-                        dbc.Tab(label="Open requests", tab_id="opened",
-                                active_label_style={"color": "#10e84a"}),
-                        dbc.Tab(label="Closed requests", tab_id="closed",
-                                active_label_style={"color": "#10e84a"}),
-                    ],
-                    id="tabs",
-                    active_tab="opened",
-                ),
-            ]),
-            dbc.Pagination(
-                id="issues_pagination",
-                min_value=1,
-                max_value=1,
-                active_page=1,
-                first_last=True,
-                previous_next=True,
-                fully_expanded=False,
-                style={"justify-content": "center"},
+            dbc.Tabs(
+                [
+                    dbc.Tab(label="Welcome", tab_id="welcome",
+                            active_label_style={"color": "#10e84a"}),
+                    dbc.Tab(pagination, label="Open requests",
+                            tab_id="opened",
+                            active_label_style={"color": "#10e84a"}),
+                    dbc.Tab(pagination, label="Closed requests",
+                            tab_id="closed",
+                            active_label_style={"color": "#10e84a"}),
+                ],
+                id="tabs",
+                active_tab="welcome",
             ),
             html.Div(id="tab_content"),
         ],
     )
 
 
-def create_accord_item_for_issue(isu, active_tab):
+def create_accord_item_for_issue(issue):
     """Create an accordion item for a given issue"""
-    web_url = isu["web_url"]
+    web_url = issue["web_url"]
     return dbc.AccordionItem(
         [
-            paragraph_comp(text=f"Request created by: {isu['author']}"),
-            paragraph_comp(text=f"Pipeline ID: {isu['id']}"),
-            groupby_columns(
+            popup_comp(
+                comp_id={"type": "stop_pipeline_popup",
+                         "index": issue['iid']},
+                refresh_path=PATHNAME_PREFIX,
+                text="Pipeline request has been canceled!"
+            ),
+            header_comp(text="Pipeline Details:"),
+
+            group_items(
                 [
-                    web_link(label=f"GitLab issue - #{isu['iid']}",
+                    paragraph_comp(text=f"Created by: {issue['author']}"),
+                    paragraph_comp(text=f"Pipeline ID: {issue['id']}"),
+                    paragraph_comp(text=f"Date of Creation: {issue['date']}"),
+                    web_link(label=f"Go to GitLab issue - #{issue['iid']}",
                              url=web_url),
-                    line_breaks(times=1),
-                    web_link(label="Download RTDC csv",
+                    web_link(label="Download RTDC csv (Not Implemented)",
                              url="https://google.com"),
-                    line_breaks(times=1) if active_tab == "opened" else None,
                     button_comp(
                         label="Stop Pipeline", type="danger",
                         comp_id={"type": "accord_item_stop",
-                                 "index": isu['iid']},
+                                 "index": issue['iid']},
                         disabled=True
-                    ) if active_tab == "opened" else None,
-                    popup_comp(
-                        comp_id={"type": "stop_pipeline_popup",
-                                 "index": isu['iid']},
-                        refresh_path=PATHNAME_PREFIX,
-                        text="Pipeline request has been canceled!"
-                    ) if active_tab == "opened" else None,
-                    line_breaks(times=2) if active_tab == "opened" else None
+                    )
                 ]
             ),
-            divider_line_comp(),
-            line_breaks(times=1),
-            progressbar_comp(
-                comp_id={"type": "accord_item_bar", "index": isu['iid']}),
-            line_breaks(times=2),
-            divider_line_comp(),
+            line_breaks(1),
+            header_comp(text="Progress Bar:"),
+            group_items([
+                progressbar_comp(
+                    comp_id={"type": "accord_item_bar",
+                             "index": issue['iid']}
+                )
+            ]),
+            line_breaks(1),
             header_comp(text="Comments:"),
             loading_comp(
-                html.Div(id={"type": "accord_item_div", "index": isu['iid']})
+                html.Div(id={"type": "accord_item_div", "index": issue['iid']})
             )
         ],
-        title=f"#{isu['iid']} {isu['name']}",
-        item_id=f"accord_item{isu['iid']}"
+        title=f"#{issue['iid']} {issue['name']}",
+        item_id=f"accord_item{issue['iid']}"
     )
 
 
-def get_issues_accord(active_tab, issue_data):
+def get_issues_accord(issue_data):
     """Take GitLab issue list and create a group of accordion items"""
     return group_accordion(
-        [create_accord_item_for_issue(isu, active_tab) for isu in issue_data],
+        [create_accord_item_for_issue(issue) for issue in issue_data],
         middle=True, comp_id="issue_accord"
     )
 
@@ -122,10 +139,13 @@ def get_issues_accord(active_tab, issue_data):
     Input("issues_pagination", "active_page"),
 )
 def switch_tabs(active_tab, page):
-    """Allow user to switch between opened and closed tabs"""
-    issue_meta = request_gitlab.get_issues_meta(active_tab, page)
-    issues = get_issues_accord(active_tab, issue_meta)
-    return open_close_tab_layout(issues)
+    """Allow user to switch between welcome, opened, and closed tabs"""
+    if active_tab == "welcome":
+        return welcome_tab_content()
+    else:
+        issue_meta = request_gitlab.get_issues_meta(active_tab, page)
+        issue_accords = get_issues_accord(issue_meta)
+        return open_close_tab_layout(issue_accords)
 
 
 @callback(
@@ -190,4 +210,7 @@ def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
 )
 def update_pagination_max_value(active_tab):
     """Get the no of pages from GitLab and update the pagination max value"""
-    return request_gitlab.get_num_pages(active_tab)
+    if active_tab == "welcome":
+        raise PreventUpdate
+    else:
+        return request_gitlab.get_num_pages(active_tab)
