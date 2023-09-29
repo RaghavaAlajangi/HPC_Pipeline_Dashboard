@@ -227,30 +227,17 @@ def groupby_rows(components, width=2):
     return dbc.Row(rows)
 
 
-def group_accordion(children, middle=False, comp_id="none"):
-    """
-    The group_accordion function takes a list of accordion items and
-    returns an HTML Div element containing the accordion. The middle
-    parameter is used to determine whether the returned div should
-    be centered on the page.The comp_id parameter is used to set an id
-    for this component, which can be referenced by other components.
-    Parameters
-    ----------
-    accord_items
-        Pass in the accordion items
-    middle
-        Add a row class to the div that is returned
-    comp_id
-        Identify the accordion
-    Returns
-    -------
-    The accordion items
-    """
+def group_accordion(children, middle=False, open_first=False, comp_id="none"):
+    """Takes a list of children, and returns an accordion with those children.
+    The middle parameter is used to center the accordion on the page. The
+    open_first parameter determines whether the first item in the accordion
+    will be opened by default."""
     accord_items = [a for a in children]
     return html.Div(
         dbc.Accordion(children=accord_items,
                       id=comp_id,
-                      className="my-accordion"
+                      className="my-accordion",
+                      start_collapsed=not open_first,
                       ),
         className="row justify-content-center" if middle else ""
     )

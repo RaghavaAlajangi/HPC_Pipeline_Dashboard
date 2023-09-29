@@ -371,6 +371,7 @@ def advanced_request(refresh_path):
                     )
                 ],
                 middle=True,
+                open_first=True,
                 comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
