@@ -171,3 +171,8 @@ a:hover {
     border-bottom: 15px solid transparent;
     border-right: 10px solid #017b50;
 }
+
+/* Set the placeholder color of dbc.Input*/
+.custom-placeholder::placeholder {
+    color: darkgray;
+}
