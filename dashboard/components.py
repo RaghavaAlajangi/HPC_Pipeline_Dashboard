@@ -42,29 +42,27 @@ def chat_box(messages, gap=15):
     )
 
 
-def checklist_comp(comp_id, options, defaults):
-    """
-    The checklist_comp function takes in three arguments:
-    - comp_id: the id of the component, which is used to reference it later.
-    - option_list: a list of strings that will be displayed as options for
-    the user to select from.
-    - defaults_list: a list of strings that are selected by default
-    when this component is rendered on screen.
+def checklist_comp(comp_id, options, defaults=None):
+    """Creates a checklist component.
     Parameters
     ----------
-    comp_id
-        Give the component an id
-    options
-        Create the options for the checklist
+    comp_id: str
+        Identify the component in the dom
+    options: dict
+        Checklist options with their values and whether they are disabled
+        or not. The keys are labels and values are booleans indicating whether
+        they should be disabled or not (True = Disabled).  This argument is
+        required.
     defaults
-        Set the default values of the checkboxes
+        default selections (optional)
     Returns
     -------
     A checklist component
     """
-    options = sorted(options)
-    defaults = sorted(defaults)
-    options = [{"label": op, "value": op} for op in options]
+    if defaults is None:
+        defaults = []
+    options = [{"label": k, "value": k, "disabled": v} for k, v in
+               options.items()]
     defaults = [op for op in defaults]
     return dbc.Checklist(
         options=options,
@@ -225,27 +223,37 @@ def line_breaks(times=1):
     return html.Div(children=br_list)
 
 
-def input_with_dropdown(comp_id, drop_options, dropdown_holder="Source",
-                        input_holder="text", with_button=True, width=100):
+def drop_input_button(comp_id, drop_options, disable_drop=False,
+                      drop_placeholder="Source", default_drop=None,
+                      input_placeholder="text", disable_input=False,
+                      disable_button=False,
+                      with_button=True, width=100
+                      ):
+    default_drop = default_drop if default_drop else []
     return html.Div(
         dbc.InputGroup([
             dbc.Select(
-                placeholder=dropdown_holder,
+                placeholder=drop_placeholder,
                 id=f"{comp_id}_drop",
                 options=[
                     {"label": i, "value": i} for i in drop_options
                 ],
-                style={"width": "15%"}
+                value=default_drop,
+                style={"width": "15%"},
+                disabled=disable_drop
             ),
             dbc.Input(
                 type="text", id=f"{comp_id}_text",
-                placeholder=input_holder,
-                style={"width": "75%"}
+                placeholder=input_placeholder,
+                style={"width": "75%"},
+                class_name="custom-placeholder",
+                disabled=disable_input,
             ),
             dbc.Button(
                 "Add", id=f"{comp_id}_button", color="info",
-                style={"width": "10%"}
-            ) if with_button else "",
+                style={"width": "10%"},
+                disabled=disable_button
+            ) if with_button else None,
         ],
             style={"width": f"{width}%"}
         ),
@@ -336,7 +344,7 @@ def text_input_comp(comp_id, placeholder, width=50, middle=True):
             disabled=False,
             type="text",
             placeholder=placeholder,
-            class_name="dbc_input",
+            class_name="custom-placeholder",
             style={"width": f"{width}rem"}
         ),
         className="row justify-content-center" if middle else "",

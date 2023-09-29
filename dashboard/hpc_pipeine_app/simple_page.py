@@ -6,7 +6,7 @@ from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
-                          line_breaks, input_with_dropdown)
+                          line_breaks, drop_input_button)
 
 from ..global_variables import request_gitlab
 
@@ -19,7 +19,7 @@ def simple_request(refresh_path):
     """Creates simple request page"""
     return dbc.Toast(
         id="simple_request_toast",
-        header="Simple pipeline request",
+        header="Simple Pipeline Request",
         header_style={"background-color": "#017b70",
                       "font-size": "25px",
                       "color": "white"},
@@ -40,15 +40,17 @@ def simple_request(refresh_path):
                     dbc.AccordionItem(
                         title="Title (required)",
                         children=[
-                            input_with_dropdown(
+                            drop_input_button(
                                 comp_id="simple_title",
                                 # drop_options=request_gitlab.get_project_members(),
                                 drop_options=["eoghan", "max", "nadia",
                                               "paul", "raghava"],
-                                dropdown_holder="User",
-                                input_holder="Type title...",
-                                with_button=False, width=80
-                            )
+                                drop_placeholder="User",
+                                input_placeholder="Enter the name of the "
+                                                  "pipeline...",
+                                with_button=False, width=80,
+                                disable_drop=True
+                            ),
                         ]
                     ),
                     dbc.AccordionItem(
@@ -56,8 +58,11 @@ def simple_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="simp_segm_id",
-                                options=["legacy", "mlunet",
-                                         "watershed", "std"],
+                                options={
+                                    "legacy": False,
+                                    "mlunet": False,
+                                    "watershed": False,
+                                    "std": False},
                                 defaults=["legacy", "mlunet"]
                             )
                         ]
@@ -68,19 +73,20 @@ def simple_request(refresh_path):
                             paragraph_comp("Classification Model"),
                             checklist_comp(
                                 comp_id="simp_classifier_id",
-                                options=["MNet", "Bloody-Bunny"],
+                                options={"Bloody-Bunny": False},
                                 defaults=["Bloody-Bunny"]
                             )
                         ]
                     ),
                     dbc.AccordionItem(
-                        title="Post Analysis",
+                        title="Post Analysis (Not Implemented)",
                         children=[
                             checklist_comp(
                                 comp_id="simp_postana_id",
-                                options=["Benchmarking",
-                                         "Scatter Plots"],
-                                defaults=["Scatter Plots"]
+                                options={
+                                    "Benchmarking": True,
+                                    "Scatter Plots": True
+                                }
                             )
                         ]
                     ),
