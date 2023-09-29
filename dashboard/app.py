@@ -48,12 +48,12 @@ def sidebar_menu():
                         id="home_active"
                     ),
                     dbc.NavLink(
-                        "Simple request",
+                        "Simple Request",
                         href=f"{PATHNAME_PREFIX}simple_request",
                         id="simple_request_active"
                     ),
                     dbc.NavLink(
-                        "Advanced request",
+                        "Advanced Request",
                         href=f"{PATHNAME_PREFIX}advanced_request",
                         id="advanced_request_active"
                     ),
@@ -67,7 +67,7 @@ def sidebar_menu():
             html.A(
                 [
                     html.Img(src=GITLAB_LOGO_URL, height=50),
-                    " Source code"
+                    " Source Code"
                 ],
                 href=PROJECT_REPO_URL,
                 target="_blank",
