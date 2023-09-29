@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import Dash, Input, Output, dcc, html
 
-from .components import (groupby_columns, line_breaks, paragraph_comp)
+from .components import line_breaks, paragraph_comp
 from .hpc_pipeine_app import main_layout, simple_request, advanced_request
 from .global_variables import (DBC_CSS, PROJECT_REPO_URL, GITLAB_LOGO_URL,
                                PATHNAME_PREFIX)
@@ -21,12 +21,8 @@ def wrong_page(pathname):
 def sidebar_menu():
     return html.Div(
         [
-            groupby_columns(
-                [
-                    html.H3("HPC Pipelines", style={"font-weight": "bold"}),
-                    line_breaks(times=1)
-                ]
-            ),
+            html.H3("HPC Pipelines", style={"font-weight": "bold"}),
+            line_breaks(times=1),
             dbc.Alert(
                 [
                     # Warning icon
@@ -42,47 +38,40 @@ def sidebar_menu():
                 style={"color": "black", "width": "fit-content"},
                 color="warning",
             ),
-            groupby_columns(
-                [
-                    line_breaks(times=1),
-                    dbc.Nav(
-                        [
-                            dbc.NavLink(
-                                "Home",
-                                href=PATHNAME_PREFIX,
-                                id="home_active"
-                            ),
-                            dbc.NavLink(
-                                "Simple request",
-                                href=f"{PATHNAME_PREFIX}simple_request",
-                                id="simple_request_active"
-                            ),
-                            dbc.NavLink(
-                                "Advanced request",
-                                href=f"{PATHNAME_PREFIX}advanced_request",
-                                id="advanced_request_active"
-                            ),
-                        ],
-                        vertical=True,
-                        pills=True,
-                    ),
-                    line_breaks(times=1),
-                ]
-            ),
 
-            html.Div(
+            line_breaks(times=1),
+            dbc.Nav(
                 [
-                    line_breaks(times=5),
-                    html.A(
-                        [
-                            html.Img(src=GITLAB_LOGO_URL, height=50),
-                            " Source code"
-                        ],
-                        href=PROJECT_REPO_URL,
-                        target="_blank",
-                        style={"text-decoration": "none"}
-                    )
-                ]
+                    dbc.NavLink(
+                        "Home",
+                        href=PATHNAME_PREFIX,
+                        id="home_active"
+                    ),
+                    dbc.NavLink(
+                        "Simple request",
+                        href=f"{PATHNAME_PREFIX}simple_request",
+                        id="simple_request_active"
+                    ),
+                    dbc.NavLink(
+                        "Advanced request",
+                        href=f"{PATHNAME_PREFIX}advanced_request",
+                        id="advanced_request_active"
+                    ),
+                ],
+                vertical=True,
+                pills=True,
+            ),
+            line_breaks(times=1),
+
+            line_breaks(times=5),
+            html.A(
+                [
+                    html.Img(src=GITLAB_LOGO_URL, height=50),
+                    " Source code"
+                ],
+                href=PROJECT_REPO_URL,
+                target="_blank",
+                style={"text-decoration": "none"}
             )
         ],
         id="sidebar"
