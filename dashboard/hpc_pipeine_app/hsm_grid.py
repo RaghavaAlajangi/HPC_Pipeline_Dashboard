@@ -7,7 +7,8 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from dash import (callback, Input, Output, State, dcc, html)
 
-from ..components import text_input_comp, input_with_dropdown, line_breaks
+from ..components import (text_input_comp, drop_input_button, line_breaks,
+                          paragraph_comp)
 
 DATA_DIR = Path(__file__).parents[2] / "resources"
 CHUNK_DIR = DATA_DIR / "hsm_chunk_dir"
@@ -27,18 +28,23 @@ def create_hsm_grid():
     return html.Div(
         [
             dcc.Store(id="store_dcor_files", data=[]),
+
+            paragraph_comp("Select DCOR-Colab file:"),
+
             line_breaks(times=1),
-            input_with_dropdown(
+            drop_input_button(
                 comp_id="input_group",
                 drop_options=["DCOR"],
-                dropdown_holder="Source",
-                input_holder="Enter DVC path or DCOR Id "
-                             "or Circle or Dataset etc...",
+                default_drop="DCOR",
+                drop_placeholder="Source",
+                input_placeholder="Enter DVC path or DCOR-colab Id, "
+                                  "Circle, or Dataset etc...",
                 width=80
             ),
             line_breaks(times=2),
+            paragraph_comp("Select HSMFS file/s:"),
             text_input_comp(comp_id="grid_filter",
-                            placeholder="Filter with name...",
+                            placeholder="Search dataset name with a keyword",
                             width=30, middle=False),
             dag.AgGrid(
                 id="hsm_grid",
@@ -194,6 +200,20 @@ def display_selected_files_number(show_grid_rows):
 
 
 @callback(
+    Output("input_group_button", "disabled"),
+    Input("input_group_drop", "value"),
+    Input("input_group_text", "value")
+)
+def toggle_input_group_button(drop_value, filename):
+    """Activates Add button in DCOR input bar only when the dropdown value
+    and DCOR identifier is entered"""
+    if drop_value and filename:
+        return False
+    else:
+        return True
+
+
+@callback(
     Output("store_dcor_files", "data"),
     Output("input_group_drop", "value"),
     Output("input_group_text", "value"),
@@ -211,7 +231,7 @@ def store_input_group_files(_, drop_input, text_input, cached_files):
         if text_input and drop_input:
             input_path = f"{drop_input}: {text_input}"
             cached_files.append(input_path)
-            return cached_files, None, None
+            return cached_files, drop_input, None
     raise PreventUpdate
 
 
