@@ -54,7 +54,12 @@ class GitLabAPI:
         comments, dates = [], []
         for note in issue_notes:
             time_stamp = self.human_readable_data(note.created_at)
-            comments.append(note.body)
+            # Filter python error messages from comments
+            if "python" in note.body:
+                comments.append(
+                    "Got some error, look at the actual GitLab issue!")
+            else:
+                comments.append(note.body)
             dates.append(time_stamp)
         return {"comments": comments, "dates": dates}
 
