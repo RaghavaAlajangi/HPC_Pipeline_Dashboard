@@ -35,7 +35,6 @@ def open_close_tab_layout(pipelines):
             pipelines,
             style={"max-height": "70rem", "overflow-y": "scroll",
                    "overflow-x": "hidden"},
-
         ),
         line_breaks(2)
     ]
@@ -43,7 +42,6 @@ def open_close_tab_layout(pipelines):
 
 def main_layout():
     """Create home page layout"""
-
     pagination = dbc.Pagination(
         id="issues_pagination",
         min_value=1,
@@ -54,7 +52,6 @@ def main_layout():
         fully_expanded=False,
         style={"justify-content": "center"},
     )
-
     return dbc.Card(
         [
             dbc.Tabs(
@@ -175,12 +172,13 @@ def show_pipeline_comments(accord_item, match_id):
 @callback(
     Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
     Input({"type": "accord_item_div", "index": MATCH}, "children"),
+    Input("tabs", "active_tab"),
     State({"type": "accord_item_stop", "index": MATCH}, "disabled"),
 )
-def toggle_stop_pipeline_button(issue_content, disable):
+def toggle_stop_pipeline_button(issue_content, tab, disable):
     """Enable the stop pipeline button in an issue only after the comments
-    of that issue are loaded"""
-    if isinstance(issue_content, dict):
+    of that issue are loaded and for issues in opened tab"""
+    if isinstance(issue_content, dict) and tab == "opened":
         return not disable
     return disable
 
