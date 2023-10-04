@@ -119,6 +119,7 @@
 .my-toast {
     width: 100%;
     height: fit-content;
+    background-color: #303030;
 }
 
 /* dbc.accordion styling parameters*/
