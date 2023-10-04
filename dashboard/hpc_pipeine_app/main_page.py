@@ -26,7 +26,7 @@ def welcome_tab_content():
     return [
         line_breaks(2),
         html.Div(
-            html.Img(src='assets/Flowchart Template.jpg',
+            html.Img(src='assets/hpc_flowchart.jpg',
                      style={'width': '1000px', 'height': '800px'}),
             className="row justify-content-center"
         ),
