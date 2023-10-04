@@ -33,7 +33,7 @@ class GitLabAPI:
                                         per_page=self.issues_per_page)
 
     @staticmethod
-    def human_readable_data(date):
+    def human_readable_date(date):
         # Define the GMT+0200 timezone offset
         gmt_offset = timedelta(hours=2)
         time_stamp = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -53,7 +53,7 @@ class GitLabAPI:
 
         comments, dates = [], []
         for note in issue_notes:
-            time_stamp = self.human_readable_data(note.created_at)
+            time_stamp = self.human_readable_date(note.created_at)
             # Filter python error messages from comments
             if "python" in note.body:
                 comments.append(
@@ -77,7 +77,7 @@ class GitLabAPI:
                 "iid": issue.iid,
                 "author": issue.author["username"],
                 "web_url": issue.web_url,
-                "date": self.human_readable_data(issue.created_at),
+                "date": self.human_readable_date(issue.created_at),
             }
             for issue in issues
         ]
