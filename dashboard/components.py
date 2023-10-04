@@ -299,10 +299,11 @@ def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
     return dbc.Label(id=comp_id, children=text, style=style)
 
 
-def progressbar_comp(comp_id, width=80):
+def progressbar_comp(comp_id, height=20, width=80):
     return dbc.Progress(id=comp_id, value=0, striped=True,
                         animated=True, color="success",
-                        style={"width": f"{width}%", "margin": "0 auto"}
+                        style={"height": f"{height}px", "width": f"{width}%",
+                               "margin": "0 auto"}
                         )
 
 
