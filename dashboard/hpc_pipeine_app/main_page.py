@@ -1,11 +1,12 @@
+import re
+
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-from dash import html, callback, Input, Output, State, MATCH
+from dash import html, callback, Input, Output, State, MATCH, no_update
 
 from ..components import (
-    line_breaks, paragraph_comp, group_accordion, group_items,
-    header_comp, button_comp, chat_box, loading_comp, web_link,
-    progressbar_comp, popup_comp
+    line_breaks, paragraph_comp, group_accordion, group_items, button_comp,
+    chat_box, loading_comp, web_link, progressbar_comp, popup_comp
 )
 from ..global_variables import request_gitlab, PATHNAME_PREFIX
 
@@ -15,13 +16,18 @@ PROGRESS_COMMENTS = [
     "STATE: done"
 ]
 
+JOB_COMMENTS = [
+    r"^Completed job",
+    r"^We have (\d+) pipeline"
+]
+
 
 def welcome_tab_content():
     return [
         line_breaks(2),
         html.Div(
-            html.Img(src='assets/overview.PNG', alt='My Image',
-                     style={'width': '800px', 'height': '500px'}),
+            html.Img(src='assets/Flowchart Template.jpg',
+                     style={'width': '1000px', 'height': '800px'}),
             className="row justify-content-center"
         ),
         line_breaks(2),
@@ -42,16 +48,22 @@ def open_close_tab_layout(pipelines):
 
 def main_layout():
     """Create home page layout"""
-    pagination = dbc.Pagination(
-        id="issues_pagination",
-        min_value=1,
-        max_value=1,
-        active_page=1,
-        first_last=True,
-        previous_next=True,
-        fully_expanded=False,
-        style={"justify-content": "center"},
-    )
+    pagination = dbc.ListGroup([
+        dbc.ListGroupItem(
+            loading_comp(
+                dbc.Pagination(
+                    id="issues_pagination",
+                    min_value=1,
+                    max_value=1,
+                    active_page=1,
+                    first_last=True,
+                    previous_next=True,
+                    fully_expanded=False,
+                    class_name="my-custom-pagination",
+                )
+            )
+        )
+    ], horizontal=True, style={"justify-content": "center"})
     return dbc.Card(
         [
             dbc.Tabs(
@@ -67,8 +79,9 @@ def main_layout():
                 ],
                 id="tabs",
                 active_tab="welcome",
+                persistence=True
             ),
-            html.Div(id="tab_content"),
+            html.Div(id="tab_content")
         ],
     )
 
@@ -84,8 +97,7 @@ def create_accord_item_for_issue(issue):
                 refresh_path=PATHNAME_PREFIX,
                 text="Pipeline request has been canceled!"
             ),
-            header_comp(text="Pipeline Details:"),
-
+            html.H6("Pipeline Details:"),
             group_items(
                 [
                     paragraph_comp(text=f"Created by: {issue['author']}"),
@@ -104,15 +116,30 @@ def create_accord_item_for_issue(issue):
                 ]
             ),
             line_breaks(1),
-            header_comp(text="Progress Bar:"),
-            group_items([
-                progressbar_comp(
-                    comp_id={"type": "accord_item_bar",
-                             "index": issue['iid']}
-                )
-            ]),
+            html.H6("Pipeline Status:"),
+            dbc.ListGroup(
+                [
+                    dbc.ListGroupItem(
+                        html.Div(
+                            id={"type": "pipeline_status",
+                                "index": issue['iid']},
+                            style={'display': 'inline'}
+                        ),
+                        style={"width": "15%", "color": "#10e84a"}
+                    ),
+                    dbc.ListGroupItem(
+                        progressbar_comp(
+                            comp_id={"type": "accord_item_bar",
+                                     "index": issue['iid']},
+                            width=95
+                        ),
+                        style={"width": "85%"}
+                    )
+                ],
+                horizontal=True
+            ),
             line_breaks(1),
-            header_comp(text="Comments:"),
+            html.H6("Comments:"),
             loading_comp(
                 html.Div(id={"type": "accord_item_div", "index": issue['iid']})
             )
@@ -133,7 +160,7 @@ def get_issues_accord(issue_data):
 @callback(
     Output("tab_content", "children"),
     Input("tabs", "active_tab"),
-    Input("issues_pagination", "active_page"),
+    Input("issues_pagination", "active_page")
 )
 def switch_tabs(active_tab, page):
     """Allow user to switch between welcome, opened, and closed tabs"""
@@ -147,26 +174,55 @@ def switch_tabs(active_tab, page):
 
 @callback(
     Output({"type": "accord_item_div", "index": MATCH}, "children"),
+    Output({"type": "pipeline_status", "index": MATCH}, "children"),
     Output({"type": "accord_item_bar", "index": MATCH}, "value"),
     Output({"type": "accord_item_bar", "index": MATCH}, "label"),
     Input("issue_accord", "active_item"),
-    State({"type": "accord_item_div", "index": MATCH}, "id")
+    State({"type": "accord_item_div", "index": MATCH}, "id"),
+    prevent_initial_call=True
 )
 def show_pipeline_comments(accord_item, match_id):
-    """Show the content of an issue only when the user clicks on issue
-    accordian item otherwise do not load"""
-    if accord_item:
-        issue_iid = int(accord_item.split("item")[1])
-        notes = request_gitlab.get_comments(issue_iid)
-        match_len = len(set(PROGRESS_COMMENTS).intersection(notes["comments"]))
-        progress = (match_len / len(PROGRESS_COMMENTS)) * 100
+    # Check if there is an active_item selected
+    if not accord_item:
+        return no_update, no_update, no_update, no_update
 
+    # Parse issue_iid from active_item
+    issue_iid = int(accord_item.split("item")[1])
+
+    # Check if the active_item matches the current item
+    if issue_iid == match_id["index"]:
+        # Fetch comments for the issue from GitLab
+        notes = request_gitlab.get_comments(issue_iid)
         comment_cards = chat_box(notes)
 
-        if issue_iid == match_id["index"]:
-            return comment_cards, progress, f"{progress:.1f} %"
+        # Find the total number of pipelines
+        total_jobs_string = [s for s in notes["comments"] if
+                             re.match(JOB_COMMENTS[1], s)]
+        if not total_jobs_string:
+            return comment_cards, None, None, None
+        total_jobs = int(
+            re.search(JOB_COMMENTS[1], total_jobs_string[0]).group(1))
 
-    raise PreventUpdate
+        # Count the number of finished job comments
+        finished_jobs = len(
+            [s for s in notes["comments"] if re.match(JOB_COMMENTS[0], s)])
+
+        # Calculate the progress percentage
+        progress = (finished_jobs / total_jobs) * 85
+
+        # Add 5% progress for specific state comments
+        for state_comment in PROGRESS_COMMENTS:
+            if state_comment in notes["comments"]:
+                progress += 5
+
+        return (
+            comment_cards,
+            f"Jobs: [{finished_jobs} / {total_jobs}]",
+            progress,
+            f"{progress:.0f} %"
+        )
+    else:
+        return no_update, no_update, no_update, no_update
 
 
 @callback(
@@ -174,6 +230,7 @@ def show_pipeline_comments(accord_item, match_id):
     Input({"type": "accord_item_div", "index": MATCH}, "children"),
     Input("tabs", "active_tab"),
     State({"type": "accord_item_stop", "index": MATCH}, "disabled"),
+    prevent_initial_call=True
 )
 def toggle_stop_pipeline_button(issue_content, tab, disable):
     """Enable the stop pipeline button in an issue only after the comments
@@ -188,7 +245,8 @@ def toggle_stop_pipeline_button(issue_content, tab, disable):
     Input("issue_accord", "active_item"),
     Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipeline_popup", "index": MATCH}, "n_clicks"),
-    State({"type": "stop_pipeline_popup", "index": MATCH}, "is_open")
+    State({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
+    prevent_initial_call=True
 )
 def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
     """Cancel pipeline, close GitLab issue, and refresh page"""
@@ -204,7 +262,7 @@ def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
 
 @callback(
     Output("issues_pagination", "max_value"),
-    Input("tabs", "active_tab"),
+    Input("tabs", "active_tab")
 )
 def update_pagination_max_value(active_tab):
     """Get the no of pages from GitLab and update the pagination max value"""
