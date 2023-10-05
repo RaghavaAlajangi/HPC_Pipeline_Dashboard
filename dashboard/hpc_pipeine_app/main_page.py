@@ -268,17 +268,23 @@ def show_pipeline_comments(accord_item, match_id):
 
 @callback(
     Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
-    Input({"type": "accord_item_div", "index": MATCH}, "children"),
     Input("tabs", "active_tab"),
-    State({"type": "accord_item_stop", "index": MATCH}, "disabled"),
+    Input("issue_accord", "active_item"),
+    Input({"type": "accord_item_div", "index": MATCH}, "children"),
+    State({"type": "accord_item_div", "index": MATCH}, "id"),
     prevent_initial_call=True
 )
-def toggle_stop_pipeline_button(issue_content, tab, disable):
+def toggle_stop_pipeline_button(active_tab, active_item, issue_content,
+                                match_id):
     """Enable the stop pipeline button in an issue only after the comments
     of that issue are loaded and for issues in opened tab"""
-    if isinstance(issue_content, dict) and tab == "opened":
-        return not disable
-    return disable
+    if isinstance(issue_content, dict) and active_tab == "opened":
+        issue_iid = int(active_item.split("item")[1])
+        if issue_iid == match_id["index"]:
+            return False
+        return True
+    else:
+        return no_update
 
 
 @callback(
