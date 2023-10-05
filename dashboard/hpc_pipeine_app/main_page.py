@@ -2,13 +2,13 @@ import re
 
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-from dash import html, callback, Input, Output, State, MATCH, no_update
+from dash import html, callback, Input, Output, State, MATCH, no_update, dcc
 
 from ..components import (
     line_breaks, paragraph_comp, group_accordion, group_items, button_comp,
     chat_box, loading_comp, web_link, progressbar_comp, popup_comp
 )
-from ..global_variables import request_gitlab, PATHNAME_PREFIX
+from ..global_variables import request_gitlab, PATHNAME_PREFIX, DCEVENT_DOCS
 
 PROGRESS_COMMENTS = [
     "STATE: setup",
@@ -25,12 +25,48 @@ JOB_COMMENTS = [
 def welcome_tab_content():
     return [
         line_breaks(2),
+        dbc.Alert(
+            [
+                # Warning icon
+                html.I(className="bi bi-info-circle-fill me-2"),
+                paragraph_comp(
+                    text="If you want to segment or/and classify your data, "
+                         "use the Simple Request on the left.",
+                    comp_id="dummy2"
+                ),
+            ],
+            color="info",
+            className="d-flex align-items-inline",
+            style={"color": "black", "width": "fit-content",
+                   "marginLeft": "40px", "height": "60px"},
+        ),
+
+        dbc.Alert(
+            [
+                # Warning icon
+                html.I(className="bi bi-info-circle-fill me-2"),
+                dcc.Markdown(
+                    f"If you are an advanced user use the Advanced Request. "
+                    f"More information at [dcevent pages]({DCEVENT_DOCS})."
+                )
+            ],
+            color="info",
+            className="d-flex align-items-inline",
+            style={"color": "black", "width": "fit-content",
+                   "marginLeft": "40px", "height": "60px"},
+        )
+    ]
+
+
+def pipeline_flowchart():
+    return [
+        line_breaks(2),
         html.Div(
             html.Img(src='assets/hpc_flowchart.jpg',
                      style={'width': '1000px', 'height': '800px'}),
             className="row justify-content-center"
         ),
-        line_breaks(2),
+        line_breaks(2)
     ]
 
 
@@ -75,6 +111,9 @@ def main_layout():
                             active_label_style={"color": "#10e84a"}),
                     dbc.Tab(pagination, label="Closed requests",
                             tab_id="closed",
+                            active_label_style={"color": "#10e84a"}),
+                    dbc.Tab(label="Work Flow",
+                            tab_id="flowchart",
                             active_label_style={"color": "#10e84a"}),
                 ],
                 id="tabs",
@@ -166,6 +205,8 @@ def switch_tabs(active_tab, page):
     """Allow user to switch between welcome, opened, and closed tabs"""
     if active_tab == "welcome":
         return welcome_tab_content()
+    elif active_tab == "flowchart":
+        return pipeline_flowchart()
     else:
         issue_meta = request_gitlab.get_issues_meta(active_tab, page)
         issue_accords = get_issues_accord(issue_meta)
@@ -266,7 +307,7 @@ def cancel_pipeline(active_issue, stop_issue, close_popup, popup):
 )
 def update_pagination_max_value(active_tab):
     """Get the no of pages from GitLab and update the pagination max value"""
-    if active_tab == "welcome":
+    if active_tab == "welcome" or active_tab == "flowchart":
         raise PreventUpdate
     else:
         return request_gitlab.get_num_pages(active_tab)

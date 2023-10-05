@@ -14,6 +14,8 @@ PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \
 GITLAB_LOGO_URL = "https://about.gitlab.com/images/press" \
                   "/logo/png/gitlab-icon-rgb.png"
 
+DCEVENT_DOCS = "https://blood_data_analysis.pages.gwdg.de/dcevent/"
+
 # Set the app prefix
 PATHNAME_PREFIX = os.getenv("BASENAME_PREFIX")
 GITLAB_URL = os.getenv("REPO_URL")
