@@ -553,7 +553,7 @@ def collect_advanced_pipeline_params(*args):
     params = [item for sublist in args[1:5] for item in sublist]
     params_dict = {params: {} for params in params}
     # Get the cached selections and update the dictionary
-    for d in args[5:-2]:
+    for d in args[5:-1]:
         params_dict.update(d)
     # Get the data files
     selected_files = args[-1]
