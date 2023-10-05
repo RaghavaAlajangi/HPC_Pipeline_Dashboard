@@ -379,8 +379,7 @@ def upload_comp(comp_id):
 
 def web_link(label, url):
     return html.A(label, href=url, target="_blank",
-                  style={"text-decoration": "none"}
-                  )
+                  className="custom-link")
 
 
 def web_link_check(text):

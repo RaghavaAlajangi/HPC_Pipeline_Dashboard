@@ -150,6 +150,16 @@ a:hover {
     color: red;
 }
 
+.custom-link {
+    color: #10e84a;
+    text-decoration: none;
+}
+
+.custom-link:hover {
+    color: red;
+    text-decoration: none;
+}
+
 /* Change bdc.Card into message box */
 .message-box {
     border: #017b50;

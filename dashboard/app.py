@@ -71,7 +71,7 @@ def sidebar_menu():
                 ],
                 href=PROJECT_REPO_URL,
                 target="_blank",
-                style={"text-decoration": "none"}
+                className="custom-link"
             )
         ],
         id="sidebar"
