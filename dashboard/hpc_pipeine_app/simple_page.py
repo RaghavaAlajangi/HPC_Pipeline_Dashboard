@@ -73,8 +73,8 @@ def simple_request(refresh_path):
                             paragraph_comp("Classification Model"),
                             checklist_comp(
                                 comp_id="simp_classifier_id",
-                                options={"Bloody-Bunny": False},
-                                defaults=["Bloody-Bunny"]
+                                options={"bloody-bunny": False},
+                                defaults=["bloody-bunny"]
                             )
                         ]
                     ),
