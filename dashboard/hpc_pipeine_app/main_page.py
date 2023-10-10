@@ -73,38 +73,12 @@ def workflow_tab_content():
         html.Div(
             html.Img(
                 src="assets/hpc_workflow.jpg",
-                style={"width": "1000px", "height": "800px"}
+                style={"width": "1000px", "height": "900px"}
             ),
             className="row justify-content-center"
         ),
         line_breaks(2)
     ]
-
-
-def opened_tab_content():
-    issue_meta = request_gitlab.get_issues_meta("opened", 1)
-    accord_items = [create_accord_item_for_issue(issue) for issue in issue_meta]
-    return html.Div(
-        group_accordion(
-            accord_items,
-            middle=True, comp_id="issue_accord"
-        ),
-        style={"max-height": "70rem", "overflow-y": "scroll",
-               "overflow-x": "hidden"},
-    )
-
-
-def closed_tab_content():
-    issue_meta = request_gitlab.get_issues_meta("closed", 1)
-    accord_items = [create_accord_item_for_issue(issue) for issue in issue_meta]
-    return html.Div(
-        group_accordion(
-            accord_items,
-            middle=True, comp_id="issue_accord"
-        ),
-        style={"max-height": "70rem", "overflow-y": "scroll",
-               "overflow-x": "hidden"},
-    )
 
 
 def create_accord_item_for_issue(issue):
@@ -309,43 +283,36 @@ def show_pipeline_comments(accord_item, match_id):
 
 @callback(
     Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
-    Input("tabs", "active_tab"),
-    Input("issue_accord", "active_item"),
-    Input({"type": "accord_item_div", "index": MATCH}, "children"),
-    State({"type": "accord_item_div", "index": MATCH}, "id"),
-    prevent_initial_call=True
-)
-def toggle_stop_pipeline_button(active_tab, active_item, issue_content,
-                                match_id):
-    """Enable the stop pipeline button in an issue only after the comments
-    of that issue are loaded and for issues in opened tab"""
-    if isinstance(issue_content, dict) and active_tab == "opened":
-        issue_iid = int(active_item.split("item")[1])
-        if issue_iid == match_id["index"]:
-            return False
-        return True
-
-
-
-@callback(
     Output({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
     Input("tabs", "active_tab"),
-    Input("issue_accord", "active_item"),
+    Input({"type": "accord_item_div", "index": MATCH}, "children"),
     Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipeline_popup", "index": MATCH}, "n_clicks"),
+    State({"type": "accord_item_div", "index": MATCH}, "id"),
     State({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
     prevent_initial_call=True
 )
-def cancel_pipeline(active_tab, active_item, stop_issue, close_popup, popup):
-    """Cancel pipeline, close GitLab issue, and refresh page"""
-    if active_tab == "opened" and active_item:
-        issue_iid = int(active_item.split("item")[1])
+def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab, issue_content,
+                                                    stop_issue, close_popup,
+                                                    match_id, popup):
+    """Enable stop pipeline button for an opened issue only after the comments
+    of that issue are loaded. Also, open a popup notification when the user
+    cancel the pipeline (close GitLab issue), and refresh the page."""
+    # Enable stop pipeline button for opened issue only if comments are loaded
+    if isinstance(issue_content, dict) and active_tab == "opened":
+        is_disabled = False
+        # Stop pipeline and open a popup
         if stop_issue:
-            request_gitlab.cancel_pipeline(issue_iid)
-            return not popup
-    if close_popup:
-        return not popup
-    return False
+            request_gitlab.cancel_pipeline(match_id["index"])
+            is_open = not popup
+        # Close popup and refresh the page
+        elif close_popup:
+            is_open = not popup
+        else:
+            is_open = False
+        return is_disabled, is_open
+    # No update for other tabs
+    return no_update, no_update
 
 
 @callback(
