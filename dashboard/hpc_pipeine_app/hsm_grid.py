@@ -7,7 +7,8 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from dash import (callback, Input, Output, State, dcc, html)
 
-from ..components import text_input_comp, input_with_dropdown, line_breaks
+from ..components import (text_input_comp, drop_input_button, line_breaks,
+                          paragraph_comp)
 
 DATA_DIR = Path(__file__).parents[2] / "resources"
 CHUNK_DIR = DATA_DIR / "hsm_chunk_dir"
@@ -27,18 +28,24 @@ def create_hsm_grid():
     return html.Div(
         [
             dcc.Store(id="store_dcor_files", data=[]),
+            dcc.Store(id="store_hsm_files", data=[]),
+
+            paragraph_comp("Select DCOR-Colab file:"),
+
             line_breaks(times=1),
-            input_with_dropdown(
+            drop_input_button(
                 comp_id="input_group",
                 drop_options=["DCOR"],
-                dropdown_holder="Source",
-                input_holder="Enter DVC path or DCOR Id "
-                             "or Circle or Dataset etc...",
+                default_drop="DCOR",
+                drop_placeholder="Source",
+                input_placeholder="Enter DVC path or DCOR-colab Id, "
+                                  "Circle, or Dataset etc...",
                 width=80
             ),
             line_breaks(times=2),
+            paragraph_comp("Select HSMFS file/s:"),
             text_input_comp(comp_id="grid_filter",
-                            placeholder="Filter with name...",
+                            placeholder="Search dataset name with a keyword",
                             width=30, middle=False),
             dag.AgGrid(
                 id="hsm_grid",
@@ -169,17 +176,14 @@ def load_hms_grid_data(pipeline_active_accord):
 @callback(
     Output("show_grid", "rowData"),
     Output("show_grid", "selectedRows"),
-    Input("hsm_grid", "selectedRows"),
     Input("store_dcor_files", "data"),
+    Input("store_hsm_files", "data"),
     prevent_initial_call=True
 )
-def update_show_grid_data(hsm_selection, selected_files):
+def update_show_grid_data(dcor_files, hsm_files):
     """Collect the user-selected data files and send them to `show_grid`"""
-    if hsm_selection:
-        hsm_files = ["/".join(s["filepath"]) for s in hsm_selection]
-        selected_files = selected_files + hsm_files
     # Convert list of strings into ag grid rowdata
-    rowdata = [{"filepath": i} for i in selected_files]
+    rowdata = [{"filepath": i} for i in (dcor_files + hsm_files)]
     return rowdata, rowdata
 
 
@@ -194,6 +198,20 @@ def display_selected_files_number(show_grid_rows):
 
 
 @callback(
+    Output("input_group_button", "disabled"),
+    Input("input_group_drop", "value"),
+    Input("input_group_text", "value")
+)
+def toggle_input_group_button(drop_value, filename):
+    """Activates Add button in DCOR input bar only when the dropdown value
+    and DCOR identifier is entered"""
+    if drop_value and filename:
+        return False
+    else:
+        return True
+
+
+@callback(
     Output("store_dcor_files", "data"),
     Output("input_group_drop", "value"),
     Output("input_group_text", "value"),
@@ -203,15 +221,34 @@ def display_selected_files_number(show_grid_rows):
     State("store_dcor_files", "data"),
     prevent_initial_call=True
 )
-def store_input_group_files(_, drop_input, text_input, cached_files):
+def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
     """Collects the user selected dcor files and cache them"""
     button_triggered = cc.triggered[0]["prop_id"].split(".")[0]
 
     if button_triggered == "input_group_button":
         if text_input and drop_input:
             input_path = f"{drop_input}: {text_input}"
-            cached_files.append(input_path)
-            return cached_files, None, None
+            if input_path not in cached_files:
+                cached_files.append(input_path)
+            return cached_files, drop_input, None
+    raise PreventUpdate
+
+
+@callback(
+    Output("store_hsm_files", "data"),
+    Input("hsm_grid", "selectedRows"),
+    State("store_hsm_files", "data"),
+    prevent_initial_call=True
+)
+def cache_user_given_hsm_files(hsm_selection, cached_files):
+    """Collects the user selected hsm files and cache them"""
+    if hsm_selection:
+        hsm_files = ["/".join(s["filepath"]) for s in hsm_selection]
+        # Convert list of strings into ag grid rowdata
+        for hfile in hsm_files:
+            if hfile not in cached_files:
+                cached_files.append(hfile)
+        return cached_files
     raise PreventUpdate
 
 

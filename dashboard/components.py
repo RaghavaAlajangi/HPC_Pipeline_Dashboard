@@ -42,29 +42,27 @@ def chat_box(messages, gap=15):
     )
 
 
-def checklist_comp(comp_id, options, defaults):
-    """
-    The checklist_comp function takes in three arguments:
-    - comp_id: the id of the component, which is used to reference it later.
-    - option_list: a list of strings that will be displayed as options for
-    the user to select from.
-    - defaults_list: a list of strings that are selected by default
-    when this component is rendered on screen.
+def checklist_comp(comp_id, options, defaults=None):
+    """Creates a checklist component.
     Parameters
     ----------
-    comp_id
-        Give the component an id
-    options
-        Create the options for the checklist
+    comp_id: str
+        Identify the component in the dom
+    options: dict
+        Checklist options with their values and whether they are disabled
+        or not. The keys are labels and values are booleans indicating whether
+        they should be disabled or not (True = Disabled).  This argument is
+        required.
     defaults
-        Set the default values of the checkboxes
+        default selections (optional)
     Returns
     -------
     A checklist component
     """
-    options = sorted(options)
-    defaults = sorted(defaults)
-    options = [{"label": op, "value": op} for op in options]
+    if defaults is None:
+        defaults = []
+    options = [{"label": k, "value": k, "disabled": v} for k, v in
+               options.items()]
     defaults = [op for op in defaults]
     return dbc.Checklist(
         options=options,
@@ -187,70 +185,24 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
     )
 
 
-def groupby_columns(components, width=10):
-    """
-    The groupby_columns function takes a list of components and returns
-    a row with the components grouped into columns. The width parameter is
-    optional, but defaults to 10. The function will group the components into
-    as many columns as needed to fit them all in one row.
-    Parameters
-    ----------
-    components
-        Pass in the components that will be grouped together
-    width
-        Set the width of each column in the row
-    Returns
-    -------
-    A row of column components
-    """
-    columns = dbc.Col([e for e in components], width=width)
-    return dbc.Row(columns)
+def group_items(items, horizontal=False):
+    return dbc.ListGroup(
+        [dbc.ListGroupItem(item) for item in items],
+        horizontal=horizontal
+    )
 
 
-def groupby_rows(components, width=2):
-    """
-    The groupby_rows function takes a list of components and groups
-    them into rows. The width parameter specifies how many columns each
-    row should span. For example, if you have a list of 6 components and
-    want to group them into 3-column rows:
-    Parameters
-    ----------
-    components
-        Pass in the components to be grouped
-    width
-        Determine the width of each column in a row
-    Returns
-    -------
-    A row of components
-    """
-    rows = [dbc.Col(e, width=width) for e in components]
-    return dbc.Row(rows)
-
-
-def group_accordion(children, middle=False, comp_id="none"):
-    """
-    The group_accordion function takes a list of accordion items and
-    returns an HTML Div element containing the accordion. The middle
-    parameter is used to determine whether the returned div should
-    be centered on the page.The comp_id parameter is used to set an id
-    for this component, which can be referenced by other components.
-    Parameters
-    ----------
-    accord_items
-        Pass in the accordion items
-    middle
-        Add a row class to the div that is returned
-    comp_id
-        Identify the accordion
-    Returns
-    -------
-    The accordion items
-    """
+def group_accordion(children, middle=False, open_first=False, comp_id="none"):
+    """Takes a list of children, and returns an accordion with those children.
+    The middle parameter is used to center the accordion on the page. The
+    open_first parameter determines whether the first item in the accordion
+    will be opened by default."""
     accord_items = [a for a in children]
     return html.Div(
         dbc.Accordion(children=accord_items,
                       id=comp_id,
-                      className="my-accordion"
+                      className="my-accordion",
+                      start_collapsed=not open_first,
                       ),
         className="row justify-content-center" if middle else ""
     )
@@ -271,27 +223,37 @@ def line_breaks(times=1):
     return html.Div(children=br_list)
 
 
-def input_with_dropdown(comp_id, drop_options, dropdown_holder="Source",
-                        input_holder="text", with_button=True, width=100):
+def drop_input_button(comp_id, drop_options, disable_drop=False,
+                      drop_placeholder="Source", default_drop=None,
+                      input_placeholder="text", disable_input=False,
+                      disable_button=False,
+                      with_button=True, width=100
+                      ):
+    default_drop = default_drop if default_drop else []
     return html.Div(
         dbc.InputGroup([
             dbc.Select(
-                placeholder=dropdown_holder,
+                placeholder=drop_placeholder,
                 id=f"{comp_id}_drop",
                 options=[
                     {"label": i, "value": i} for i in drop_options
                 ],
-                style={"width": "15%"}
+                value=default_drop,
+                style={"width": "15%"},
+                disabled=disable_drop
             ),
             dbc.Input(
                 type="text", id=f"{comp_id}_text",
-                placeholder=input_holder,
-                style={"width": "75%"}
+                placeholder=input_placeholder,
+                style={"width": "75%"},
+                class_name="custom-placeholder",
+                disabled=disable_input,
             ),
             dbc.Button(
                 "Add", id=f"{comp_id}_button", color="info",
-                style={"width": "10%"}
-            ) if with_button else "",
+                style={"width": "10%"},
+                disabled=disable_button
+            ) if with_button else None,
         ],
             style={"width": f"{width}%"}
         ),
@@ -337,10 +299,11 @@ def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
     return dbc.Label(id=comp_id, children=text, style=style)
 
 
-def progressbar_comp(comp_id, width=80):
+def progressbar_comp(comp_id, height=20, width=80):
     return dbc.Progress(id=comp_id, value=0, striped=True,
                         animated=True, color="success",
-                        style={"width": f"{width}%", "margin": "0 auto"}
+                        style={"height": f"{height}px", "width": f"{width}%",
+                               "margin": "0 auto"}
                         )
 
 
@@ -382,7 +345,7 @@ def text_input_comp(comp_id, placeholder, width=50, middle=True):
             disabled=False,
             type="text",
             placeholder=placeholder,
-            class_name="dbc_input",
+            class_name="custom-placeholder",
             style={"width": f"{width}rem"}
         ),
         className="row justify-content-center" if middle else "",
@@ -416,8 +379,7 @@ def upload_comp(comp_id):
 
 def web_link(label, url):
     return html.A(label, href=url, target="_blank",
-                  style={"text-decoration": "none"}
-                  )
+                  className="custom-link")
 
 
 def web_link_check(text):

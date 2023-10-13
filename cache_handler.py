@@ -55,21 +55,23 @@ class HSMDataProcessor:
         chunk_counter = 0
 
         for dirpath, dirnames, filenames in os.walk(self.drive_path):
-            filenames = [f for f in filenames if f.endswith('.rtdc')]
+            filenames = [f for f in filenames if f.endswith(".rtdc")]
             for fname in filenames:
                 fpath = os.path.join(dirpath, fname)
+                # Standardize the RTDC file path
                 fpath = fpath.replace("\\", "/").replace("//", "/")
-
+                # Get the modified date of the RTDC file
                 modified_time = os.path.getmtime(fpath)
                 modified_time = dt.fromtimestamp(
                     modified_time).strftime(
                     "%d-%b-%Y %I.%M %p")
-                file_path_list = list(fpath.split("/"))
-                file_path_list[0] = "HSMFS:"
+                # Get the relative path without HSMFS drive name
+                fpath_wo_hsmfs = fpath.split("HSMFS/")[1]
+                # Split path string into list and add HSMFS identifier
+                file_path_list = ["HSMFS:"] + list(fpath_wo_hsmfs.split("/"))
                 entry = {
                     "filepath": file_path_list,
                     "dateModified": modified_time,
-                    # "rtdc_path": "/".join(file_path_list)
                 }
                 chunk_data.append(entry)
 
@@ -92,7 +94,7 @@ class HSMDataProcessor:
         with open(str(self.chunk_idx_file_path), "wb") as f:
             pickle.dump(self.chunk_index, f)
 
-        disc_time = str(timedelta(seconds=time.time() - t1)).split('.')[0]
+        disc_time = str(timedelta(seconds=time.time() - t1)).split(".")[0]
         print(f"Disc scanning time: {disc_time}")
 
 

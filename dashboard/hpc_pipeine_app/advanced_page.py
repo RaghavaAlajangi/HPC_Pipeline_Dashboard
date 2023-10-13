@@ -5,7 +5,7 @@ from dash import callback, Input, Output, State, html, dcc, ALL
 from .utils import update_advanced_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, checklist_comp, group_accordion,
-                          popup_comp, button_comp, input_with_dropdown,
+                          popup_comp, button_comp, drop_input_button,
                           line_breaks, form_group_dropdown, form_group_input,
                           divider_line_comp)
 from ..global_variables import request_gitlab, dvc_gitlab
@@ -23,7 +23,7 @@ def advanced_request(refresh_path):
     """Creates advanced request page"""
     return dbc.Toast(
         id="advanced_request_toast",
-        header="Advanced pipeline request",
+        header="Advanced Pipeline Request",
         header_style={"background-color": "#017b70",
                       "font-size": "25px",
                       "color": "white"},
@@ -47,14 +47,14 @@ def advanced_request(refresh_path):
                     dbc.AccordionItem(
                         title="Title (required)",
                         children=[
-                            input_with_dropdown(
+                            drop_input_button(
                                 comp_id="advanced_title",
-                                drop_options=["eoghan", "max",
-                                              "nadia",
-                                              "paul",
-                                              "raghava"],
-                                dropdown_holder="User",
-                                input_holder="Type title...",
+                                drop_options=["eoghan", "max", "nadia",
+                                              "paul", "raghava"],
+                                drop_placeholder="User",
+                                disable_drop=True,
+                                input_placeholder="Enter the name of the "
+                                                  "pipeline...",
                                 with_button=False, width=80
                             )
                         ]
@@ -65,7 +65,9 @@ def advanced_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="dcevent_ver_id",
-                                options=["dcevent version=latest"],
+                                options={
+                                    "dcevent version=latest": False,
+                                },
                                 defaults=["dcevent version=latest"]
                             )
                         ]
@@ -77,7 +79,7 @@ def advanced_request(refresh_path):
                             # MLUNet segmentor section
                             checklist_comp(
                                 comp_id="mlunet_id",
-                                options=["mlunet: UNET"],
+                                options={"mlunet: UNET": False},
                                 defaults=["mlunet: UNET"]
                             ),
                             html.Ul(
@@ -99,9 +101,8 @@ def advanced_request(refresh_path):
                             # Legacy segmentor section
                             checklist_comp(
                                 comp_id="legacy_id",
-                                options=["legacy: Legacy thresholding"
-                                         " with OpenCV"],
-                                defaults=[]
+                                options={"legacy: Legacy thresholding"
+                                         " with OpenCV": False}
                             ),
                             html.Ul(
                                 id="legacy_options",
@@ -161,8 +162,9 @@ def advanced_request(refresh_path):
                             divider_line_comp(),
                             checklist_comp(
                                 comp_id="watershed_id",
-                                options=["watershed: Watershed algorithm"],
-                                defaults=[]
+                                options={
+                                    "watershed: Watershed algorithm": False,
+                                }
                             ),
                             html.Ul(
                                 id="watershed_options",
@@ -194,9 +196,10 @@ def advanced_request(refresh_path):
                             # STD segmentor section
                             checklist_comp(
                                 comp_id="std_id",
-                                options=["std: Standard-deviation-"
-                                         "based thresholding"],
-                                defaults=[]
+                                options={
+                                    "std: Standard-deviation-"
+                                    "based thresholding": False,
+                                }
                             ),
                             html.Ul(
                                 id="std_options",
@@ -231,9 +234,11 @@ def advanced_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="rollmed_id",
-                                options=["rollmed: Rolling median "
-                                         "RT-DC background image "
-                                         "computation"],
+                                options={
+                                    "rollmed: Rolling median "
+                                    "RT-DC background image "
+                                    "computation": False,
+                                },
                                 defaults=["rollmed: Rolling median RT-DC "
                                           "background image computation"]
                             ),
@@ -259,10 +264,11 @@ def advanced_request(refresh_path):
                             divider_line_comp(),
                             checklist_comp(
                                 comp_id="sparsemed_id",
-                                options=["sparsemed: Sparse median "
-                                         "background correction with "
-                                         "cleansing"],
-                                defaults=[]
+                                options={
+                                    "sparsemed: Sparse median "
+                                    "background correction with "
+                                    "cleansing": False,
+                                }
                             ),
                             html.Ul(
                                 id="sparsemed_options",
@@ -304,7 +310,9 @@ def advanced_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="ngate_id",
-                                options=["norm gating"],
+                                options={
+                                    "norm gating": False,
+                                },
                                 defaults=["norm gating"]
                             ),
                             html.Ul(
@@ -333,8 +341,9 @@ def advanced_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="repro_id",
-                                options=["--reproduce"],
-                                defaults=[]
+                                options={
+                                    "--reproduce": False,
+                                }
                             )
                         ]
                     ),
@@ -343,21 +352,24 @@ def advanced_request(refresh_path):
                         children=[
                             checklist_comp(
                                 comp_id="classifier_id",
-                                options=["bloody-bunny_g1_bacae: "
-                                         "Bloody Bunny"],
+                                options={
+                                    "bloody-bunny_g1_bacae: "
+                                    "Bloody Bunny": False,
+                                },
                                 defaults=["bloody-bunny_g1_bacae: "
                                           "Bloody Bunny"]
                             )
                         ]
                     ),
                     dbc.AccordionItem(
-                        title="Post Analysis",
+                        title="Post Analysis (Not Implemented)",
                         children=[
                             checklist_comp(
                                 comp_id="adv_postana_id",
-                                options=["Benchmarking",
-                                         "Scatter Plot"],
-                                defaults=["Scatter Plot"]
+                                options={
+                                    "Benchmarking": True,
+                                    "Scatter Plot": True,
+                                }
                             )
                         ]
                     ),
@@ -371,6 +383,7 @@ def advanced_request(refresh_path):
                     )
                 ],
                 middle=True,
+                open_first=True,
                 comp_id="pipeline_accord"
             ),
             line_breaks(times=3),
@@ -540,7 +553,7 @@ def collect_advanced_pipeline_params(*args):
     params = [item for sublist in args[1:5] for item in sublist]
     params_dict = {params: {} for params in params}
     # Get the cached selections and update the dictionary
-    for d in args[5:-2]:
+    for d in args[5:-1]:
         params_dict.update(d)
     # Get the data files
     selected_files = args[-1]

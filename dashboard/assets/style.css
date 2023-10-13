@@ -119,6 +119,7 @@
 .my-toast {
     width: 100%;
     height: fit-content;
+    background-color: #303030;
 }
 
 /* dbc.accordion styling parameters*/
@@ -149,6 +150,16 @@ a:hover {
     color: red;
 }
 
+.custom-link {
+    color: #10e84a;
+    text-decoration: none;
+}
+
+.custom-link:hover {
+    color: red;
+    text-decoration: none;
+}
+
 /* Change bdc.Card into message box */
 .message-box {
     border: #017b50;
@@ -170,4 +181,20 @@ a:hover {
     border-top: 1px solid transparent;
     border-bottom: 15px solid transparent;
     border-right: 10px solid #017b50;
+}
+
+/* Set the placeholder color of dbc.Input*/
+.custom-placeholder::placeholder {
+    color: darkgray;
+}
+
+/* Set the pagination color*/
+.my-custom-pagination .page-item .page-link {
+    background-color: #303030;
+    color: white;
+    border-color: white;
+}
+
+.my-custom-pagination .page-item.active .page-link {
+    background-color: #017b50;
 }
