@@ -572,10 +572,9 @@ def collect_advanced_pipeline_params(*args):
     author_name, advanced_title = args[0:2]
     # Get the params value list and convert it to a dictionary
     params = [item for sublist in args[2:5] for item in sublist]
-    print(params)
     params_dict = {params: {} for params in params}
     # Get the cached selections and update the dictionary
-    for d in args[5:-1]:
+    for d in args[6:-1]:
         params_dict.update(d)
     # Get the data files
     selected_files = args[-1]
