@@ -5,14 +5,16 @@ from dash import callback, Input, Output, State, html, dcc, ALL
 from .utils import update_advanced_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, checklist_comp, group_accordion,
-                          popup_comp, button_comp, drop_input_button,
-                          line_breaks, form_group_dropdown, form_group_input,
-                          divider_line_comp)
+                          popup_comp, button_comp, form_group_dropdown,
+                          form_group_input, line_breaks, divider_line_comp)
 from ..global_variables import request_gitlab, dvc_gitlab
 
 # Fetch the model checkpoint list from DVC repo
 segm_ckp_list = dvc_gitlab.get_dvc_filelist_from_dir(
     path="model_registry/segmentation")
+
+# Fetch the members list from request repo
+members_list = request_gitlab.get_project_members()
 
 # Fetch the advanced request template from request repo
 advanced_template = request_gitlab.read_file(
@@ -47,15 +49,34 @@ def advanced_request(refresh_path):
                     dbc.AccordionItem(
                         title="Title (required)",
                         children=[
-                            drop_input_button(
-                                comp_id="advanced_title",
-                                drop_options=["eoghan", "max", "nadia",
-                                              "paul", "raghava"],
-                                drop_placeholder="User",
-                                disable_drop=True,
-                                input_placeholder="Enter the name of the "
-                                                  "pipeline...",
-                                with_button=False, width=80
+                            html.Div(
+                                dbc.InputGroup(
+                                    [
+                                        dbc.Select(
+                                            placeholder="User",
+                                            id="advanced_title_drop",
+                                            options=[
+                                                {"label": member.name,
+                                                 "value": member.username} for
+                                                member in members_list
+                                            ],
+                                            # Note: HPC_pipeline_dashboard is
+                                            # hard coded as a default user
+                                            value="project_28692_bot1",
+                                            style={"width": "18%"},
+                                        ),
+                                        dbc.Input(
+                                            type="text",
+                                            id="advanced_title_text",
+                                            placeholder="Enter the name of "
+                                                        "the pipeline...",
+                                            style={"width": "72%"},
+                                            class_name="custom-placeholder",
+                                        )
+                                    ],
+                                    style={"width": "90%"},
+                                ),
+                                className="row justify-content-center",
                             )
                         ]
                     ),
@@ -90,8 +111,7 @@ def advanced_request(refresh_path):
                                         label="model_file",
                                         box_width=18,
                                         options=segm_ckp_list,
-                                        # This is first ever checkpoint from
-                                        # segmentation group. Currently, it is
+                                        # Note: the default checkpoint it is
                                         # hardcoded.
                                         default="unet-228_g1_40c43.ckp"
                                     )
@@ -527,6 +547,7 @@ def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
 
 @callback(
     Output("store_advanced_template", "data"),
+    Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
     # Direct options
     Input("dcevent_ver_id", "value"),
@@ -548,9 +569,10 @@ def collect_advanced_pipeline_params(*args):
     """Collect all the user selected and cached parameters. Then, it updates
     the advanced issue template. Updated template will be cached"""
     # Get the title of the request
-    advanced_title = args[0]
+    author_name, advanced_title = args[0:2]
     # Get the params value list and convert it to a dictionary
-    params = [item for sublist in args[1:5] for item in sublist]
+    params = [item for sublist in args[2:5] for item in sublist]
+    print(params)
     params_dict = {params: {} for params in params}
     # Get the cached selections and update the dictionary
     for d in args[5:-1]:
@@ -564,8 +586,8 @@ def collect_advanced_pipeline_params(*args):
         # Create a template dict with title
         pipeline_template = {"title": advanced_title}
         # Update the advanced template from request repo
-        description = update_advanced_template(params_dict, rtdc_files,
-                                               advanced_template)
+        description = update_advanced_template(params_dict, author_name,
+                                               rtdc_files, advanced_template)
         pipeline_template["description"] = description
         return pipeline_template
 

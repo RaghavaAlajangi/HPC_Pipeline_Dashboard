@@ -1,7 +1,7 @@
 import re
 
 
-def update_simple_template(params, rtdc_paths, template):
+def update_simple_template(params, author_name, rtdc_paths, template):
     """Update th simple issue template with user selected options"""
     # Uncheck all the boxes in the template before update
     template = template.replace("[x]", "[ ]")
@@ -18,10 +18,17 @@ def update_simple_template(params, rtdc_paths, template):
     for path in rtdc_paths:
         template = template + f"\n   - [x] {path}"
 
+    # Add html break for smooth paring
+    template = template + "\n\n    <!-- option end -->"
+
+    # Insert the username in the issue description
+    template = template + (f"\n- __Author__"
+                           f"\n   - [x] username={author_name}")
+
     return template
 
 
-def update_advanced_template(params_dict, rtdc_files, template):
+def update_advanced_template(params_dict, author_name, rtdc_files, template):
     """Update th advanced issue template with user selected options"""
     # Get the parameter section of the template
     template = template.split("- **Segmentation**")[0]
@@ -112,5 +119,12 @@ def update_advanced_template(params_dict, rtdc_files, template):
     # Add user selected files to the template
     for path in rtdc_files:
         template += f"\n  - [x] {path}"
+
+    # Add html break for smooth paring
+    template = template + "\n\n    <!-- option end -->"
+
+    # Insert the username in the issue description
+    template = template + (f"\n- __Author__"
+                           f"\n   - [x] username={author_name}")
 
     return template
