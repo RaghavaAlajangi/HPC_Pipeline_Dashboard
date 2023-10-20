@@ -81,6 +81,68 @@ def divider_line_comp(width=100, middle=True):
     )
 
 
+def dropdown_menu_comp(name, options, indent=0, middle=False):
+    """
+    The dropdown_menu_comp function takes in a name, components, indent
+    and middle. The name is the title of the dropdown menu. The components
+    are what will be displayed in the dropdown menu. The indent is how far
+    from the left side of your screen you want to place it (in pixels).
+    If you set middle to True then it will center itself on your screen.
+    Parameters
+    ----------
+    name: str
+        Set the name of the dropdown menu
+    options: str or dash components
+        Create the dropdown menu options
+    indent: int
+        Indent the dropdown menu
+    middle: int
+        Center the dropdown menu
+    Returns
+    -------
+    A dropdown menu with a list of components
+    """
+    if middle:
+        style = {"text-align": "center"}
+    elif not middle and indent > 0:
+        style = {"marginLeft": f"{indent}px"}
+    else:
+        style = {}
+    options = [dbc.DropdownMenuItem([c]) for c in options]
+    return html.Div(
+        dbc.DropdownMenu(options, label=name),
+        style=style
+    )
+
+
+def dropdown_searchbar_comp(comp_id, options, defaults):
+    """
+    The dropdown_searchbar_comp function takes in three arguments
+    Parameters
+    ----------
+    comp_id
+        Identify the component
+    options
+        Create the dropdown options
+    defaults
+        Set the default value of the dropdown menu
+    Returns
+    -------
+    A dropdown searchbar component
+    """
+    options = sorted(options)
+    defaults = sorted(defaults)
+    options = [{"label": op, "value": op} for op in options]
+    defaults = [op for op in defaults]
+    return dbc.Select(
+        id=comp_id,
+        disabled=False,
+        options=options,
+        value=defaults,
+        style={"width": "6rem"}
+    )
+
+
 def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=2):
     options = [{"label": op, "value": op} for op in sorted(options)]
     dropdown = dbc.Select(
@@ -215,6 +277,18 @@ def loading_comp(children):
     return dbc.Spinner(size="sm", children=children, color="success")
 
 
+def num_searchbar_comp(comp_id, min, max, step, default, width=6):
+    return dbc.Input(
+        id=comp_id,
+        disabled=False,
+        min=min, max=max, step=step,
+        value=default,
+        type="number",
+        placeholder="Enter a number...",
+        style={"width": f"{width}rem"}
+    )
+
+
 def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
     if middle:
         style = {"text-align": "center"}
@@ -278,17 +352,44 @@ def text_input_comp(comp_id, placeholder, width=50, middle=True):
     )
 
 
+def upload_comp(comp_id):
+    """
+    The upload_comp function is a helper function that creates an upload
+    component. It takes in the id of the component and returns a
+    dcc.Upload object with children, className, and multiple attributes
+    set to specific values.
+    Parameters
+    ----------
+    comp_id
+        Identify the component in the callback function
+    Returns
+    -------
+    A dcc.Upload component
+    """
+    return dcc.Upload(
+        id=comp_id,
+        children=html.Div([
+            "Drag and Drop or ",
+            html.A("Select Files")
+        ]),
+        className="dcc-upload",
+        multiple=True
+    )
+
+
 def web_link(label, url):
     return html.A(label, href=url, target="_blank",
                   className="custom-link")
 
 
 def web_link_check(text):
-    """It takes a string as input and returns the same string with any web
-    links replaced by a clickable link. The function uses regular expressions
-    to find all instances of web links in the input text, then replaces each
-    instance with an HTML hyperlink tag that will display as a clickable link
-    when rendered.
+    """
+    The web_link_check function takes a string as input and returns the
+    same string with any web links replaced by a clickable link. The
+    function uses regular expressions to find all instances of web links
+    in the input text, then replaces each instance with an HTML hyperlink
+    tag that will display as a clickable link when
+    rendered.
     Parameters
     ----------
     text: str
