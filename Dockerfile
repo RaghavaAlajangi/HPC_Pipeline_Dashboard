@@ -1,4 +1,5 @@
-FROM python:alpine as cron
+FROM python:3.9-slim as cron
+#FROM python:alpine as cron
 RUN pip install yacron
 COPY crontab.yaml /tmp/crontab.yaml
 COPY cache_handler.py /app/cache_handler.py
