@@ -4,9 +4,12 @@ import pickle
 import os
 import time
 
-HSM_PATH = Path(__file__).parents[1] / "HSMFS"
+HSM_PATH = Path(__file__).parents[1] / "HSMFS" / "Data"
 RESOURCE_PATH = Path(__file__).parents[0] / "resources"
 
+HSM_PATH = Path(__file__).parents[0] / "HSMFS" / "Data"
+
+print(HSM_PATH)
 
 class HSMDataProcessor:
     def __init__(self, drive_path, chunk_size, resource_path):
