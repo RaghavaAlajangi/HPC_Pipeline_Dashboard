@@ -1,14 +1,17 @@
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc
+from dash import callback, Input, Output, State, dcc, html
 
 from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
-                          line_breaks, drop_input_button)
+                          line_breaks)
 
 from ..global_variables import request_gitlab
+
+# Fetch the members list from request repo
+members_list = request_gitlab.get_project_members()
 
 # Fetch the simple request template from request repo
 simple_template = request_gitlab.read_file(
@@ -40,17 +43,35 @@ def simple_request(refresh_path):
                     dbc.AccordionItem(
                         title="Title (required)",
                         children=[
-                            drop_input_button(
-                                comp_id="simple_title",
-                                # drop_options=request_gitlab.get_project_members(),
-                                drop_options=["eoghan", "max", "nadia",
-                                              "paul", "raghava"],
-                                drop_placeholder="User",
-                                input_placeholder="Enter the name of the "
-                                                  "pipeline...",
-                                with_button=False, width=80,
-                                disable_drop=True
-                            ),
+                            html.Div(
+                                dbc.InputGroup(
+                                    children=[
+                                        dbc.Select(
+                                            placeholder="User",
+                                            id="simple_title_drop",
+                                            options=[
+                                                {"label": member.name,
+                                                 "value": member.username} for
+                                                member in members_list
+                                            ],
+                                            # Note: HPC_pipeline_dashboard is
+                                            # hard coded as a default user
+                                            value="project_28692_bot1",
+                                            style={"width": "18%"},
+                                        ),
+                                        dbc.Input(
+                                            type="text",
+                                            id="simple_title_text",
+                                            placeholder="Enter the name of "
+                                                        "the pipeline...",
+                                            style={"width": "72%"},
+                                            class_name="custom-placeholder",
+                                        )
+                                    ],
+                                    style={"width": "90%"},
+                                ),
+                                className="row justify-content-center",
+                            )
                         ]
                     ),
                     dbc.AccordionItem(
@@ -117,13 +138,14 @@ def simple_request(refresh_path):
 
 @callback(
     Output("store_simple_template", "data"),
+    Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
     Input("simp_segm_id", "value"),
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
     Input("show_grid", "selectedRows")
 )
-def collect_simple_pipeline_params(simple_title, simple_segment,
+def collect_simple_pipeline_params(author_name, simple_title, simple_segment,
                                    simple_classifier, simple_postana,
                                    selected_files):
     """Collect all the user selected parameters. Then, it updates the simple
@@ -136,7 +158,7 @@ def collect_simple_pipeline_params(simple_title, simple_segment,
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
-        description = update_simple_template(params, rtdc_files,
+        description = update_simple_template(params, author_name, rtdc_files,
                                              simple_template)
         pipeline_template["description"] = description
         return pipeline_template

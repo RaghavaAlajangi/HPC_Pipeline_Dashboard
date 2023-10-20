@@ -84,8 +84,7 @@ class GitLabAPI:
 
     def get_project_members(self):
         """Fetch the members list of a repository"""
-        members = self.project.members.list(all=True, include_inherited=True)
-        return [member.name for member in members]
+        return self.project.members_all.list(get_all=True)
 
     def read_file(self, path):
         """Fetch the file content of a specified repository path"""
