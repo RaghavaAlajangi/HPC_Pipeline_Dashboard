@@ -18,8 +18,38 @@ PROGRESS_COMMENTS = [
 
 JOB_COMMENTS = [
     r"^Completed job",
-    r"^We have (\d+) pipeline"
+    r"^We have (\d+) pipeline",
+    "Access your data at"
 ]
+
+
+def find_results_path(issue_notes):
+    result_path = "No result path"
+    for cmt in issue_notes["comments"]:
+        if JOB_COMMENTS[2] in cmt:
+            result_path = cmt.split("main/")[1]
+            break
+    return result_path
+
+
+def find_job_stats(issue_notes):
+    """Fetch total & completed no of pipelines info from issue comments"""
+    # Initialize variables to hold total and finished job counts
+    total_jobs = 0
+
+    # Find the total number of pipelines
+    for cmt in issue_notes["comments"]:
+        if re.match(JOB_COMMENTS[1], cmt):
+            total_jobs_match = re.search(JOB_COMMENTS[1], cmt)
+            if total_jobs_match:
+                total_jobs = int(total_jobs_match.group(1))
+            break
+
+    # Count the number of finished job comments
+    finished_jobs = len([cmt for cmt in issue_notes["comments"] if
+                         re.match(JOB_COMMENTS[0], cmt)])
+
+    return total_jobs, finished_jobs
 
 
 def welcome_tab_content():
@@ -131,6 +161,33 @@ def create_accord_item_for_issue(issue):
                 horizontal=True
             ),
             line_breaks(1),
+            html.H6("Result Path: (path to find results on S3-proxy)"),
+            dbc.ListGroup(
+                [
+                    dbc.ListGroupItem(
+                        html.P(
+                            id={"type": "results_path", "index": issue['iid']},
+                            style={'display': 'inline'}
+                        ),
+                        style={"color": "#10e84a"}
+                    ),
+                    dbc.ListGroupItem(
+                        dcc.Clipboard(
+                            target_id={"type": "results_path",
+                                       "index": issue['iid']},
+                            title="Copy Path",
+                            style={
+                                "display": "inline-block",
+                                "fontSize": 20,
+                                "verticalAlign": "top",
+                            }
+                        )
+                    )
+                ],
+                horizontal=True,
+            ),
+
+            line_breaks(1),
             html.H6("Comments:"),
             loading_comp(
                 html.Div(id={"type": "accord_item_div", "index": issue['iid']})
@@ -231,6 +288,7 @@ def switch_tabs(active_tab, page):
 @callback(
     Output({"type": "accord_item_div", "index": MATCH}, "children"),
     Output({"type": "pipeline_status", "index": MATCH}, "children"),
+    Output({"type": "results_path", "index": MATCH}, "children"),
     Output({"type": "accord_item_bar", "index": MATCH}, "value"),
     Output({"type": "accord_item_bar", "index": MATCH}, "label"),
     Input("issue_accord", "active_item"),
@@ -240,7 +298,7 @@ def switch_tabs(active_tab, page):
 def show_pipeline_comments(accord_item, match_id):
     # Check if there is an active_item selected
     if not accord_item:
-        return no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update
 
     # Parse issue_iid from active_item
     issue_iid = int(accord_item.split("item")[1])
@@ -250,18 +308,13 @@ def show_pipeline_comments(accord_item, match_id):
         # Fetch comments for the issue from GitLab
         notes = request_gitlab.get_comments(issue_iid)
         comment_cards = chat_box(notes)
-
-        # Find the total number of pipelines
-        total_jobs_string = [s for s in notes["comments"] if
-                             re.match(JOB_COMMENTS[1], s)]
-        if not total_jobs_string:
-            return comment_cards, None, None, None
-        total_jobs = int(
-            re.search(JOB_COMMENTS[1], total_jobs_string[0]).group(1))
-
-        # Count the number of finished job comments
-        finished_jobs = len(
-            [s for s in notes["comments"] if re.match(JOB_COMMENTS[0], s)])
+        # Get the result path from issue notes
+        result_path = find_results_path(notes)
+        # Get the total jobs and finished jobs numbers
+        total_jobs, finished_jobs = find_job_stats(notes)
+        # Show only comments if total jobs equal to zero
+        if total_jobs == 0:
+            return comment_cards, "Jobs: [0 / 0]", result_path, None, None
 
         # Calculate the progress percentage
         progress = (finished_jobs / total_jobs) * 85
@@ -274,11 +327,12 @@ def show_pipeline_comments(accord_item, match_id):
         return (
             comment_cards,
             f"Jobs: [{finished_jobs} / {total_jobs}]",
+            result_path,
             progress,
             f"{progress:.0f} %"
         )
     else:
-        return no_update, no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update
 
 
 @callback(
