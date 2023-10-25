@@ -10,14 +10,13 @@ from dash import (callback, Input, Output, State, dcc, html)
 from ..components import (text_input_comp, drop_input_button, line_breaks,
                           paragraph_comp)
 
-DATA_DIR = Path(__file__).parents[2] / "resources"
-CHUNK_DIR = DATA_DIR / "hsm_chunk_dir"
+HSM_DATA_DIR = Path(__file__).parents[2] / "resources"
 
 
-def load_data_chunk(chunk_id):
-    """Load a specific chunk based on chunk_id"""
-    if (CHUNK_DIR / f"chunk_num_{chunk_id}.pkl").exists():
-        with open(CHUNK_DIR / f"chunk_num_{chunk_id}.pkl", "rb") as file:
+def load_hsm_data():
+    """Load rtdc file paths from pickled HSMFS drive"""
+    if (HSM_DATA_DIR / "hsm_drive.pkl").exists():
+        with open(HSM_DATA_DIR / "hsm_drive.pkl", "rb") as file:
             return pickle.load(file)
     else:
         return None
@@ -91,7 +90,6 @@ def create_hsm_grid():
                     # No blue highlight
                     "suppressRowHoverHighlight": True,
                 },
-                # rowData=load_data_chunk(1),
                 enableEnterpriseModules=True,
                 style={"height": 600},
                 # getRowId="params.data.filepath",
@@ -168,7 +166,7 @@ def create_show_grid(comp_id):
 def load_hms_grid_data(pipeline_active_accord):
     """Show HSMFS grid only when user clicks on `Data to Process` accord"""
     if pipeline_active_accord == "hsm_accord":
-        return load_data_chunk(1)
+        return load_hsm_data()
     else:
         return None
 

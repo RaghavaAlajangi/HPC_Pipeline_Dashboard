@@ -8,8 +8,6 @@ SECRETS.txt
 trails
 notes
 HSMFS
-resources/hsm_chunk_dir
-resources/hsm_chunk_index.pkl
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
