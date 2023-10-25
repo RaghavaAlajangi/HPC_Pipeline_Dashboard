@@ -6,7 +6,7 @@ from dash import html, callback, Input, Output, State, MATCH, no_update, dcc
 
 from ..components import (
     line_breaks, paragraph_comp, group_accordion, group_items, button_comp,
-    chat_box, loading_comp, web_link, progressbar_comp, popup_comp
+    chat_box, loading_comp, web_link, progressbar_comp, popup_comp, header_comp
 )
 from ..global_variables import request_gitlab, PATHNAME_PREFIX, DCEVENT_DOCS
 
@@ -282,7 +282,14 @@ def switch_tabs(active_tab, page):
         return workflow_tab_content()
     else:
         issue_meta = request_gitlab.get_issues_meta(active_tab, page)
-        return get_pipeline_accords(issue_meta)
+        if len(issue_meta) == 0:
+            return html.Div([
+                line_breaks(1),
+                header_comp("⦿ No open requests!", indent=40),
+                line_breaks(25)
+            ])
+        else:
+            return get_pipeline_accords(issue_meta)
 
 
 @callback(
