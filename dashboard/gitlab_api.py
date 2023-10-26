@@ -75,7 +75,9 @@ class GitLabAPI:
                 "name": issue.title,
                 "id": issue.id,
                 "iid": issue.iid,
-                "author": issue.author["username"],
+                "author": issue.author["name"],
+                "user": self.find_user(issue.description) or issue.author[
+                    "name"],
                 "web_url": issue.web_url,
                 "date": self.human_readable_date(issue.created_at),
             }
@@ -85,6 +87,23 @@ class GitLabAPI:
     def get_project_members(self):
         """Fetch the members list of a repository"""
         return self.project.members_all.list(get_all=True)
+
+    def find_user(self, issue_text, pattern="username"):
+        """Look for `username` section in the issue description"""
+        members = self.get_project_members()
+        username = None
+        name = None
+        for line in reversed(issue_text.split('\n')):
+            if f"[x] {pattern}" in line:
+                username = line.split("=")[1].strip()
+                break
+
+        if username:
+            for member in members:
+                if username == member.username:
+                    name = member.name
+                    break
+        return name
 
     def read_file(self, path):
         """Fetch the file content of a specified repository path"""

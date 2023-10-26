@@ -124,6 +124,7 @@ def create_accord_item_for_issue(issue):
             html.H6("Pipeline Details:"),
             group_items([
                 paragraph_comp(text=f"Created by: {issue['author']}"),
+                paragraph_comp(text=f"Username: {issue['user']}"),
                 paragraph_comp(text=f"Pipeline ID: {issue['id']}"),
                 paragraph_comp(text=f"Date of Creation: {issue['date']}"),
                 web_link(label=f"Go to GitLab issue - #{issue['iid']}",
