@@ -1,7 +1,8 @@
 import re
 
 
-def update_simple_template(params, author_name, rtdc_paths, template):
+def update_simple_template(params, simple_mlunet, author_name, rtdc_paths,
+                           template):
     """Update th simple issue template with user selected options"""
     # Uncheck all the boxes in the template before update
     template = template.replace("[x]", "[ ]")
@@ -11,6 +12,25 @@ def update_simple_template(params, author_name, rtdc_paths, template):
         if param_lower in template.lower() or param in template:
             template = re.sub(re.escape(f"[ ] {param}"), f"[x] {param}",
                               template, flags=re.IGNORECASE)
+
+    if simple_mlunet:
+        template = re.sub(re.escape("[ ] mlunet"), "[x] mlunet",
+                          template, flags=re.IGNORECASE)
+
+        # Option after which you want to add a new line
+        mlunet_option = "mlunet: UNET"
+
+        # Find the position of the mlunet option in the template
+        word_index = template.find(mlunet_option)
+
+        # Split the string at the position of the specific word
+        first_part = template[:word_index + len(mlunet_option)]
+        second_part = template[word_index + len(mlunet_option):]
+
+        ckp_part = f"\n        - [x] model_file={simple_mlunet['model_file']}"
+
+        # Join the parts with a model_file in between
+        template = first_part + ckp_part + second_part
 
     template = template.split("- **Data to Process**")[0]
     template = template + "- **Data to Process**"
