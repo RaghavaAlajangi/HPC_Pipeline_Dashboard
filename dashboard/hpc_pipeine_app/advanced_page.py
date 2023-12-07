@@ -10,18 +10,18 @@ from ..components import (header_comp, checklist_comp, group_accordion,
 from ..global_variables import request_gitlab, dvc_gitlab
 
 
-# Fetch the model checkpoint list from DVC repo
 def get_model_ckp_list():
+    """Fetch the model checkpoint list from DVC repo"""
     return dvc_gitlab.get_dvc_files(path="model_registry/segmentation")
 
 
-# Fetch the members list from request repo
 def get_user_list():
+    """Fetch the members list from request repo"""
     return request_gitlab.get_project_members()
 
 
-# Fetch the advanced request template from request repo
 def get_advanced_template():
+    """Fetch the advanced request template from request repo"""
     return request_gitlab.read_file(
         path=".gitlab/issue_templates/pipeline_request_advanced.md")
 

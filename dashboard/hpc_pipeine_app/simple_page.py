@@ -11,13 +11,13 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
 from ..global_variables import request_gitlab
 
 
-# Fetch the members list from request repo
 def get_user_list():
+    """Fetch the members list from request repo"""
     return request_gitlab.get_project_members()
 
 
-# Fetch the simple request template from request repo
 def get_simple_template():
+    """Fetch the simple request template from request repo"""
     return request_gitlab.read_file(
         path=".gitlab/issue_templates/pipeline_request_simple.md")
 
