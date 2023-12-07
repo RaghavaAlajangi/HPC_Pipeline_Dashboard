@@ -157,7 +157,7 @@ def simple_request(refresh_path):
                         disabled=True,
                         comp_id="create_simple_pipeline_button"),
             line_breaks(times=2),
-            dbc.Alert("Username, pipeline title, and data paths are "
+            dbc.Alert("Note: Username, pipeline title, and data paths are "
                       "mandatory fields to activate 'Create Pipeline' button.",
                       color="warning",
                       style={
