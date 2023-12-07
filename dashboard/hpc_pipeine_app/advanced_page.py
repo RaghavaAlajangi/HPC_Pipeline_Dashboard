@@ -42,7 +42,7 @@ def advanced_request(refresh_path):
             line_breaks(times=1),
             header_comp("⦿ Pipeline for segmentation and/or classification "
                         "(prediction) and analysis of data.", indent=40),
-
+            line_breaks(times=1),
             header_comp("⦿ Choosing multiple Segmentation or Prediction "
                         "algorithms will create a matrix of jobs "
                         "(multiple jobs).", indent=40),
@@ -58,16 +58,15 @@ def advanced_request(refresh_path):
                                 dbc.InputGroup(
                                     [
                                         dbc.Select(
-                                            placeholder="User",
+                                            placeholder="Select Username",
                                             id="advanced_title_drop",
                                             options=[
                                                 {"label": member.name,
                                                  "value": member.username} for
                                                 member in get_user_list()
                                             ],
-                                            # Note: HPC_pipeline_dashboard is
-                                            # hard coded as a default user
-                                            value="project_28692_bot1",
+                                            # Set default user
+                                            # value="project_28692_bot1",
                                             style={"width": "18%"},
                                         ),
                                         dbc.Input(
@@ -415,6 +414,15 @@ def advanced_request(refresh_path):
             button_comp(label="Create pipeline",
                         disabled=True,
                         comp_id="create_advanced_pipeline_button"),
+            line_breaks(times=2),
+            dbc.Alert("Username, pipeline title, and data paths are "
+                      "mandatory fields to activate 'Create Pipeline' button.",
+                      color="warning",
+                      style={
+                          "color": "black",
+                          "width": "fit-content",
+                          "margin": "auto",
+                      }),
             line_breaks(times=5),
             dcc.Store(id="store_advanced_template"),
             dcc.Store(id="store_mlunet_params", data={}),
@@ -582,8 +590,9 @@ def collect_advanced_pipeline_params(*args):
     # Get the data files
     selected_files = args[-1]
 
-    # Update the template, only when is a title and data files to process
-    if advanced_title and selected_files:
+    # Update the template, only when author name, title, and data files
+    # to process are entered
+    if author_name and advanced_title and selected_files:
         rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": advanced_title}
@@ -616,13 +625,14 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
 
 @callback(
     Output("create_advanced_pipeline_button", "disabled"),
+    Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
     Input("show_grid", "selectedRows")
 )
-def toggle_advanced_create_pipeline_button(title, selected_files):
-    """Activates create pipeline button only when the issue title and data
-    files are put in the template"""
-    if selected_files and title and title != "":
+def toggle_advanced_create_pipeline_button(author_name, title, selected_files):
+    """Activates create pipeline button only when author name, title, and
+    data files are entered"""
+    if author_name and selected_files and title and title != "":
         return False
     else:
         return True
