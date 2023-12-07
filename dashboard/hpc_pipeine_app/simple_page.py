@@ -6,9 +6,14 @@ from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp,
-                          line_breaks)
+                          line_breaks, form_group_dropdown)
 
-from ..global_variables import request_gitlab
+from ..global_variables import request_gitlab, dvc_gitlab
+
+
+def get_model_ckp_list():
+    """Fetch the model checkpoint list from DVC repo"""
+    return dvc_gitlab.get_dvc_files(path="model_registry/segmentation")
 
 
 def get_user_list():
@@ -81,14 +86,31 @@ def simple_request(refresh_path):
                     dbc.AccordionItem(
                         title="Segmentation",
                         children=[
+                            # MLUNet segmentor section
+                            checklist_comp(
+                                comp_id="simple_mlunet_id",
+                                options={"mlunet": False},
+                                # defaults=["mlunet"]
+                            ),
+                            html.Ul(
+                                id="simple_mlunet_options",
+                                children=[
+                                    form_group_dropdown(
+                                        comp_id="simple_mlunet_modelpath",
+                                        label="model_file",
+                                        box_width=18,
+                                        options=get_model_ckp_list(),
+                                        default=get_model_ckp_list()[-1],
+                                    )
+                                ]
+                            ),
+
                             checklist_comp(
                                 comp_id="simp_segm_id",
                                 options={
                                     "legacy": False,
-                                    "mlunet": False,
                                     "watershed": False,
                                     "std": False},
-                                defaults=["legacy", "mlunet"]
                             )
                         ]
                     ),
@@ -144,23 +166,42 @@ def simple_request(refresh_path):
                           "margin": "auto",
                       }),
             line_breaks(times=5),
-            dcc.Store(id="store_simple_template")
+            dcc.Store(id="store_simple_template"),
+            dcc.Store(id="store_simple_mlunet_params", data={}),
         ]
     )
+
+
+@callback(
+    Output("store_simple_mlunet_params", "data"),
+    Output("simple_mlunet_options", "style"),
+    Input("simple_mlunet_id", "value"),
+    Input("simple_mlunet_modelpath", "key"),
+    Input("simple_mlunet_modelpath", "value"),
+)
+def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
+    """Toggle mlunet segmentation options with mlunet switch, selected options
+    will be cached"""
+    model_file = {mpath_key: mpath_value}
+    if len(mlunet_opt) == 1:
+        return {mlunet_opt[0]: model_file}, {"display": "block"}
+    else:
+        return {}, {"display": "none"}
 
 
 @callback(
     Output("store_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
+    Input("store_simple_mlunet_params", "data"),
     Input("simp_segm_id", "value"),
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
     Input("show_grid", "selectedRows")
 )
-def collect_simple_pipeline_params(author_name, simple_title, simple_segment,
-                                   simple_classifier, simple_postana,
-                                   selected_files):
+def collect_simple_pipeline_params(author_name, simple_title, simple_mlunet,
+                                   simple_segment, simple_classifier,
+                                   simple_postana, selected_files):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
@@ -172,7 +213,8 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_segment,
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
-        description = update_simple_template(params, author_name, rtdc_files,
+        description = update_simple_template(params, simple_mlunet["mlunet"],
+                                             author_name, rtdc_files,
                                              get_simple_template())
         pipeline_template["description"] = description
         return pipeline_template
