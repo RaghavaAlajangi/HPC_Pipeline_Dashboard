@@ -136,7 +136,7 @@ def simple_request(refresh_path):
                         comp_id="create_simple_pipeline_button"),
             line_breaks(times=2),
             dbc.Alert("Username, pipeline title, and data paths are "
-                      "mandatory fields to activate Create Pipeline button.",
+                      "mandatory fields to activate 'Create Pipeline' button.",
                       color="warning",
                       style={
                           "color": "black",
@@ -165,7 +165,8 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_segment,
     issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
 
-    # Update the template, only when is a title and data paths to process
+    # Update the template, only when author name, title, and data files
+    # to process are entered
     if author_name and simple_title and selected_files:
         rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
@@ -184,8 +185,8 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_segment,
     Input("show_grid", "selectedRows")
 )
 def toggle_simple_create_pipeline_button(author_name, title, selected_files):
-    """Activates create pipeline button only when the issue title and data
-    paths are put in the template"""
+    """Activates create pipeline button only when author name, title, and
+    data files are entered"""
     if author_name and selected_files and title and title != "":
         return False
     else:
