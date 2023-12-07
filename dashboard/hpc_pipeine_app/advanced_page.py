@@ -261,9 +261,7 @@ def advanced_request(refresh_path):
                                     "rollmed: Rolling median "
                                     "RT-DC background image "
                                     "computation": False,
-                                },
-                                defaults=["rollmed: Rolling median RT-DC "
-                                          "background image computation"]
+                                }
                             ),
                             html.Ul(
                                 id="rollmed_options",
@@ -272,14 +270,14 @@ def advanced_request(refresh_path):
                                         comp_id={"type": "rollmed_param",
                                                  "index": 1},
                                         label="kernel_size",
-                                        min=50, max=500, step=10,
+                                        min=50, max=500, step=1,
                                         default=100
                                     ),
                                     form_group_input(
                                         comp_id={"type": "rollmed_param",
                                                  "index": 2},
                                         label="batch_size",
-                                        min=0, max=100000, step=1000,
+                                        min=0, max=100000, step=1,
                                         default=10000
                                     )
                                 ]
@@ -291,7 +289,10 @@ def advanced_request(refresh_path):
                                     "sparsemed: Sparse median "
                                     "background correction with "
                                     "cleansing": False,
-                                }
+                                },
+                                defaults=["sparsemed: Sparse median "
+                                          "background correction with "
+                                          "cleansing"]
                             ),
                             html.Ul(
                                 id="sparsemed_options",
@@ -300,7 +301,7 @@ def advanced_request(refresh_path):
                                         comp_id={"type": "sparsemed_param",
                                                  "index": 1},
                                         label="kernel_size",
-                                        min=50, max=500, step=10,
+                                        min=50, max=500, step=1,
                                         default=200
                                     ),
                                     form_group_input(
@@ -336,7 +337,6 @@ def advanced_request(refresh_path):
                                 options={
                                     "norm gating": False,
                                 },
-                                defaults=["norm gating"]
                             ),
                             html.Ul(
                                 id="ngate_options",
@@ -353,7 +353,7 @@ def advanced_request(refresh_path):
                                                  "index": 2},
                                         label="size_thresh_mask",
                                         min=0, max=10, step=1,
-                                        default=5
+                                        default=0
                                     )
                                 ]
                             )
