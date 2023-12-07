@@ -76,7 +76,7 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
             },
             "Available gating options": {
                 "norm gating": {"online_gates": False,
-                                "size_thresh_mask": 5},
+                                "size_thresh_mask": 0},
             },
             "Further Options": {
                 "--reproduce": {},
