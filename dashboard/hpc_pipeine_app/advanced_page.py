@@ -9,16 +9,21 @@ from ..components import (header_comp, checklist_comp, group_accordion,
                           form_group_input, line_breaks, divider_line_comp)
 from ..global_variables import request_gitlab, dvc_gitlab
 
+
 # Fetch the model checkpoint list from DVC repo
-segm_ckp_list = dvc_gitlab.get_dvc_filelist_from_dir(
-    path="model_registry/segmentation")
+def get_model_ckp_list():
+    return dvc_gitlab.get_dvc_files(path="model_registry/segmentation")
+
 
 # Fetch the members list from request repo
-members_list = request_gitlab.get_project_members()
+def get_user_list():
+    return request_gitlab.get_project_members()
+
 
 # Fetch the advanced request template from request repo
-advanced_template = request_gitlab.read_file(
-    path=".gitlab/issue_templates/pipeline_request_advanced.md")
+def get_advanced_template():
+    return request_gitlab.read_file(
+        path=".gitlab/issue_templates/pipeline_request_advanced.md")
 
 
 def advanced_request(refresh_path):
@@ -58,7 +63,7 @@ def advanced_request(refresh_path):
                                             options=[
                                                 {"label": member.name,
                                                  "value": member.username} for
-                                                member in members_list
+                                                member in get_user_list()
                                             ],
                                             # Note: HPC_pipeline_dashboard is
                                             # hard coded as a default user
@@ -110,10 +115,8 @@ def advanced_request(refresh_path):
                                         comp_id="mlunet_modelpath",
                                         label="model_file",
                                         box_width=18,
-                                        options=segm_ckp_list,
-                                        # Note: the default checkpoint it is
-                                        # hardcoded.
-                                        default="unet-228_g1_40c43.ckp"
+                                        options=get_model_ckp_list(),
+                                        default=get_model_ckp_list()[-1],
                                     )
                                 ]
                             ),
@@ -586,7 +589,8 @@ def collect_advanced_pipeline_params(*args):
         pipeline_template = {"title": advanced_title}
         # Update the advanced template from request repo
         description = update_advanced_template(params_dict, author_name,
-                                               rtdc_files, advanced_template)
+                                               rtdc_files,
+                                               get_advanced_template())
         pipeline_template["description"] = description
         return pipeline_template
 

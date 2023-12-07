@@ -10,12 +10,16 @@ from ..components import (header_comp, paragraph_comp, checklist_comp,
 
 from ..global_variables import request_gitlab
 
+
 # Fetch the members list from request repo
-members_list = request_gitlab.get_project_members()
+def get_user_list():
+    return request_gitlab.get_project_members()
+
 
 # Fetch the simple request template from request repo
-simple_template = request_gitlab.read_file(
-    path=".gitlab/issue_templates/pipeline_request_simple.md")
+def get_simple_template():
+    return request_gitlab.read_file(
+        path=".gitlab/issue_templates/pipeline_request_simple.md")
 
 
 def simple_request(refresh_path):
@@ -52,7 +56,7 @@ def simple_request(refresh_path):
                                             options=[
                                                 {"label": member.name,
                                                  "value": member.username} for
-                                                member in members_list
+                                                member in get_user_list()
                                             ],
                                             # Note: HPC_pipeline_dashboard is
                                             # hard coded as a default user
@@ -159,7 +163,7 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_segment,
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
         description = update_simple_template(params, author_name, rtdc_files,
-                                             simple_template)
+                                             get_simple_template())
         pipeline_template["description"] = description
         return pipeline_template
 

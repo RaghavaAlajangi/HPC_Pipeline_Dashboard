@@ -111,7 +111,7 @@ class GitLabAPI:
         file_content = file.decode().decode()
         return file_content
 
-    def get_dvc_filelist_from_dir(self, path):
+    def get_dvc_files(self, path):
         """Fetch DVC file list from a specified repository path without .dvc
         extension"""
         folder_contents = self.project.repository_tree(path=path)
