@@ -90,8 +90,8 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
                 "cleansing": {
                     "kernel_size": 2,
                     "split_time": 1.0,
-                    "thresh_clean": 0,
-                    "frac_clean": 0.8,
+                    "thresh_cleansing": 0,
+                    "frac_cleansing": 0.8,
                 },
             },
             "Available gating options": {
