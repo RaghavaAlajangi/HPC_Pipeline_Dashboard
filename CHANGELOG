@@ -1,2 +1,3 @@
 0.0.1
+ - enh: show file size in the HSMFS grid
  - enh: exclude less than 1MB files from HSMFS grid
