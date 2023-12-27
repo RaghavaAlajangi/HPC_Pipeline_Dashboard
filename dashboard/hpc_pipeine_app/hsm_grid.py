@@ -50,8 +50,8 @@ def create_hsm_grid():
                 id="hsm_grid",
                 className="ag-theme-alpine-dark",
                 columnDefs=[
-                    {"field": "size"},
-                    {"field": "dateModified"}
+                    {"field": "size", "width": 50, "maxWidth": 200},
+                    {"field": "dateModified", "width": 50, "maxWidth": 300},
                 ],
                 defaultColDef={
                     "flex": 1,
