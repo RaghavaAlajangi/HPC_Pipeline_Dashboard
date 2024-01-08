@@ -361,20 +361,24 @@ def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab, issue_content,
     of that issue are loaded. Also, open a popup notification when the user
     cancel the pipeline (close GitLab issue), and refresh the page."""
     # Enable stop pipeline button for opened issue only if comments are loaded
-    if isinstance(issue_content, dict) and active_tab == "opened":
-        is_disabled = False
-        # Stop pipeline and open a popup
-        if stop_issue:
-            request_gitlab.cancel_pipeline(match_id["index"])
-            is_open = not popup
-        # Close popup and refresh the page
-        elif close_popup:
-            is_open = not popup
-        else:
-            is_open = False
-        return is_disabled, is_open
-    # No update for other tabs
-    return no_update, no_update
+    if active_tab != "opened" or not isinstance(issue_content, dict):
+        return no_update, no_update
+    # Get the issue comments
+    comments = request_gitlab.get_comments(match_id["index"])["comments"]
+
+    # Enable/Disable stop button based on 'cancel' comment in issue
+    is_disabled = comments and comments[0].lower() == "cancel"
+
+    # Stop pipeline and open a popup
+    if stop_issue:
+        request_gitlab.cancel_pipeline(match_id["index"])
+        is_open = not popup
+    # Close popup and refresh the page
+    elif close_popup:
+        is_open = not popup
+    else:
+        is_open = False
+    return is_disabled, is_open
 
 
 @callback(

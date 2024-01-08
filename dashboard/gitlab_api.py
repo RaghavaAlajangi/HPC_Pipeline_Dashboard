@@ -140,5 +140,4 @@ class GitLabAPI:
         """Stop a pipeline by creating `Close` comment in an issue"""
         issue_obj = self.get_issue_obj(issue_iid)
         issue_obj.notes.create({"body": "Cancel"})
-        issue_obj.state_event = "close"
         issue_obj.save()
