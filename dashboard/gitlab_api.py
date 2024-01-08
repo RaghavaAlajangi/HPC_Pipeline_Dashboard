@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import math
+import re
 
 import gitlab
 from gitlab.exceptions import GitlabAuthenticationError
@@ -49,18 +50,30 @@ class GitLabAPI:
     def get_comments(self, issue_iid):
         """Fetch comments with dates of an issue"""
         issue = self.project.issues.get(issue_iid)
-        issue_notes = issue.notes.list(get_all=True)
 
-        comments, dates = [], []
+        # Fetch comments of the issue
+        issue_notes = issue.notes.list(all=True)
+
+        # Compile regex pattern
+        pattern = re.compile(r"```python.*?```", flags=re.DOTALL)
+
+        comments = []
+        dates = []
+
         for note in issue_notes:
             time_stamp = self.human_readable_date(note.created_at)
+
             # Filter python error messages from comments
-            if "python" in note.body:
-                comments.append(
-                    "Got some error, look at the actual GitLab issue!")
+            if "```python" in note.body:
+                note_wo_code = pattern.sub(f"Got some error! Look at the "
+                                           f"GitLab issue: {issue.web_url}",
+                                           note.body)
+                comments.append(note_wo_code)
             else:
                 comments.append(note.body)
+
             dates.append(time_stamp)
+
         return {"comments": comments, "dates": dates}
 
     def get_issue_obj(self, issue_iid):
