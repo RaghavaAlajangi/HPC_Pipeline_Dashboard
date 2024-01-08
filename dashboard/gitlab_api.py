@@ -65,9 +65,11 @@ class GitLabAPI:
 
             # Filter python error messages from comments
             if "```python" in note.body:
-                note_wo_code = pattern.sub(f"Got some error! Look at the "
-                                           f"GitLab issue: {issue.web_url}",
-                                           note.body)
+                note_wo_code = pattern.sub(
+                    f"Got some error! See the comment: "
+                    f"{issue.web_url}#note_{note.id}",
+                    note.body
+                )
                 comments.append(note_wo_code)
             else:
                 comments.append(note.body)
