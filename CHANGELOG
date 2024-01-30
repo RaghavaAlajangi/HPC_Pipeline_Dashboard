@@ -1,3 +1,6 @@
+0.0.2
+ - enh: show error link in pipeline comments
+ - enh: update stop pipeline button functionality
 0.0.1
  - enh: set column size in HSMFS grid
  - enh: show file size in the HSMFS grid
