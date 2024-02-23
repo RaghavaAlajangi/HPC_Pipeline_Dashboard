@@ -6,13 +6,9 @@ from .utils import update_advanced_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, form_group_dropdown,
-                          form_group_input, line_breaks, divider_line_comp)
+                          form_group_input, line_breaks, divider_line_comp,
+                          radio_item_comp)
 from ..global_variables import request_gitlab, dvc_gitlab
-
-
-def get_model_ckp_list():
-    """Fetch the model checkpoint list from DVC repo"""
-    return dvc_gitlab.get_dvc_files(path="model_registry/segmentation")
 
 
 def get_user_list():
@@ -110,14 +106,37 @@ def advanced_request(refresh_path):
                             ),
                             html.Ul(
                                 id="advanced_unet_options",
+                                key="model_file",
                                 children=[
-                                    form_group_dropdown(
-                                        comp_id="unet_modelpath",
-                                        label="model_file",
-                                        box_width=18,
-                                        options=get_model_ckp_list(),
-                                        default=get_model_ckp_list()[-1],
-                                    )
+                                    dbc.Row([
+                                        dbc.Col([
+                                            html.P(
+                                                "⦿ Select device:",
+                                                style={
+                                                    "margin": "0",
+                                                    "padding-bottom": "5px"
+                                                }
+                                            ),
+                                            radio_item_comp(
+                                                comp_id="advanced_unet_device",
+                                                option_list=model_meta_dict[0]
+                                            ),
+
+                                        ], width=2),
+                                        dbc.Col([
+                                            html.P(
+                                                "⦿ Select type:",
+                                                style={
+                                                    "margin": "0",
+                                                    "padding-bottom": "5px"
+                                                }
+                                            ),
+                                            radio_item_comp(
+                                                comp_id="advanced_unet_type",
+                                                option_list=model_meta_dict[1]
+                                            ),
+                                        ])
+                                    ])
                                 ]
                             ),
                             divider_line_comp(),
@@ -425,33 +444,45 @@ def advanced_request(refresh_path):
                           "margin": "auto",
                       }),
             line_breaks(times=5),
-            dcc.Store(id="store_advanced_template"),
-            dcc.Store(id="store_advanced_unet_params", data={}),
-            dcc.Store(id="store_legacy_params", data={}),
-            dcc.Store(id="store_watershed_params", data={}),
-            dcc.Store(id="store_std_params", data={}),
-            dcc.Store(id="store_rollmed_params", data={}),
-            dcc.Store(id="store_sparsemed_params", data={}),
-            dcc.Store(id="store_ngate_params", data={}),
+            dcc.Store(id="store_advanced_template", storage_type="local"),
+            dcc.Store(id="store_advanced_unet_params",  storage_type="local"),
+            dcc.Store(id="store_legacy_params",  storage_type="local"),
+            dcc.Store(id="store_watershed_params",  storage_type="local"),
+            dcc.Store(id="store_std_params",  storage_type="local"),
+            dcc.Store(id="store_rollmed_params",  storage_type="local"),
+            dcc.Store(id="store_sparsemed_params",  storage_type="local"),
+            dcc.Store(id="store_ngate_params",  storage_type="local"),
         ]
     )
 
 
 @callback(
     Output("store_advanced_unet_params", "data"),
+    Input("advanced_unet_id", "value"),
+    Input("advanced_unet_device", "value"),
+    Input("advanced_unet_type", "value"),
+    Input("advanced_unet_options", "key")
+)
+def cache_unet_options(unet_click, device, ftype, mpath_key):
+    meta_dict = dvc_gitlab.fetch_model_meta()[2]
+    if device and ftype and unet_click:
+        model_path = meta_dict[device][ftype]
+        unet_path = {mpath_key: model_path}
+        return {unet_click[0]: unet_path}
+    else:
+        return {}
+
+
+@callback(
     Output("advanced_unet_options", "style"),
     Input("advanced_unet_id", "value"),
-    Input("unet_modelpath", "key"),
-    Input("unet_modelpath", "value"),
 )
-def toggle_unet_options(unet_click, mpath_key, mpath_value):
-    """Toggle mlunet segmentation options with mlunet switch, selected options
-    will be cached"""
-    model_file = {mpath_key: mpath_value}
-    if len(unet_click) == 1:
-        return {unet_click[0]: model_file}, {"display": "block"}
+def toggle_unet_options(unet_click):
+    """Toggle mlunet segmentation options with unet switch"""
+    if unet_click:
+        return {"display": "block"}
     else:
-        return {}, {"display": "none"}
+        return {"display": "none"}
 
 
 @callback(
@@ -628,12 +659,22 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     Output("create_advanced_pipeline_button", "disabled"),
     Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
-    Input("show_grid", "selectedRows")
+    Input("show_grid", "selectedRows"),
+    Input("advanced_unet_id", "value"),
+    Input("store_advanced_unet_params", "data")
 )
-def toggle_advanced_create_pipeline_button(author_name, title, selected_files):
+def toggle_advanced_create_pipeline_button(author_name, title, selected_files,
+                                           unet_click, unet_mpath):
     """Activates create pipeline button only when author name, title, and
     data files are entered"""
-    if author_name and selected_files and title and title != "":
-        return False
+    if author_name and title and title.strip() and selected_files:
+        if unet_click and unet_mpath:
+            return False
+        elif unet_click and not unet_click:
+            return True
+        elif not unet_click:
+            return False
+        else:
+            return True
     else:
         return True
