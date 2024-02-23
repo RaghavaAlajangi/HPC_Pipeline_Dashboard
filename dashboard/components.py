@@ -264,6 +264,20 @@ def popup_comp(comp_id, refresh_path, text):
     )
 
 
+def radio_item_comp(comp_id, option_list):
+    return dbc.RadioItems(
+        options=[
+            {
+                "label": opt.capitalize(),
+                "value": opt
+            } for opt in option_list
+        ],
+        id=comp_id,
+        labelCheckedClassName="text-success",
+        inputCheckedClassName="border border-success bg-success"
+    )
+
+
 def text_input_comp(comp_id, placeholder, width=50, middle=True):
     return html.Div(
         dbc.Input(

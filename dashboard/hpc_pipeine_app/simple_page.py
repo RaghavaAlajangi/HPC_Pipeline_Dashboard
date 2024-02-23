@@ -5,15 +5,10 @@ from dash import callback, Input, Output, State, dcc, html
 from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
-                          group_accordion, popup_comp, button_comp,
-                          line_breaks, form_group_dropdown)
+                          group_accordion, popup_comp, button_comp, line_breaks,
+                          radio_item_comp)
 
 from ..global_variables import request_gitlab, dvc_gitlab
-
-
-def get_model_ckp_list():
-    """Fetch the model checkpoint list from DVC repo"""
-    return dvc_gitlab.get_dvc_files(path="model_registry/segmentation")
 
 
 def get_user_list():
@@ -29,6 +24,7 @@ def get_simple_template():
 
 def simple_request(refresh_path):
     """Creates simple request page"""
+    model_meta_dict = dvc_gitlab.fetch_model_meta()
     return dbc.Toast(
         id="simple_request_toast",
         header="Simple Pipeline Request",
@@ -64,8 +60,6 @@ def simple_request(refresh_path):
                                                  "value": member.username} for
                                                 member in get_user_list()
                                             ],
-                                            # Set default user
-                                            # value="project_28692_bot1",
                                             style={"width": "18%"},
                                         ),
                                         dbc.Input(
@@ -88,23 +82,41 @@ def simple_request(refresh_path):
                         children=[
                             # MLUNet segmentor section
                             checklist_comp(
-                                comp_id="simple_mlunet_id",
+                                comp_id="simple_unet_id",
                                 options={"mlunet": False},
-                                # defaults=["mlunet"]
                             ),
                             html.Ul(
-                                id="simple_mlunet_options",
+                                id="simple_unet_options",
+                                key="model_file",
                                 children=[
-                                    form_group_dropdown(
-                                        comp_id="simple_mlunet_modelpath",
-                                        label="model_file",
-                                        box_width=18,
-                                        options=get_model_ckp_list(),
-                                        default=get_model_ckp_list()[-1],
-                                    )
+                                    dbc.Row([
+                                        dbc.Col([
+                                            html.P("⦿ Select device:",
+                                                   style={
+                                                       "margin": "0",
+                                                       "padding-bottom": "5px"
+                                                   }
+                                                   ),
+                                            radio_item_comp(
+                                                comp_id="simple_unet_device",
+                                                option_list=model_meta_dict[0]
+                                            ),
+                                        ], width=2),
+                                        dbc.Col([
+                                            html.P("⦿ Select type:",
+                                                   style={
+                                                       "margin": "0",
+                                                       "padding-bottom": "5px"
+                                                   }
+                                                   ),
+                                            radio_item_comp(
+                                                comp_id="simple_unet_type",
+                                                option_list=model_meta_dict[1]
+                                            )
+                                        ])
+                                    ])
                                 ]
                             ),
-
                             checklist_comp(
                                 comp_id="simp_segm_id",
                                 options={
@@ -166,40 +178,53 @@ def simple_request(refresh_path):
                           "margin": "auto",
                       }),
             line_breaks(times=5),
-            dcc.Store(id="store_simple_template"),
-            dcc.Store(id="store_simple_mlunet_params", data={}),
+            dcc.Store(id="store_simple_template", storage_type="local"),
+            dcc.Store(id="store_unet_options", storage_type="local"),
+            dcc.Store(id="store_simple_unet_params", storage_type="local"),
         ]
     )
 
 
 @callback(
-    Output("store_simple_mlunet_params", "data"),
-    Output("simple_mlunet_options", "style"),
-    Input("simple_mlunet_id", "value"),
-    Input("simple_mlunet_modelpath", "key"),
-    Input("simple_mlunet_modelpath", "value"),
+    Output("store_simple_unet_params", "data"),
+    Input("simple_unet_id", "value"),
+    Input("simple_unet_device", "value"),
+    Input("simple_unet_type", "value"),
+    Input("simple_unet_options", "key")
 )
-def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
-    """Toggle mlunet segmentation options with mlunet switch, selected options
-    will be cached"""
-    model_file = {mpath_key: mpath_value}
-    if len(mlunet_opt) == 1:
-        return {mlunet_opt[0]: model_file}, {"display": "block"}
+def cache_unet_options(unet_click, device, ftype, mpath_key):
+    meta_dict = dvc_gitlab.fetch_model_meta()[2]
+    if device and ftype and unet_click:
+        model_path = meta_dict[device][ftype]
+        unet_path = {mpath_key: model_path}
+        return {unet_click[0]: unet_path}
     else:
-        return {}, {"display": "none"}
+        return None
+
+
+@callback(
+    Output("simple_unet_options", "style"),
+    Input("simple_unet_id", "value"),
+)
+def toggle_unet_options(unet_click):
+    """Toggle mlunet segmentation options with unet switch"""
+    if unet_click:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
 
 
 @callback(
     Output("store_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
-    Input("store_simple_mlunet_params", "data"),
+    Input("store_simple_unet_params", "data"),
     Input("simp_segm_id", "value"),
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
     Input("show_grid", "selectedRows")
 )
-def collect_simple_pipeline_params(author_name, simple_title, simple_mlunet,
+def collect_simple_pipeline_params(author_name, simple_title, simple_unet,
                                    simple_segment, simple_classifier,
                                    simple_postana, selected_files):
     """Collect all the user selected parameters. Then, it updates the simple
@@ -208,12 +233,12 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_mlunet,
 
     # Update the template, only when author name, title, and data files
     # to process are entered
-    if author_name and simple_title and selected_files:
+    if author_name and simple_title and selected_files and simple_unet:
         rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
-        description = update_simple_template(params, simple_mlunet["mlunet"],
+        description = update_simple_template(params, simple_unet["mlunet"],
                                              author_name, rtdc_files,
                                              get_simple_template())
         pipeline_template["description"] = description
@@ -224,13 +249,23 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_mlunet,
     Output("create_simple_pipeline_button", "disabled"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
-    Input("show_grid", "selectedRows")
+    Input("show_grid", "selectedRows"),
+    Input("simple_unet_id", "value"),
+    Input("store_simple_unet_params", "data")
 )
-def toggle_simple_create_pipeline_button(author_name, title, selected_files):
+def toggle_simple_create_pipeline_button(author_name, title, selected_files,
+                                         unet_click, unet_mpath):
     """Activates create pipeline button only when author name, title, and
     data files are entered"""
-    if author_name and selected_files and title and title != "":
-        return False
+    if author_name and title and title.strip() and selected_files:
+        if unet_click and unet_mpath:
+            return False
+        elif unet_click and not unet_click:
+            return True
+        elif not unet_click:
+            return False
+        else:
+            return True
     else:
         return True
 

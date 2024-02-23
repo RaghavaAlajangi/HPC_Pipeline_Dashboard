@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import math
 import re
+import yaml
+from collections import defaultdict
 
 import gitlab
 from gitlab.exceptions import GitlabAuthenticationError
@@ -132,6 +134,30 @@ class GitLabAPI:
         folder_contents = self.project.repository_tree(path=path)
         return [item["name"].split(".dvc")[0] for item in folder_contents if
                 ".dvc" in item["name"]]
+
+    def fetch_model_meta(self):
+        repo_folder_path = "model_registry/segmentation"
+        folder_content = self.project.repository_tree(repo_folder_path)
+        model_meta = defaultdict(dict)
+
+        for file in folder_content:
+            str_data = self.read_file(file["path"])
+            # Convert file content string into dictionary
+            dict_data = yaml.safe_load(str_data)
+            if not dict_data["meta"]["archive"]:
+                device = dict_data["meta"]["device"]
+                ftype = dict_data["meta"]["type"]
+                path = dict_data["outs"][0]["path"]
+                model_meta[device][ftype] = path
+
+        # Extract device and type lists from model_meta
+        device_list = list(model_meta.keys())
+        type_list = list(
+            {ty for types in model_meta.values() for ty in types.keys()})
+
+        result = (device_list, type_list, model_meta)
+
+        return result
 
     def run_pipeline(self, pipeline_request):
         """Trigger a pipeline by creating `Go` comment in an issue"""
