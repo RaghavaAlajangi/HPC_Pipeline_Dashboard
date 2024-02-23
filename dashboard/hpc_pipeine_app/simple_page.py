@@ -104,12 +104,14 @@ def simple_request(refresh_path):
                                         ], width=2),
                                         dbc.Col([
                                             html.P("⦿ Select type:",
-                                                   style={"margin": "0",
-                                                          "padding-bottom": "5px"}
+                                                   style={
+                                                       "margin": "0",
+                                                       "padding-bottom": "5px"
+                                                   }
                                                    ),
                                             radio_item_comp(
                                                 comp_id="simple_unet_type",
-                                                option_list=model_meta_dict[0]
+                                                option_list=model_meta_dict[1]
                                             )
                                         ])
                                     ])
