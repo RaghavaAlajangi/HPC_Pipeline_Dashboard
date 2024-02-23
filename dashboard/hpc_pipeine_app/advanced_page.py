@@ -28,6 +28,7 @@ def get_advanced_template():
 
 def advanced_request(refresh_path):
     """Creates advanced request page"""
+    model_meta_dict = dvc_gitlab.fetch_model_meta()
     return dbc.Toast(
         id="advanced_request_toast",
         header="Advanced Pipeline Request",
@@ -103,15 +104,15 @@ def advanced_request(refresh_path):
                         children=[
                             # MLUNet segmentor section
                             checklist_comp(
-                                comp_id="mlunet_id",
+                                comp_id="advanced_unet_id",
                                 options={"mlunet: UNET": False},
                                 defaults=["mlunet: UNET"]
                             ),
                             html.Ul(
-                                id="mlunet_options",
+                                id="advanced_unet_options",
                                 children=[
                                     form_group_dropdown(
-                                        comp_id="mlunet_modelpath",
+                                        comp_id="unet_modelpath",
                                         label="model_file",
                                         box_width=18,
                                         options=get_model_ckp_list(),
@@ -425,7 +426,7 @@ def advanced_request(refresh_path):
                       }),
             line_breaks(times=5),
             dcc.Store(id="store_advanced_template"),
-            dcc.Store(id="store_mlunet_params", data={}),
+            dcc.Store(id="store_advanced_unet_params", data={}),
             dcc.Store(id="store_legacy_params", data={}),
             dcc.Store(id="store_watershed_params", data={}),
             dcc.Store(id="store_std_params", data={}),
@@ -437,18 +438,18 @@ def advanced_request(refresh_path):
 
 
 @callback(
-    Output("store_mlunet_params", "data"),
-    Output("mlunet_options", "style"),
-    Input("mlunet_id", "value"),
-    Input("mlunet_modelpath", "key"),
-    Input("mlunet_modelpath", "value"),
+    Output("store_advanced_unet_params", "data"),
+    Output("advanced_unet_options", "style"),
+    Input("advanced_unet_id", "value"),
+    Input("unet_modelpath", "key"),
+    Input("unet_modelpath", "value"),
 )
-def toggle_mlunet_options(mlunet_opt, mpath_key, mpath_value):
+def toggle_unet_options(unet_click, mpath_key, mpath_value):
     """Toggle mlunet segmentation options with mlunet switch, selected options
     will be cached"""
     model_file = {mpath_key: mpath_value}
-    if len(mlunet_opt) == 1:
-        return {mlunet_opt[0]: model_file}, {"display": "block"}
+    if len(unet_click) == 1:
+        return {unet_click[0]: model_file}, {"display": "block"}
     else:
         return {}, {"display": "none"}
 
@@ -566,7 +567,7 @@ def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
     Input("classifier_id", "value"),
     Input("adv_postana_id", "value"),
     # Cached options
-    Input("store_mlunet_params", "data"),
+    Input("store_advanced_unet_params", "data"),
     Input("store_legacy_params", "data"),
     Input("store_watershed_params", "data"),
     Input("store_std_params", "data"),
