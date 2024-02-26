@@ -7,7 +7,7 @@ from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, form_group_dropdown,
                           form_group_input, line_breaks, divider_line_comp,
-                          radio_item_comp)
+                          dmc_chip_comp)
 from ..global_variables import request_gitlab, dvc_gitlab
 
 
@@ -117,7 +117,7 @@ def advanced_request(refresh_path):
                                                     "padding-bottom": "5px"
                                                 }
                                             ),
-                                            radio_item_comp(
+                                            dmc_chip_comp(
                                                 comp_id="advanced_unet_device",
                                                 option_list=model_meta_dict[0]
                                             ),
@@ -131,7 +131,7 @@ def advanced_request(refresh_path):
                                                     "padding-bottom": "5px"
                                                 }
                                             ),
-                                            radio_item_comp(
+                                            dmc_chip_comp(
                                                 comp_id="advanced_unet_type",
                                                 option_list=model_meta_dict[1]
                                             ),

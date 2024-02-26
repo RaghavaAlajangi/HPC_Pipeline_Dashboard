@@ -6,7 +6,7 @@ from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
 from ..components import (header_comp, paragraph_comp, checklist_comp,
                           group_accordion, popup_comp, button_comp, line_breaks,
-                          radio_item_comp)
+                          dmc_chip_comp)
 
 from ..global_variables import request_gitlab, dvc_gitlab
 
@@ -97,7 +97,7 @@ def simple_request(refresh_path):
                                                        "padding-bottom": "5px"
                                                    }
                                                    ),
-                                            radio_item_comp(
+                                            dmc_chip_comp(
                                                 comp_id="simple_unet_device",
                                                 option_list=model_meta_dict[0]
                                             ),
@@ -109,7 +109,7 @@ def simple_request(refresh_path):
                                                        "padding-bottom": "5px"
                                                    }
                                                    ),
-                                            radio_item_comp(
+                                            dmc_chip_comp(
                                                 comp_id="simple_unet_type",
                                                 option_list=model_meta_dict[1]
                                             )
@@ -230,6 +230,8 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_unet,
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
+
+    print(simple_unet)
 
     # Update the template, only when author name, title, and data files
     # to process are entered

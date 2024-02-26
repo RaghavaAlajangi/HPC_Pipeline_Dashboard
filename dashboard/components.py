@@ -1,5 +1,6 @@
-from dash import html, dcc
+from dash import html
 import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
 import re
 
 
@@ -264,18 +265,24 @@ def popup_comp(comp_id, refresh_path, text):
     )
 
 
-def radio_item_comp(comp_id, option_list):
-    return dbc.RadioItems(
-        options=[
-            {
-                "label": opt.capitalize(),
-                "value": opt
-            } for opt in option_list
+def dmc_chip_comp(comp_id, option_list):
+    styles = {
+        "label": {
+            "&[data-checked]": {
+                "&, &:hover": {
+                    "backgroundColor": "#13bd40",
+                    "color": "black",
+                },
+            },
+        }
+    }
+    return html.Div(dmc.ChipGroup(
+        [
+            dmc.Chip(opt.capitalize(), value=opt, styles=styles) for opt in
+            option_list
         ],
         id=comp_id,
-        labelCheckedClassName="text-success",
-        inputCheckedClassName="border border-success bg-success"
-    )
+    ))
 
 
 def text_input_comp(comp_id, placeholder, width=50, middle=True):
