@@ -1,4 +1,5 @@
 0.0.2
+ - fix: read only dvc file from model registry
  - ref: model selection with dmc chip component
  - enh: show error link in pipeline comments
  - enh: update stop pipeline button functionality

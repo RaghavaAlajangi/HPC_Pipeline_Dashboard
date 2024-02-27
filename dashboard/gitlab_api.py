@@ -141,14 +141,15 @@ class GitLabAPI:
         model_meta = defaultdict(dict)
 
         for file in folder_content:
-            str_data = self.read_file(file["path"])
-            # Convert file content string into dictionary
-            dict_data = yaml.safe_load(str_data)
-            if not dict_data["meta"]["archive"]:
-                device = dict_data["meta"]["device"]
-                ftype = dict_data["meta"]["type"]
-                path = dict_data["outs"][0]["path"]
-                model_meta[device][ftype] = path
+            if ".dvc" in file["name"]:
+                str_data = self.read_file(file["path"])
+                # Convert file content string into dictionary
+                dict_data = yaml.safe_load(str_data)
+                if not dict_data["meta"]["archive"]:
+                    device = dict_data["meta"]["device"]
+                    ftype = dict_data["meta"]["type"]
+                    path = dict_data["outs"][0]["path"]
+                    model_meta[device][ftype] = path
 
         # Extract device and type lists from model_meta
         device_list = list(model_meta.keys())
