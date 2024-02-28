@@ -17,39 +17,37 @@ PROGRESS_COMMENTS = [
 ]
 
 JOB_COMMENTS = [
-    r"^Completed job",
-    r"^We have (\d+) pipeline",
-    "Access your data at"
+    re.compile(r"^Completed job"),
+    re.compile(r"^We have (\d+) pipeline"),
+    re.compile(r"Access all your experiments at:\s*(https?://\S+)")
 ]
 
 
-def find_results_path(issue_notes):
-    result_path = "No result path"
-    for cmt in issue_notes["comments"]:
-        if JOB_COMMENTS[2] in cmt:
-            result_path = cmt.split("main/")[1]
-            break
-    return result_path
-
-
-def find_job_stats(issue_notes):
-    """Fetch total & completed no of pipelines info from issue comments"""
-    # Initialize variables to hold total and finished job counts
+def parse_job_stats(issue_notes):
+    """Fetch total & completed no of pipelines info and results path from
+    issue comments"""
+    # Initialize variables
     total_jobs = 0
+    finished_jobs = 0
+    results_path = "No result path"
 
-    # Find the total number of pipelines
+    # Iterate over comments
     for cmt in issue_notes["comments"]:
-        if re.match(JOB_COMMENTS[1], cmt):
-            total_jobs_match = re.search(JOB_COMMENTS[1], cmt)
-            if total_jobs_match:
-                total_jobs = int(total_jobs_match.group(1))
-            break
+        # Check for total number of pipelines
+        total_match = JOB_COMMENTS[1].match(cmt)
+        if total_match:
+            total_jobs = int(total_match.group(1))
 
-    # Count the number of finished job comments
-    finished_jobs = len([cmt for cmt in issue_notes["comments"] if
-                         re.match(JOB_COMMENTS[0], cmt)])
+        # Check for completed job
+        if JOB_COMMENTS[0].match(cmt):
+            finished_jobs += 1
 
-    return total_jobs, finished_jobs
+        # Check for results path
+        results_match = JOB_COMMENTS[2].search(cmt)
+        if results_match:
+            results_path = f"P:/{results_match.group(1).split('main/')[1]}"
+
+    return total_jobs, finished_jobs, results_path
 
 
 def welcome_tab_content():
@@ -316,10 +314,8 @@ def show_pipeline_comments(accord_item, match_id):
         # Fetch comments for the issue from GitLab
         notes = request_gitlab.get_comments(issue_iid)
         comment_cards = chat_box(notes)
-        # Get the result path from issue notes
-        result_path = find_results_path(notes)
-        # Get the total jobs and finished jobs numbers
-        total_jobs, finished_jobs = find_job_stats(notes)
+        # Get the total jobs, finished jobs, and result path from issue notes
+        total_jobs, finished_jobs, result_path = parse_job_stats(notes)
         # Show only comments if total jobs equal to zero
         if total_jobs == 0:
             return comment_cards, "Jobs: [0 / 0]", result_path, None, None
