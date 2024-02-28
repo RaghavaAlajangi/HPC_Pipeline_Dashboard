@@ -215,7 +215,7 @@ def get_pipeline_accords(issue_data):
     ]
 
 
-def main_layout():
+def home_page_layout():
     """Create home page layout"""
     pagination = dbc.ListGroup(
         [

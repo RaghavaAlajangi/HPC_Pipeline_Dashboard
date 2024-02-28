@@ -22,7 +22,7 @@ def get_advanced_template():
         path=".gitlab/issue_templates/pipeline_request_advanced.md")
 
 
-def advanced_request(refresh_path):
+def advanced_page_layout(refresh_path):
     """Creates advanced request page"""
     model_meta_dict = dvc_gitlab.fetch_model_meta()
     return dbc.Toast(

@@ -22,7 +22,7 @@ def get_simple_template():
         path=".gitlab/issue_templates/pipeline_request_simple.md")
 
 
-def simple_request(refresh_path):
+def simple_page_layout(refresh_path):
     """Creates simple request page"""
     model_meta_dict = dvc_gitlab.fetch_model_meta()
     return dbc.Toast(
