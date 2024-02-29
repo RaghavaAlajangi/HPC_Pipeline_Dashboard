@@ -421,51 +421,68 @@ def switch_tabs(active_tab, page_num, search_term):
 
 
 @callback(
+    Output("store_pipeline_notes", "data"),
+    Input("issue_accord", "active_item"),
+    State("store_pipeline_notes", "data"),
+)
+def cache_pipeline_notes(pipeline_num, cached_notes):
+    """Get the GitLab issue notes based in `iid` and cache them on the browser
+    (dcc.Store). This could reduce the number of API calls to GitLab API.
+    """
+    if pipeline_num:
+        # Parse issue_iid from accord_item
+        issue_iid = pipeline_num.split("item")[1]
+        if issue_iid not in cached_notes:
+            # Fetch issue notes from GitLab
+            notes = request_gitlab.get_comments(int(issue_iid))
+            # Update cache with new pipeline iid
+            cached_notes[issue_iid] = notes
+    return cached_notes or no_update
+
+
+@callback(
     Output({"type": "accord_item_div", "index": MATCH}, "children"),
     Output({"type": "pipeline_status", "index": MATCH}, "children"),
     Output({"type": "results_path", "index": MATCH}, "children"),
     Output({"type": "accord_item_bar", "index": MATCH}, "value"),
     Output({"type": "accord_item_bar", "index": MATCH}, "label"),
     Input("issue_accord", "active_item"),
-    State({"type": "accord_item_div", "index": MATCH}, "id"),
+    Input("store_pipeline_notes", "data"),
     prevent_initial_call=True
 )
-def show_pipeline_comments(accord_item, match_id):
+def show_pipeline_data(pipeline_num, cached_notes):
+    """Display the cached pipeline data when the user clicks on pipeline
+    accordion"""
     # Check if there is an active_item selected
-    if not accord_item:
+    if not pipeline_num:
         return no_update, no_update, no_update, no_update, no_update
 
     # Parse issue_iid from active_item
-    issue_iid = int(accord_item.split("item")[1])
+    issue_iid = pipeline_num.split("item")[1]
+    notes = cached_notes[issue_iid]
 
-    # Check if the active_item matches the current item
-    if issue_iid == match_id["index"]:
-        # Fetch comments for the issue from GitLab
-        notes = request_gitlab.get_comments(issue_iid)
-        comment_cards = chat_box(notes)
-        # Get the total jobs, finished jobs, and result path from issue notes
-        total_jobs, finished_jobs, result_path = parse_job_stats(notes)
-        # Show only comments if total jobs equal to zero
-        if total_jobs == 0:
-            return comment_cards, "Jobs: [0 / 0]", result_path, None, None
+    comment_cards = chat_box(notes)
+    # Get the total jobs, finished jobs, and result path from issue notes
+    total_jobs, finished_jobs, result_path = parse_job_stats(notes)
+    # Show only comments if total jobs equal to zero
+    if total_jobs == 0:
+        return comment_cards, "Jobs: [0 / 0]", result_path, None, None
 
-        # Calculate the progress percentage
-        progress = (finished_jobs / total_jobs) * 85
+    # Calculate the progress percentage
+    progress = (finished_jobs / total_jobs) * 85
 
-        # Add 5% progress for specific state comments
-        for state_comment in PROGRESS_COMMENTS:
-            if state_comment in notes["comments"]:
-                progress += 5
+    # Add 5% progress for specific state comments
+    for state_comment in PROGRESS_COMMENTS:
+        if state_comment in notes["comments"]:
+            progress += 5
 
-        return (
-            comment_cards,
-            f"Jobs: [{finished_jobs} / {total_jobs}]",
-            result_path,
-            progress,
-            f"{progress:.0f} %"
-        )
-    else:
-        return no_update, no_update, no_update, no_update, no_update
+    result = [comment_cards,
+              f"Jobs: [{finished_jobs} / {total_jobs}]",
+              result_path,
+              progress,
+              f"{progress:.0f} %"]
+
+    return result
 
 
 @callback(
