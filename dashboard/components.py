@@ -1,7 +1,8 @@
+import re
+
 from dash import html
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
-import re
 
 
 def button_comp(label, comp_id, type="primary", disabled=False):
@@ -13,33 +14,53 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     )
 
 
-def chat_box(messages, gap=15):
+def chat_box(messages, gap=10):
+    """Creates a list of dbc.Card items from a dictionary of comments.
+
+    Parameters
+    ----------
+        messages: dict
+            Pass the messages dataframe to the chat_box function
+        gap: int
+            Set the vertical space between each comment card
+
+    Returns
+    -------
+        A dbc.ListGroupItem with a list of dbc.Card components
+    """
     comment_cards = []
 
     for comment, date in zip(messages["comments"], messages["dates"]):
         comment_card = dbc.Card(
-            [
-                dbc.CardBody(web_link_check(comment), style={"padding": "0"}),
-                dbc.Badge(
-                    date,
-                    color="secondary",
-                    text_color="white",
-                    className="position-absolute bottom-0 start-100",
-                ),
+            children=[
+                dmc.Stack(
+                    children=[
+                        html.P(
+                            web_link_check(comment),
+                            style={"color": "white", "fontSize": 15,
+                                   "margin": "0"}
+                        ),
+                        html.Code(
+                            date, lang="python",
+                            style={"color": "black", "fontSize": 12,
+                                   "margin": "1"}
+                        )
+                    ],
+                    spacing=0
+                )
             ],
             className="message-box",
             style={"margin-bottom": f"{gap}px", "border": "0"},
         )
         comment_cards.append(comment_card)
-
-    return dbc.Card(
-        dbc.CardBody(comment_cards),
+    return dbc.ListGroupItem(
+        children=comment_cards,
         style={
             "max-height": "30rem",
             "width": "100%",
             "overflow-y": "scroll",
             "overflowX": "hidden",
-        },
+        }
     )
 
 
