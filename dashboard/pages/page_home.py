@@ -100,6 +100,7 @@ def welcome_tab_content():
 
 
 def workflow_tab_content():
+    """Workflow tab content"""
     return dbc.ListGroup(
         children=dbc.ListGroupItem(
             children=[
@@ -118,6 +119,10 @@ def workflow_tab_content():
 
 
 def get_tab_content(tab_id, load_id):
+    """Placeholder for opened and closed tab content. This function has
+    search bar to find specific pipeline and `Previous` and `Next` buttons
+    for the pagination.
+    """
     return dbc.CardBody([
         dbc.ListGroup([
             # Pipeline search bar
