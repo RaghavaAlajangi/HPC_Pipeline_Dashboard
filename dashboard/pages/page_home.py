@@ -1,3 +1,4 @@
+import os
 import re
 
 from dash import callback, dcc, html, Input, MATCH, no_update, Output, State
@@ -7,11 +8,12 @@ from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from ..components import (button_comp, chat_box, create_list_group,
-                          group_accordion, header_comp,
-                          line_breaks, loading_comp, paragraph_comp,
-                          progressbar_comp, popup_comp, web_link
-                          )
-from ..global_variables import request_gitlab, PATHNAME_PREFIX, DCEVENT_DOCS
+                          header_comp, line_breaks, paragraph_comp,
+                          progressbar_comp, popup_comp, web_link)
+from ..global_variables import request_gitlab, DCEVENT_DOCS
+
+# Get the BASENAME_PREFIX from environment variables if not default
+BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
 
 PROGRESS_COMMENTS = [
     "STATE: setup",
@@ -217,7 +219,7 @@ def create_issue_accordion_item(issue, mode):
                     popup_comp(
                         comp_id={"type": "pipeline_stop_popup",
                                  "index": issue["iid"]},
-                        refresh_path=PATHNAME_PREFIX,
+                        refresh_path=BASENAME_PREFIX,
                         text="Pipeline request has been canceled!"
                     ),
                     html.Strong("Pipeline Details:"),
