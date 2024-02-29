@@ -351,6 +351,7 @@ def home_page_layout():
     State("store_page_num", "data")
 )
 def update_page(pclick, nclick, page_num):
+    """Cache page number when user click on `Previous` and `Next` buttons"""
     triggered_id = ctx.triggered_id
 
     if triggered_id == "next_button":
@@ -359,6 +360,18 @@ def update_page(pclick, nclick, page_num):
         page_num -= 1
     is_disable = page_num < 2
     return page_num, is_disable
+
+
+@callback(
+    Output("open_tab_badge", "children"),
+    Output("close_tab_badge", "children"),
+    Input("main_tabs", "value"),
+)
+def show_pipeline_number(active_tab):
+    """Display how many pipelines available in opened and closed tabs"""
+    open_num = request_gitlab.total_issues(state="opened")
+    close_num = request_gitlab.total_issues(state="closed")
+    return open_num, close_num
 
 
 @callback(
@@ -373,7 +386,6 @@ def update_page(pclick, nclick, page_num):
 )
 def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
-
     load_style = {"position": "center"}
     ISSUE_PER_PAGE = 10
 
@@ -404,7 +416,6 @@ def switch_tabs(active_tab, page_num, search_term):
                 return get_pipeline_accords(
                     issue_meta), no_update, is_disabled, load_style, no_update
             elif active_tab == "closed":
-
                 return no_update, get_pipeline_accords(
                     issue_meta), is_disabled, no_update, load_style
 
