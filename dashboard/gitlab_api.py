@@ -46,6 +46,9 @@ class GitLabAPI:
         new_time_stamp = time_stamp + gmt_offset
         return new_time_stamp.strftime("%I:%M%p, %d-%b-%Y")
 
+    def total_issues(self, state):
+        return len(self.project.issues.list(state=state, get_all=True))
+
     def get_comments(self, issue_iid):
         """Fetch comments with dates of an issue"""
         issue = self.project.issues.get(issue_iid)
