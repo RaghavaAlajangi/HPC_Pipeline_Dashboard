@@ -337,7 +337,7 @@ def create_issues_accordion(issue_data, mode):
             "item": {
                 "backgroundColor": "#303030",
                 "border": "1px solid transparent",
-                "borderColor": "#2fad40",
+                "borderColor": "#017b50",
                 "borderRadius": 10,
                 "&[data-active]": {
                     "backgroundColor": "#262525",
