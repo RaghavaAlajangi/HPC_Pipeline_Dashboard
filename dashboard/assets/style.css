@@ -187,3 +187,8 @@ a:hover {
 .custom-placeholder::placeholder {
     color: darkgray;
 }
+
+/* Set the dmc.Tab active tab properties*/
+.mantine-Tabs-tab[data-active="true"] {
+    font-weight: bold;
+}
