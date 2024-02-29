@@ -44,16 +44,7 @@ app.layout = html.Div([
     Input("url", "pathname"),
 )
 def render_page_content(pathname):
-    """Renders the content of each page.
-
-    Parameters
-    ----------
-        pathname: str
-            Determine which page to render
-    Returns
-    -------
-        A tuple of four elements
-    """
+    """Renders the page content when the user clicks on the page link"""
     if pathname == BASENAME_PREFIX:
         return home_page_layout(), True, False, False
     elif pathname == f"{BASENAME_PREFIX}simple_request":
@@ -68,6 +59,7 @@ def render_page_content(pathname):
 @click.option("--port", default=8050, help="Port for the Dash app.")
 @click.option("--local", is_flag=True, help="Run app locally.")
 def serve(port, local):
+    """Run the dashboard"""
     if not local:
         host = "0.0.0.0"  # Host IP address
         debug = False
