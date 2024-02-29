@@ -91,9 +91,18 @@ class GitLabAPI:
         """Fetch the issue object based on issue iid"""
         return self.project.issues.get(issue_iid)
 
-    def get_issues_meta(self, state, page):
+    def get_issues_meta(self, state, page, per_page=10, search_term=None):
         """Fetch the metadata of issues in a page"""
-        issues = self.get_issues_per_page(state, page)
+        if search_term:
+            filter_issues = self.project.issues.list(search=search_term,
+                                                     get_all=True,
+                                                     state=state)
+        else:
+            filter_issues = self.project.issues.list(state=state,
+                                                     page=page,
+                                                     get_all=False,
+                                                     per_page=per_page)
+
         return [
             {
                 "title": issue.title,
@@ -106,7 +115,7 @@ class GitLabAPI:
                 "date": self.human_readable_date(issue.created_at),
                 "type": self.get_issue_type(issue.description)
             }
-            for issue in issues
+            for issue in filter_issues
         ]
 
     def get_project_members(self):
