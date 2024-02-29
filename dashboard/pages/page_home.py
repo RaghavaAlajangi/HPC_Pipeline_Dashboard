@@ -117,6 +117,56 @@ def workflow_tab_content():
     )
 
 
+def get_tab_content(tab_id, load_id):
+    return dbc.CardBody([
+        dbc.ListGroup([
+            # Pipeline search bar
+            dbc.ListGroupItem(
+                children=dbc.Input(
+                    class_name="custom-placeholder",
+                    id="issue_filter",
+                    placeholder="Filter pipelines with username or "
+                                "title or keywords...",
+                    style={"width": "100%", "color": "black"},
+                    type="text",
+                ),
+                style={"width": "80%"}
+            ),
+            dbc.ListGroupItem(
+                children=dcc.Loading(
+                    color="#10e84a", id=load_id,
+                    parent_style={"position": "center"}
+                ),
+                style={"width": "20%"}
+            ),
+        ], horizontal=True),
+        # Placeholder for pipeline data to be displayed
+        dbc.ListGroup([
+            dbc.ListGroupItem(id=tab_id)
+        ]),
+        # Previous and next buttons
+        dbc.ListGroup([
+            dbc.ListGroupItem(
+                dbc.Button(
+                    children="< Prev", color="info", disabled=True,
+                    id="prev_button", n_clicks=0
+                )
+            ),
+            dbc.ListGroupItem(
+                dbc.Button(
+                    children="Next >", color="info", disabled=True,
+                    id="next_button", n_clicks=0
+                )
+            ),
+            # Cache page number on the browser
+            dcc.Store(id="store_page_num", storage_type="memory", data=1)
+        ],
+            horizontal=True,
+            style={"justify-content": "center"}
+        )
+    ])
+
+
 def create_accord_item_for_issue(issue):
     """Create an accordion item for a given issue"""
     return dbc.AccordionItem(
