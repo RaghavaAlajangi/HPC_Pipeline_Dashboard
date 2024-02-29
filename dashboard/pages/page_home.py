@@ -1,13 +1,14 @@
 import re
 
-from dash.exceptions import PreventUpdate
+from dash import callback, dcc, html, Input, MATCH, no_update, Output, State
 import dash_bootstrap_components as dbc
-from dash import html, callback, Input, Output, State, MATCH, no_update, dcc
+from dash.exceptions import PreventUpdate
 
-from ..components import (
-    line_breaks, paragraph_comp, group_accordion, group_items, button_comp,
-    chat_box, loading_comp, web_link, progressbar_comp, popup_comp, header_comp
-)
+from ..components import (button_comp, chat_box, create_list_group,
+                          group_accordion, header_comp,
+                          line_breaks, loading_comp, paragraph_comp,
+                          progressbar_comp, popup_comp, web_link
+                          )
 from ..global_variables import request_gitlab, PATHNAME_PREFIX, DCEVENT_DOCS
 
 PROGRESS_COMMENTS = [
@@ -51,48 +52,51 @@ def parse_job_stats(issue_notes):
 
 
 def welcome_tab_content():
-    return [
-        line_breaks(2),
-        html.Div(
-            html.Img(
-                src="assets/pipeline_logo.jfif",
-                style={"width": "800px", "height": "700px",
-                       "marginLeft": "40px"}
-            )
-        ),
-        line_breaks(2),
-        dbc.Alert(
-            [
-                # Warning icon
-                html.I(className="bi bi-info-circle-fill me-2"),
-                paragraph_comp(
-                    text="If you want to segment or/and classify your data, "
-                         "use the Simple Request on the left.",
-                    comp_id="dummy2"
+    """Welcome tab content"""
+    return dbc.ListGroup(
+        children=dbc.ListGroupItem(
+            children=[
+                line_breaks(2),
+                html.Img(
+                    src="assets/pipeline_logo.jfif",
+                    style={"width": "800px", "height": "700px",
+                           "marginLeft": "40px"}
                 ),
-            ],
-            color="info",
-            className="d-flex align-items-inline",
-            style={"color": "black", "width": "fit-content",
-                   "marginLeft": "40px", "height": "60px"},
-        ),
-
-        dbc.Alert(
-            [
-                # Warning icon
-                html.I(className="bi bi-info-circle-fill me-2"),
-                dcc.Markdown(
-                    f"If you are an advanced user use the Advanced Request. "
-                    f"More information at [dcevent pages]({DCEVENT_DOCS})."
-                )
-            ],
-            color="info",
-            className="d-flex align-items-inline",
-            style={"color": "black", "width": "fit-content",
-                   "marginLeft": "40px", "height": "60px"},
-        ),
-        line_breaks(2)
-    ]
+                line_breaks(2),
+                dbc.Alert(
+                    children=[
+                        # Warning icon
+                        html.I(className="bi bi-info-circle-fill me-2"),
+                        paragraph_comp(
+                            text="If you want to segment or/and classify your "
+                                 "data, use the Simple Request on the left.",
+                            comp_id="dummy2"
+                        ),
+                    ],
+                    className="d-flex align-items-inline",
+                    color="info",
+                    style={"color": "black", "width": "fit-content",
+                           "marginLeft": "40px", "height": "60px"}
+                ),
+                dbc.Alert(
+                    children=[
+                        # Warning icon
+                        html.I(className="bi bi-info-circle-fill me-2"),
+                        dcc.Markdown(
+                            f"If you are an advanced user use the Advanced "
+                            f"Request. More information at [dcevent pages]"
+                            f"({DCEVENT_DOCS})."
+                        )
+                    ],
+                    className="d-flex align-items-inline",
+                    color="info",
+                    style={"color": "black", "width": "fit-content",
+                           "marginLeft": "40px", "height": "60px"},
+                ),
+                line_breaks(2)
+            ]
+        )
+    )
 
 
 def workflow_tab_content():
@@ -120,7 +124,7 @@ def create_accord_item_for_issue(issue):
                 text="Pipeline request has been canceled!"
             ),
             html.H6("Pipeline Details:"),
-            group_items([
+            create_list_group([
                 paragraph_comp(text=f"Created by: {issue['author']}"),
                 paragraph_comp(text=f"Username: {issue['user']}"),
                 paragraph_comp(text=f"Pipeline ID: {issue['id']}"),
@@ -192,7 +196,7 @@ def create_accord_item_for_issue(issue):
                 html.Div(id={"type": "accord_item_div", "index": issue['iid']})
             )
         ],
-        title=f"#{issue['iid']} {issue['name']}",
+        title=f"#{issue['iid']} {issue['title']}",
         item_id=f"accord_item{issue['iid']}"
     )
 
