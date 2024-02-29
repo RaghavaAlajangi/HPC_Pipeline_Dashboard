@@ -507,7 +507,7 @@ def show_pipeline_data(pipeline_num):
         return no_update, no_update, no_update, no_update, no_update
 
     # Get the pipeline notes from GitLab
-    notes = request_gitlab.get_comments(int(pipeline_num))
+    notes = request_gitlab.get_comments(pipeline_num)
 
     # Create dash chat box from the notes
     comment_cards = chat_box(notes)
