@@ -2,7 +2,8 @@ import re
 
 from dash import callback, dcc, html, Input, MATCH, no_update, Output, State
 import dash_bootstrap_components as dbc
-from dash.exceptions import PreventUpdate
+from dash import callback_context as ctx
+import dash_mantine_components as dmc
 
 from ..components import (button_comp, chat_box, create_list_group,
                           group_accordion, header_comp,
@@ -277,81 +278,135 @@ def get_pipeline_accords(issue_data):
 
 
 def home_page_layout():
-    """Create home page layout"""
-    pagination = dbc.ListGroup(
-        [
-            dbc.ListGroupItem(
-                loading_comp(
-                    dbc.Pagination(
-                        id="issues_pagination",
-                        min_value=1,
-                        max_value=1,
-                        active_page=1,
-                        first_last=True,
-                        previous_next=True,
-                        fully_expanded=False,
-                        class_name="my-custom-pagination",
-                    )
-                )
-            )
-        ],
-        horizontal=True, style={"justify-content": "center"}
-    )
+    """Creates home page layout"""
     return dbc.Card([
-        dbc.Tabs(
-            [
-                dbc.Tab(
-                    label="Welcome",
-                    tab_id="welcome",
-                    active_label_style={"color": "#10e84a"}
+        dmc.Tabs(
+            children=[
+                dmc.TabsList([
+                    dmc.Tab(
+                        children="Welcome",
+                        value="welcome",
+                        style={"color": "white"},
+                    ),
+                    dmc.Tab(
+                        children="Open requests",
+                        value="opened",
+                        style={"color": "white"},
+                        rightSection=dbc.Badge(
+                            color="#10e84a", id="open_tab_badge",
+                            pill=True, text_color="black"
+                        )
+                    ),
+                    dmc.Tab(
+                        children="Closed requests",
+                        rightSection=dbc.Badge(
+                            color="#10e84a", id="close_tab_badge",
+                            pill=True, text_color="black"
+                        ),
+                        style={"color": "white"},
+                        value="closed"
+                    ),
+                    dmc.Tab(
+                        children="Work Flow",
+                        style={"color": "white"},
+                        value="workflow"
+                    )
+                ]),
+                dmc.TabsPanel(
+                    children=welcome_tab_content(),
+                    value="welcome"
                 ),
-                dbc.Tab(
-                    pagination,
-                    label="Open requests",
-                    tab_id="opened",
-                    active_label_style={"color": "#10e84a"}
+                dmc.TabsPanel(
+                    children=get_tab_content(tab_id="opened_content",
+                                             load_id="opened_loading"),
+                    value="opened"
                 ),
-                dbc.Tab(
-                    pagination,
-                    label="Closed requests",
-                    tab_id="closed",
-                    active_label_style={"color": "#10e84a"}
+                dmc.TabsPanel(
+                    children=get_tab_content(tab_id="closed_content",
+                                             load_id="closed_loading"),
+                    value="closed"
                 ),
-                dbc.Tab(
-                    label="Work Flow",
-                    tab_id="workflow",
-                    active_label_style={"color": "#10e84a"}
-                )
+                dmc.TabsPanel(
+                    children=workflow_tab_content(),
+                    value="workflow"
+                ),
+
+                dcc.Store(data={}, id="store_pipeline_notes",
+                          storage_type="memory")
             ],
-            id="tabs",
-            active_tab="welcome",
-            persistence=True
-        ),
-        html.Div(id="tab_content")
+            color="green",
+            id="main_tabs",
+            persistence=True,
+            value="welcome",
+            variant="outline"
+        )
     ])
 
 
 @callback(
-    Output("tab_content", "children"),
-    Input("tabs", "active_tab"),
-    Input("issues_pagination", "active_page")
+    Output("store_page_num", "data"),
+    Output("prev_button", "disabled"),
+    Input("prev_button", "n_clicks"),
+    Input("next_button", "n_clicks"),
+    State("store_page_num", "data")
 )
-def switch_tabs(active_tab, page):
+def update_page(pclick, nclick, page_num):
+    triggered_id = ctx.triggered_id
+
+    if triggered_id == "next_button":
+        page_num += 1
+    elif triggered_id == "prev_button":
+        page_num -= 1
+    is_disable = page_num < 2
+    return page_num, is_disable
+
+
+@callback(
+    Output("opened_content", "children"),
+    Output("closed_content", "children"),
+    Output("next_button", "disabled"),
+    Output("opened_loading", "parent_style"),
+    Output("closed_loading", "parent_style"),
+    Input("main_tabs", "value"),
+    Input("store_page_num", "data"),
+    Input("issue_filter", "value"),
+)
+def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
-    if active_tab == "welcome":
-        return welcome_tab_content()
-    elif active_tab == "workflow":
-        return workflow_tab_content()
-    else:
-        issue_meta = request_gitlab.get_issues_meta(active_tab, page)
+
+    load_style = {"position": "center"}
+    ISSUE_PER_PAGE = 10
+
+    if active_tab in ["welcome", "workflow"]:
+        return no_update, no_update, no_update, no_update, no_update
+
+    if active_tab in ["opened", "closed"]:
+        issue_meta = request_gitlab.get_issues_meta(state=active_tab,
+                                                    page=page_num,
+                                                    per_page=ISSUE_PER_PAGE,
+                                                    search_term=search_term)
+
+        is_disabled = len(issue_meta) != ISSUE_PER_PAGE
         if len(issue_meta) == 0:
-            return html.Div([
-                line_breaks(1),
-                header_comp("⦿ No open requests!", indent=40),
-                line_breaks(25)
-            ])
+            return (
+                html.Div([
+                    line_breaks(1),
+                    header_comp(f"⦿ No {active_tab} requests!", indent=40),
+                    line_breaks(5)
+                ]),
+                no_update,
+                True,
+                no_update,
+                no_update
+            )
         else:
-            return get_pipeline_accords(issue_meta)
+            if active_tab == "opened":
+                return get_pipeline_accords(
+                    issue_meta), no_update, is_disabled, load_style, no_update
+            elif active_tab == "closed":
+
+                return no_update, get_pipeline_accords(
+                    issue_meta), is_disabled, no_update, load_style
 
 
 @callback(
@@ -405,7 +460,7 @@ def show_pipeline_comments(accord_item, match_id):
 @callback(
     Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
     Output({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
-    Input("tabs", "active_tab"),
+    Input("main_tabs", "value"),
     Input({"type": "accord_item_div", "index": MATCH}, "children"),
     Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipeline_popup", "index": MATCH}, "n_clicks"),
@@ -438,15 +493,3 @@ def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab, issue_content,
     else:
         is_open = False
     return is_disabled, is_open
-
-
-@callback(
-    Output("issues_pagination", "max_value"),
-    Input("tabs", "active_tab")
-)
-def update_pagination_max_value(active_tab):
-    """Get the no of pages from GitLab and update the pagination max value"""
-    if active_tab == "welcome" or active_tab == "workflow":
-        raise PreventUpdate
-    else:
-        return request_gitlab.get_num_pages(active_tab)
