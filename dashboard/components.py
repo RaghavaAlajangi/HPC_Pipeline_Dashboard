@@ -145,9 +145,9 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
     )
 
 
-def group_items(items, horizontal=False):
+def create_list_group(children, horizontal=False):
     return dbc.ListGroup(
-        [dbc.ListGroupItem(item) for item in items],
+        children=[dbc.ListGroupItem(child) for child in children],
         horizontal=horizontal
     )
 
