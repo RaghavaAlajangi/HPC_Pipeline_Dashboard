@@ -36,6 +36,13 @@ class GitLabAPI:
                                         per_page=self.issues_per_page)
 
     @staticmethod
+    def get_issue_type(issue_text):
+        if "advanced" in issue_text.lower():
+            return "Advanced", "danger"
+        else:
+            return "Simple", "success"
+
+    @staticmethod
     def human_readable_date(date):
         # Define the GMT+0200 timezone offset
         gmt_offset = timedelta(hours=2)
@@ -89,7 +96,7 @@ class GitLabAPI:
         issues = self.get_issues_per_page(state, page)
         return [
             {
-                "name": issue.title,
+                "title": issue.title,
                 "id": issue.id,
                 "iid": issue.iid,
                 "author": issue.author["name"],
@@ -97,6 +104,7 @@ class GitLabAPI:
                     "name"],
                 "web_url": issue.web_url,
                 "date": self.human_readable_date(issue.created_at),
+                "type": self.get_issue_type(issue.description)
             }
             for issue in issues
         ]
