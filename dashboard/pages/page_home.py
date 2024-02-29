@@ -1,8 +1,9 @@
 import re
 
 from dash import callback, dcc, html, Input, MATCH, no_update, Output, State
-import dash_bootstrap_components as dbc
 from dash import callback_context as ctx
+import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from ..components import (button_comp, chat_box, create_list_group,
@@ -173,108 +174,179 @@ def get_tab_content(tab_id, load_id):
     ])
 
 
-def create_accord_item_for_issue(issue):
-    """Create an accordion item for a given issue"""
-    return dbc.AccordionItem(
-        [
-            popup_comp(
-                comp_id={"type": "stop_pipeline_popup",
-                         "index": issue['iid']},
-                refresh_path=PATHNAME_PREFIX,
-                text="Pipeline request has been canceled!"
-            ),
-            html.H6("Pipeline Details:"),
-            create_list_group([
-                paragraph_comp(text=f"Created by: {issue['author']}"),
-                paragraph_comp(text=f"Username: {issue['user']}"),
-                paragraph_comp(text=f"Pipeline ID: {issue['id']}"),
-                paragraph_comp(text=f"Date of Creation: {issue['date']}"),
-                web_link(label=f"Go to GitLab issue - #{issue['iid']}",
-                         url=issue["web_url"]),
-                web_link(label="Download RTDC csv (Not Implemented)",
-                         url="https://google.com"),
-                button_comp(
-                    label="Stop Pipeline", type="danger",
-                    comp_id={"type": "accord_item_stop",
-                             "index": issue['iid']},
-                    disabled=True
-                )
-            ]),
-            line_breaks(1),
-            html.H6("Pipeline Status:"),
-            dbc.ListGroup(
-                [
-                    dbc.ListGroupItem(
-                        html.Div(
-                            id={"type": "pipeline_status",
-                                "index": issue['iid']},
-                            style={'display': 'inline'}
-                        ),
-                        style={"width": "15%", "color": "#10e84a"}
-                    ),
-                    dbc.ListGroupItem(
-                        progressbar_comp(
-                            comp_id={"type": "accord_item_bar",
-                                     "index": issue['iid']},
-                            width=95
-                        ),
-                        style={"width": "85%"}
-                    )
-                ],
-                horizontal=True
-            ),
-            line_breaks(1),
-            html.H6("Result Path: (path to find results on S3-proxy)"),
-            dbc.ListGroup(
-                [
-                    dbc.ListGroupItem(
-                        html.P(
-                            id={"type": "results_path", "index": issue['iid']},
-                            style={'display': 'inline'}
-                        ),
-                        style={"color": "#10e84a"}
-                    ),
-                    dbc.ListGroupItem(
-                        dcc.Clipboard(
-                            target_id={"type": "results_path",
-                                       "index": issue['iid']},
-                            title="Copy Path",
-                            style={
-                                "display": "inline-block",
-                                "fontSize": 20,
-                                "verticalAlign": "top",
-                            }
-                        )
-                    )
-                ],
-                horizontal=True,
-            ),
+def create_issue_accordion_item(issue, mode):
+    """Creates an accordion item for a given issue"""
+    if mode == "opened":
+        icon_flag = "fluent-mdl2:processing-run"
+    else:
+        icon_flag = "fluent-mdl2:processing-cancel"
 
-            line_breaks(1),
-            html.H6("Comments:"),
-            loading_comp(
-                html.Div(id={"type": "accord_item_div", "index": issue['iid']})
+    return dmc.AccordionItem(
+        children=[
+            dmc.AccordionControl(
+                children=[
+                    # Pipeline title
+                    html.P(
+                        children=f"(#{issue['iid']}) {issue['title']}",
+                        style={"color": "white", "display": "inline"}
+                    ),
+                    html.Br(),
+                    # Badge for type of pipeline (simple/advanced)
+                    dbc.Badge(
+                        children=issue["type"][0], color=issue["type"][1],
+                        className="me-2", text_color="black"
+                    ),
+                    # Badge for user
+                    dbc.Badge(
+                        children=issue["user"], className="me-2",
+                        color="success", text_color="black",
+                    ),
+                    # Badge for date
+                    dbc.Badge(
+                        children=issue["date"], color="info",
+                        className="me-2", text_color="black"
+                    ),
+                ],
+                # Pipeline icon
+                icon=DashIconify(
+                    color="white", icon=icon_flag, height=30, width=30
+                )
+            ),
+            dmc.AccordionPanel(
+                children=[
+                    popup_comp(
+                        comp_id={"type": "pipeline_stop_popup",
+                                 "index": issue["iid"]},
+                        refresh_path=PATHNAME_PREFIX,
+                        text="Pipeline request has been canceled!"
+                    ),
+                    html.Strong("Pipeline Details:"),
+                    create_list_group(
+                        children=[
+                            dmc.Text(f"Created by: {issue['author']}"),
+                            dmc.Text(f"Username: {issue['user']}"),
+                            web_link(
+                                label=f"Go to GitLab issue - #{issue['iid']}",
+                                url=issue["web_url"]
+                            ),
+                            web_link(
+                                label="Download RTDC csv (Not Implemented)",
+                                url="https://google.com"
+                            ),
+                            button_comp(
+                                comp_id={"type": "pipeline_stop_click",
+                                         "index": issue["iid"]},
+                                disabled=True, label="Stop Pipeline",
+                                type="danger",
+                            )
+                        ]),
+                    line_breaks(1),
+                    html.Strong("Pipeline Progress:"),
+                    dbc.ListGroup(
+                        children=[
+                            dbc.ListGroupItem(
+                                children=html.Div(
+                                    id={"type": "pipeline_progress_num",
+                                        "index": issue["iid"]},
+                                    style={"display": "inline"}
+                                ),
+                                style={"width": "15%", "color": "#10e84a"}
+                            ),
+                            dbc.ListGroupItem(
+                                children=progressbar_comp(
+                                    comp_id={"type": "pipeline_progress_bar",
+                                             "index": issue["iid"]},
+                                    width=95
+                                ),
+                                style={"width": "85%"}
+                            )
+                        ],
+                        horizontal=True
+                    ),
+                    line_breaks(1),
+                    html.Strong(
+                        "Result Path: (path to find results on S3-proxy)"),
+                    dbc.ListGroup(
+                        children=[
+                            dbc.ListGroupItem(
+                                children=html.Code(
+                                    id={"type": "s3_proxy_path",
+                                        "index": issue["iid"]},
+                                    lang="python",
+                                    style={"color": "#10e84a", "fontSize": 15}
+                                ),
+                                style={"color": "#10e84a"}
+                            ),
+                            dbc.ListGroupItem(
+                                children=dcc.Clipboard(
+                                    target_id={"type": "s3_proxy_path",
+                                               "index": issue["iid"]},
+                                    title="Copy Path",
+                                    style={
+                                        "color": "#10e84a",
+                                        "display": "inline-block",
+                                        "fontSize": 20,
+                                        "verticalAlign": "top",
+                                    }
+                                )
+                            )
+                        ],
+                        horizontal=True
+                    ),
+                    line_breaks(1),
+                    html.Strong("Comments:"),
+                    dmc.LoadingOverlay(
+                        children=dbc.ListGroup(
+                            id={"type": "pipeline_comments",
+                                "index": issue["iid"]}
+                        ),
+                        loaderProps={"variant": "dots", "color": "#10e84a",
+                                     "size": "xl"},
+                        overlayColor="#303030"
+                    )
+                ]
             )
         ],
-        title=f"#{issue['iid']} {issue['title']}",
-        item_id=f"accord_item{issue['iid']}"
+        style={"width": "100%"},
+        value=str(issue["iid"])
     )
 
 
-def get_pipeline_accords(issue_data):
-    """Take GitLab issue metadata list and create a group of accordion items"""
-    accord_items = [create_accord_item_for_issue(issue) for issue in issue_data]
-    return [
-        html.Div(
-            group_accordion(
-                accord_items,
-                middle=True, comp_id="issue_accord"
-            ),
-            style={"max-height": "70rem", "overflow-y": "scroll",
-                   "overflow-x": "hidden"},
-        ),
-        line_breaks(2)
-    ]
+def create_issues_accordion(issue_data, mode):
+    """Creates an accordion of GitLab issues"""
+    children_items = [create_issue_accordion_item(issue, mode) for issue in
+                      issue_data]
+    return dmc.Accordion(
+        children=children_items,
+        id="pipeline_accordion",
+        className="my-accordion",
+        disableChevronRotation=False,
+        chevron=DashIconify(icon="quill:chevron-down",
+                            color="#2fad40", height=50,
+                            width=50),
+        chevronSize=30,
+        chevronPosition="right",
+        variant="separated",
+        transitionDuration=0,
+        style={"max-height": "60rem", "width": "100%",
+               "overflow-y": "scroll", "overflow-x": "hidden"},
+        styles={
+            "root": {"backgroundColor": "yellow", "borderRadius": 5},
+            "item": {
+                "backgroundColor": "#303030",
+                "border": "1px solid transparent",
+                "borderColor": "#2fad40",
+                "borderRadius": 10,
+                "&[data-active]": {
+                    "backgroundColor": "#262525",
+                    "boxShadow": 5,
+                    "borderColor": "#2fad40",
+                    "borderRadius": 10,
+                    "zIndex": 1,
+                }
+            }
+        }
+    )
 
 
 def home_page_layout():
@@ -329,10 +401,7 @@ def home_page_layout():
                 dmc.TabsPanel(
                     children=workflow_tab_content(),
                     value="workflow"
-                ),
-
-                dcc.Store(data={}, id="store_pipeline_notes",
-                          storage_type="memory")
+                )
             ],
             color="green",
             id="main_tabs",
@@ -413,57 +482,37 @@ def switch_tabs(active_tab, page_num, search_term):
             )
         else:
             if active_tab == "opened":
-                return get_pipeline_accords(
-                    issue_meta), no_update, is_disabled, load_style, no_update
+                return (create_issues_accordion(issue_meta, active_tab),
+                        no_update, is_disabled, load_style, no_update)
             elif active_tab == "closed":
-                return no_update, get_pipeline_accords(
-                    issue_meta), is_disabled, no_update, load_style
+                return no_update, create_issues_accordion(
+                    issue_meta, active_tab), is_disabled, no_update, load_style
 
 
 @callback(
-    Output("store_pipeline_notes", "data"),
-    Input("issue_accord", "active_item"),
-    State("store_pipeline_notes", "data"),
-)
-def cache_pipeline_notes(pipeline_num, cached_notes):
-    """Get the GitLab issue notes based in `iid` and cache them on the browser
-    (dcc.Store). This could reduce the number of API calls to GitLab API.
-    """
-    if pipeline_num:
-        # Parse issue_iid from accord_item
-        issue_iid = pipeline_num.split("item")[1]
-        if issue_iid not in cached_notes:
-            # Fetch issue notes from GitLab
-            notes = request_gitlab.get_comments(int(issue_iid))
-            # Update cache with new pipeline iid
-            cached_notes[issue_iid] = notes
-    return cached_notes or no_update
-
-
-@callback(
-    Output({"type": "accord_item_div", "index": MATCH}, "children"),
-    Output({"type": "pipeline_status", "index": MATCH}, "children"),
-    Output({"type": "results_path", "index": MATCH}, "children"),
-    Output({"type": "accord_item_bar", "index": MATCH}, "value"),
-    Output({"type": "accord_item_bar", "index": MATCH}, "label"),
-    Input("issue_accord", "active_item"),
-    Input("store_pipeline_notes", "data"),
+    Output({"type": "pipeline_comments", "index": MATCH}, "children"),
+    Output({"type": "pipeline_progress_num", "index": MATCH}, "children"),
+    Output({"type": "s3_proxy_path", "index": MATCH}, "children"),
+    Output({"type": "pipeline_progress_bar", "index": MATCH}, "value"),
+    Output({"type": "pipeline_progress_bar", "index": MATCH}, "label"),
+    Input("pipeline_accordion", "value"),
     prevent_initial_call=True
 )
-def show_pipeline_data(pipeline_num, cached_notes):
-    """Display the cached pipeline data when the user clicks on pipeline
-    accordion"""
+def show_pipeline_data(pipeline_num):
+    """Display pipeline data when the user clicks on pipeline accordion"""
     # Check if there is an active_item selected
     if not pipeline_num:
         return no_update, no_update, no_update, no_update, no_update
 
-    # Parse issue_iid from active_item
-    issue_iid = pipeline_num.split("item")[1]
-    notes = cached_notes[issue_iid]
+    # Get the pipeline notes from GitLab
+    notes = request_gitlab.get_comments(int(pipeline_num))
 
+    # Create dash chat box from the notes
     comment_cards = chat_box(notes)
-    # Get the total jobs, finished jobs, and result path from issue notes
+
+    # Get pipeline stats from the notes
     total_jobs, finished_jobs, result_path = parse_job_stats(notes)
+
     # Show only comments if total jobs equal to zero
     if total_jobs == 0:
         return comment_cards, "Jobs: [0 / 0]", result_path, None, None
@@ -486,14 +535,14 @@ def show_pipeline_data(pipeline_num, cached_notes):
 
 
 @callback(
-    Output({"type": "accord_item_stop", "index": MATCH}, "disabled"),
-    Output({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
+    Output({"type": "pipeline_stop_click", "index": MATCH}, "disabled"),
+    Output({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     Input("main_tabs", "value"),
-    Input({"type": "accord_item_div", "index": MATCH}, "children"),
-    Input({"type": "accord_item_stop", "index": MATCH}, "n_clicks"),
-    Input({"type": "stop_pipeline_popup", "index": MATCH}, "n_clicks"),
-    State({"type": "accord_item_div", "index": MATCH}, "id"),
-    State({"type": "stop_pipeline_popup", "index": MATCH}, "is_open"),
+    Input({"type": "pipeline_comments", "index": MATCH}, "children"),
+    Input({"type": "pipeline_stop_click", "index": MATCH}, "n_clicks"),
+    Input({"type": "pipeline_stop_popup", "index": MATCH}, "n_clicks"),
+    State({"type": "pipeline_comments", "index": MATCH}, "id"),
+    State({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     prevent_initial_call=True
 )
 def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab, issue_content,
