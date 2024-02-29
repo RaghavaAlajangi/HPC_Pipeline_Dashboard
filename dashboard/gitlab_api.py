@@ -30,11 +30,6 @@ class GitLabAPI:
                 "settings."
             )
 
-    def get_issues_per_page(self, state, page):
-        """Fetch issues list per page in a state"""
-        return self.project.issues.list(state=state, page=page, get_all=False,
-                                        per_page=self.issues_per_page)
-
     @staticmethod
     def get_issue_type(issue_text):
         if "advanced" in issue_text.lower():
@@ -50,11 +45,6 @@ class GitLabAPI:
         # Add the GMT offset to the timestamp
         new_time_stamp = time_stamp + gmt_offset
         return new_time_stamp.strftime("%I:%M%p, %d-%b-%Y")
-
-    def get_num_pages(self, state):
-        """Compute the total number of issue pages in a state"""
-        num_issues = len(self.project.issues.list(state=state, get_all=True))
-        return math.ceil(num_issues / self.issues_per_page)
 
     def get_comments(self, issue_iid):
         """Fetch comments with dates of an issue"""
@@ -102,7 +92,6 @@ class GitLabAPI:
                                                      page=page,
                                                      get_all=False,
                                                      per_page=per_page)
-
         return [
             {
                 "title": issue.title,
