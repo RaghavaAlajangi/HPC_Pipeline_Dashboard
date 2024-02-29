@@ -100,17 +100,21 @@ def welcome_tab_content():
 
 
 def workflow_tab_content():
-    return [
-        line_breaks(2),
-        html.Div(
-            html.Img(
-                src="assets/hpc_workflow.jpg",
-                style={"width": "1000px", "height": "900px"}
-            ),
-            className="row justify-content-center"
-        ),
-        line_breaks(2)
-    ]
+    return dbc.ListGroup(
+        children=dbc.ListGroupItem(
+            children=[
+                line_breaks(2),
+                html.Div(
+                    children=html.Img(
+                        src="assets/hpc_workflow.jpg",
+                        style={"width": "1000px", "height": "900px"}
+                    ),
+                    className="row justify-content-center"
+                ),
+                line_breaks(2)
+            ]
+        )
+    )
 
 
 def create_accord_item_for_issue(issue):
