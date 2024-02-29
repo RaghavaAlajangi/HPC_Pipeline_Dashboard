@@ -187,14 +187,3 @@ a:hover {
 .custom-placeholder::placeholder {
     color: darkgray;
 }
-
-/* Set the pagination color*/
-.my-custom-pagination .page-item .page-link {
-    background-color: #303030;
-    color: white;
-    border-color: white;
-}
-
-.my-custom-pagination .page-item.active .page-link {
-    background-color: #017b50;
-}
