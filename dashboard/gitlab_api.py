@@ -30,10 +30,6 @@ class GitLabAPI:
             )
 
     @staticmethod
-    def get_issue_type(issue_text):
-        return "advanced" if "advanced" in issue_text.lower() else "simple"
-
-    @staticmethod
     def human_readable_date(date):
         # Define the GMT+0200 timezone offset
         gmt_offset = timedelta(hours=2)
@@ -80,65 +76,82 @@ class GitLabAPI:
         """Fetch the issue object based on issue iid"""
         return self.project.issues.get(issue_iid)
 
-    def get_issues_meta(self, state, page, per_page=10, search_term=None):
-        """Fetch the metadata of issues in a page"""
-        if search_term:
-            filter_issues = self.project.issues.list(search=search_term,
-                                                     get_all=True,
-                                                     state=state)
+    def parse_description(self, issue_text):
+        lower_text = issue_text.lower()
+        data = {"type": "simple" if "simple" in lower_text else "advanced"}
+
+        # Search for the username in reverse order
+        for line in reversed(lower_text.split("\n")):
+            if "[x] username" in line:
+                name = line.split("=")[1].strip()
+                break
         else:
-            filter_issues = self.project.issues.list(state=state,
-                                                     page=page,
-                                                     get_all=False,
-                                                     per_page=per_page)
-        return [
-            {
+            # Username not found, return immediately
+            return data
+
+        members = self.get_project_members()
+
+        # Search for the matching username in project members
+        for member in members:
+            if name == member.username:
+                data["username"] = member.name
+                break
+
+        return data
+
+    def get_issues_meta(self, state, page, per_page=10, search_term=None):
+        """Filter issues based on the state and search term if it exists and
+        returns a list of dictionaries containing information about each issue.
+
+        Parameters
+        ----------
+            state: str
+                Filter issues by state
+            page: int
+                Get the page number of issues to be displayed
+            per_page: int
+                Set the number of issues to be displayed per page
+            search_term: str
+                Search for issues that match the term
+
+        Returns
+        -------
+            A list of dictionaries
+        """
+        filter_params = {"state": state, "per_page": per_page}
+
+        if search_term:
+            filter_params.update({"search": search_term, "get_all": True})
+        else:
+            filter_params.update({"page": page, "per_page": per_page})
+
+        issues = self.project.issues.list(**filter_params)
+
+        issues_meta = []
+        for issue in issues:
+            parsed_description = self.parse_description(issue.description)
+            issue_meta = {
                 "title": issue.title,
                 "id": issue.id,
                 "iid": issue.iid,
                 "author": issue.author["name"],
-                "user": self.find_user(issue.description) or issue.author[
-                    "name"],
+                "user": parsed_description["username"] or issue.author["name"],
                 "web_url": issue.web_url,
                 "date": self.human_readable_date(issue.created_at),
-                "type": self.get_issue_type(issue.description)
+                "type": parsed_description["type"]
             }
-            for issue in filter_issues
-        ]
+            issues_meta.append(issue_meta)
+        return issues_meta
 
     def get_project_members(self):
         """Fetch the members list of a repository"""
         return self.project.members_all.list(get_all=True)
-
-    def find_user(self, issue_text, pattern="username"):
-        """Look for `username` section in the issue description"""
-        members = self.get_project_members()
-        username = None
-        name = None
-        for line in reversed(issue_text.split('\n')):
-            if f"[x] {pattern}" in line:
-                username = line.split("=")[1].strip()
-                break
-
-        if username:
-            for member in members:
-                if username == member.username:
-                    name = member.name
-                    break
-        return name
 
     def read_file(self, path):
         """Fetch the file content of a specified repository path"""
         file = self.project.files.get(path, ref="main")
         file_content = file.decode().decode()
         return file_content
-
-    def get_dvc_files(self, path):
-        """Fetch DVC file list from a specified repository path without .dvc
-        extension"""
-        folder_contents = self.project.repository_tree(path=path)
-        return [item["name"].split(".dvc")[0] for item in folder_contents if
-                ".dvc" in item["name"]]
 
     def fetch_model_meta(self):
         repo_folder_path = "model_registry/segmentation"
