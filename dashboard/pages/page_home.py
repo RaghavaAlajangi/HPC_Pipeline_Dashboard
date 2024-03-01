@@ -545,37 +545,35 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "pipeline_stop_click", "index": MATCH}, "disabled"),
     Output({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     Input("main_tabs", "value"),
+    Input("pipeline_accordion", "value"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
     Input({"type": "pipeline_stop_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_stop_popup", "index": MATCH}, "n_clicks"),
-    State({"type": "pipeline_comments", "index": MATCH}, "id"),
     State({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     prevent_initial_call=True
 )
-def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab,
-                                                    pipeline_content,
-                                                    stop_pipeline, close_popup,
-                                                    match_id, popup):
+def toggle_stop_pipeline_button(active_tab, pipeline_num, pipeline_content,
+                                stop_pipeline, popup_click, close_popup):
     """Enable stop pipeline button for an opened pipeline only after the
     comments of that pipeline are loaded. Also, open a popup notification when
     the user cancel the pipeline (close GitLab issue), and refresh the page."""
-    # Enable stop pipeline button only for opened pipelines and
-    # comments are loaded
+    # Check for opened tab and pipeline content
     if active_tab != "opened" or not isinstance(pipeline_content, dict):
         return no_update, no_update
+
     # Get the issue comments
-    comments = request_gitlab.get_comments(match_id["index"])["comments"]
+    comments = request_gitlab.get_comments(pipeline_num)["comments"]
 
     # Enable/Disable stop button based on 'cancel' comment in issue
     is_disabled = comments and comments[0].lower() == "cancel"
 
     # Stop pipeline and open a popup
     if stop_pipeline:
-        request_gitlab.cancel_pipeline(match_id["index"])
-        is_open = not popup
+        request_gitlab.cancel_pipeline(pipeline_num)
+        is_open = not close_popup
     # Close popup and refresh the page
-    elif close_popup:
-        is_open = not popup
+    elif popup_click:
+        is_open = not close_popup
     else:
-        is_open = False
+        is_open = close_popup
     return is_disabled, is_open
