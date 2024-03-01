@@ -183,6 +183,8 @@ def create_pipeline_accordion_item(pipeline, mode):
     else:
         icon_flag = "fluent-mdl2:processing-cancel"
 
+    pipeline_color = "success" if pipeline["type"] == "simple" else "danger"
+
     return dmc.AccordionItem(
         children=[
             dmc.AccordionControl(
@@ -195,8 +197,9 @@ def create_pipeline_accordion_item(pipeline, mode):
                     html.Br(),
                     # Badge for type of pipeline (simple/advanced)
                     dbc.Badge(
-                        children=pipeline["type"][0], color=pipeline["type"][1],
-                        className="me-2", text_color="black"
+                        children=pipeline["type"].capitalize(),
+                        className="me-2", color=pipeline_color,
+                        text_color="black"
                     ),
                     # Badge for user
                     dbc.Badge(

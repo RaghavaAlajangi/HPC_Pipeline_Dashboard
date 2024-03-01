@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import math
 import re
 import yaml
 from collections import defaultdict
@@ -32,10 +31,7 @@ class GitLabAPI:
 
     @staticmethod
     def get_issue_type(issue_text):
-        if "advanced" in issue_text.lower():
-            return "Advanced", "danger"
-        else:
-            return "Simple", "success"
+        return "advanced" if "advanced" in issue_text.lower() else "simple"
 
     @staticmethod
     def human_readable_date(date):
