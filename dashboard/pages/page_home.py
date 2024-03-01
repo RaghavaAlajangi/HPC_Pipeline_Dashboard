@@ -28,16 +28,16 @@ JOB_COMMENTS = [
 ]
 
 
-def parse_job_stats(issue_notes):
+def parse_job_stats(pipeline_notes):
     """Fetch total & completed no of pipelines info and results path from
-    issue comments"""
+    pipeline comments"""
     # Initialize variables
     total_jobs = 0
     finished_jobs = 0
     results_path = "No result path"
 
     # Iterate over comments
-    for cmt in issue_notes["comments"]:
+    for cmt in pipeline_notes["comments"]:
         # Check for total number of pipelines
         total_match = JOB_COMMENTS[1].match(cmt)
         if total_match:
@@ -133,7 +133,7 @@ def get_tab_content(tab_id, load_id):
             dbc.ListGroupItem(
                 children=dbc.Input(
                     class_name="custom-placeholder",
-                    id="issue_filter",
+                    id="pipeline_filter",
                     placeholder="Filter pipelines with username or "
                                 "title or keywords...",
                     style={"width": "100%", "color": "black"},
@@ -176,8 +176,8 @@ def get_tab_content(tab_id, load_id):
     ])
 
 
-def create_issue_accordion_item(issue, mode):
-    """Creates an accordion item for a given issue"""
+def create_pipeline_accordion_item(pipeline, mode):
+    """Creates an accordion item for a given pipeline"""
     if mode == "opened":
         icon_flag = "fluent-mdl2:processing-run"
     else:
@@ -189,23 +189,23 @@ def create_issue_accordion_item(issue, mode):
                 children=[
                     # Pipeline title
                     html.P(
-                        children=f"(#{issue['iid']}) {issue['title']}",
+                        children=f"(#{pipeline['iid']}) {pipeline['title']}",
                         style={"color": "white", "display": "inline"}
                     ),
                     html.Br(),
                     # Badge for type of pipeline (simple/advanced)
                     dbc.Badge(
-                        children=issue["type"][0], color=issue["type"][1],
+                        children=pipeline["type"][0], color=pipeline["type"][1],
                         className="me-2", text_color="black"
                     ),
                     # Badge for user
                     dbc.Badge(
-                        children=issue["user"], className="me-2",
+                        children=pipeline["user"], className="me-2",
                         color="success", text_color="black",
                     ),
                     # Badge for date
                     dbc.Badge(
-                        children=issue["date"], color="info",
+                        children=pipeline["date"], color="info",
                         className="me-2", text_color="black"
                     ),
                 ],
@@ -218,18 +218,19 @@ def create_issue_accordion_item(issue, mode):
                 children=[
                     popup_comp(
                         comp_id={"type": "pipeline_stop_popup",
-                                 "index": issue["iid"]},
+                                 "index": pipeline["iid"]},
                         refresh_path=BASENAME_PREFIX,
                         text="Pipeline request has been canceled!"
                     ),
                     html.Strong("Pipeline Details:"),
                     create_list_group(
                         children=[
-                            dmc.Text(f"Created by: {issue['author']}"),
-                            dmc.Text(f"Username: {issue['user']}"),
+                            dmc.Text(f"Created by: {pipeline['author']}"),
+                            dmc.Text(f"Username: {pipeline['user']}"),
                             web_link(
-                                label=f"Go to GitLab issue - #{issue['iid']}",
-                                url=issue["web_url"]
+                                label=f"Go to GitLab issue - "
+                                      f"#{pipeline['iid']}",
+                                url=pipeline["web_url"]
                             ),
                             web_link(
                                 label="Download RTDC csv (Not Implemented)",
@@ -237,7 +238,7 @@ def create_issue_accordion_item(issue, mode):
                             ),
                             button_comp(
                                 comp_id={"type": "pipeline_stop_click",
-                                         "index": issue["iid"]},
+                                         "index": pipeline["iid"]},
                                 disabled=True, label="Stop Pipeline",
                                 type="danger",
                             )
@@ -249,7 +250,7 @@ def create_issue_accordion_item(issue, mode):
                             dbc.ListGroupItem(
                                 children=html.Div(
                                     id={"type": "pipeline_progress_num",
-                                        "index": issue["iid"]},
+                                        "index": pipeline["iid"]},
                                     style={"display": "inline"}
                                 ),
                                 style={"width": "15%", "color": "#10e84a"}
@@ -257,7 +258,7 @@ def create_issue_accordion_item(issue, mode):
                             dbc.ListGroupItem(
                                 children=progressbar_comp(
                                     comp_id={"type": "pipeline_progress_bar",
-                                             "index": issue["iid"]},
+                                             "index": pipeline["iid"]},
                                     width=95
                                 ),
                                 style={"width": "85%"}
@@ -273,7 +274,7 @@ def create_issue_accordion_item(issue, mode):
                             dbc.ListGroupItem(
                                 children=html.Code(
                                     id={"type": "s3_proxy_path",
-                                        "index": issue["iid"]},
+                                        "index": pipeline["iid"]},
                                     lang="python",
                                     style={"color": "#10e84a", "fontSize": 15}
                                 ),
@@ -282,7 +283,7 @@ def create_issue_accordion_item(issue, mode):
                             dbc.ListGroupItem(
                                 children=dcc.Clipboard(
                                     target_id={"type": "s3_proxy_path",
-                                               "index": issue["iid"]},
+                                               "index": pipeline["iid"]},
                                     title="Copy Path",
                                     style={
                                         "color": "#10e84a",
@@ -300,7 +301,7 @@ def create_issue_accordion_item(issue, mode):
                     dmc.LoadingOverlay(
                         children=dbc.ListGroup(
                             id={"type": "pipeline_comments",
-                                "index": issue["iid"]}
+                                "index": pipeline["iid"]}
                         ),
                         loaderProps={"variant": "dots", "color": "#10e84a",
                                      "size": "xl"},
@@ -310,14 +311,14 @@ def create_issue_accordion_item(issue, mode):
             )
         ],
         style={"width": "100%"},
-        value=str(issue["iid"])
+        value=str(pipeline["iid"])
     )
 
 
-def create_issues_accordion(issue_data, mode):
+def create_pipelines_accordion(pipelines_meta, mode):
     """Creates an accordion of GitLab issues"""
-    children_items = [create_issue_accordion_item(issue, mode) for issue in
-                      issue_data]
+    children_items = [create_pipeline_accordion_item(pipeline, mode) for
+                      pipeline in pipelines_meta]
     return dmc.Accordion(
         children=children_items,
         id="pipeline_accordion",
@@ -453,7 +454,7 @@ def show_pipeline_number(active_tab):
     Output("closed_loading", "parent_style"),
     Input("main_tabs", "value"),
     Input("store_page_num", "data"),
-    Input("issue_filter", "value"),
+    Input("pipeline_filter", "value"),
 )
 def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
@@ -464,13 +465,13 @@ def switch_tabs(active_tab, page_num, search_term):
         return no_update, no_update, no_update, no_update, no_update
 
     if active_tab in ["opened", "closed"]:
-        issue_meta = request_gitlab.get_issues_meta(state=active_tab,
-                                                    page=page_num,
-                                                    per_page=ISSUE_PER_PAGE,
-                                                    search_term=search_term)
+        pipeline_meta = request_gitlab.get_issues_meta(state=active_tab,
+                                                       page=page_num,
+                                                       per_page=ISSUE_PER_PAGE,
+                                                       search_term=search_term)
 
-        is_disabled = len(issue_meta) != ISSUE_PER_PAGE
-        if len(issue_meta) == 0:
+        is_disabled = len(pipeline_meta) != ISSUE_PER_PAGE
+        if len(pipeline_meta) == 0:
             return (
                 html.Div([
                     line_breaks(1),
@@ -484,11 +485,12 @@ def switch_tabs(active_tab, page_num, search_term):
             )
         else:
             if active_tab == "opened":
-                return (create_issues_accordion(issue_meta, active_tab),
+                return (create_pipelines_accordion(pipeline_meta, active_tab),
                         no_update, is_disabled, load_style, no_update)
             elif active_tab == "closed":
-                return no_update, create_issues_accordion(
-                    issue_meta, active_tab), is_disabled, no_update, load_style
+                return no_update, create_pipelines_accordion(
+                    pipeline_meta,
+                    active_tab), is_disabled, no_update, load_style
 
 
 @callback(
@@ -547,14 +549,16 @@ def show_pipeline_data(pipeline_num):
     State({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     prevent_initial_call=True
 )
-def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab, issue_content,
-                                                    stop_issue, close_popup,
+def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab,
+                                                    pipeline_content,
+                                                    stop_pipeline, close_popup,
                                                     match_id, popup):
-    """Enable stop pipeline button for an opened issue only after the comments
-    of that issue are loaded. Also, open a popup notification when the user
-    cancel the pipeline (close GitLab issue), and refresh the page."""
-    # Enable stop pipeline button for opened issue only if comments are loaded
-    if active_tab != "opened" or not isinstance(issue_content, dict):
+    """Enable stop pipeline button for an opened pipeline only after the
+    comments of that pipeline are loaded. Also, open a popup notification when
+    the user cancel the pipeline (close GitLab issue), and refresh the page."""
+    # Enable stop pipeline button only for opened pipelines and
+    # comments are loaded
+    if active_tab != "opened" or not isinstance(pipeline_content, dict):
         return no_update, no_update
     # Get the issue comments
     comments = request_gitlab.get_comments(match_id["index"])["comments"]
@@ -563,7 +567,7 @@ def toggle_stop_pipeline_button_and_cancel_pipeline(active_tab, issue_content,
     is_disabled = comments and comments[0].lower() == "cancel"
 
     # Stop pipeline and open a popup
-    if stop_issue:
+    if stop_pipeline:
         request_gitlab.cancel_pipeline(match_id["index"])
         is_open = not popup
     # Close popup and refresh the page
