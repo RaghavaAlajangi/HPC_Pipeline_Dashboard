@@ -554,11 +554,13 @@ def show_pipeline_data(pipeline_num):
 )
 def toggle_stop_pipeline_button(active_tab, pipeline_num, pipeline_content,
                                 stop_pipeline, popup_click, close_popup):
-    """Enable stop pipeline button for an opened pipeline only after the
-    comments of that pipeline are loaded. Also, open a popup notification when
-    the user cancel the pipeline (close GitLab issue), and refresh the page."""
-    # Check for opened tab and pipeline content
-    if active_tab != "opened" or not isinstance(pipeline_content, dict):
+    """Enable stop pipeline button only for opened tab and comments of that
+    pipeline are loaded. Also, open a popup notification when the user stop
+    the pipeline (close GitLab issue)."""
+
+    # Check for pipeline_num, opened tab, and pipeline content
+    if not pipeline_num or active_tab != "opened" or \
+            not isinstance(pipeline_content, dict):
         return no_update, no_update
 
     # Get the issue comments
@@ -567,13 +569,11 @@ def toggle_stop_pipeline_button(active_tab, pipeline_num, pipeline_content,
     # Enable/Disable stop button based on 'cancel' comment in issue
     is_disabled = comments and comments[0].lower() == "cancel"
 
-    # Stop pipeline and open a popup
+    # Perform actions based on button clicks
     if stop_pipeline:
         request_gitlab.cancel_pipeline(pipeline_num)
-        is_open = not close_popup
-    # Close popup and refresh the page
-    elif popup_click:
-        is_open = not close_popup
-    else:
-        is_open = close_popup
+
+    # Determine the state of the popup
+    is_open = not close_popup if stop_pipeline or popup_click else close_popup
+
     return is_disabled, is_open
