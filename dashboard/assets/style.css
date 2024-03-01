@@ -197,3 +197,8 @@ a:hover {
 .mantine-Tabs-tab[data-active="true"] {
     font-weight: bold;
 }
+
+/* Adjust the size of the dbc.Modal backdrop */
+.modal-backdrop.show {
+  transform: scale(2); /* Adjust the scale factor as needed */
+}
