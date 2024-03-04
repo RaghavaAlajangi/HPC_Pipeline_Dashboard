@@ -1,4 +1,5 @@
 0.0.3
+ - enh: cache pipeline notes to share across callbacks
  - enh: extract job stats by looping through issue comments just once
  - enh: add search bar to filter pipelines
  - enh: update tabs

@@ -189,6 +189,11 @@ def create_pipeline_accordion_item(pipeline, mode):
                         refresh_path=BASENAME_PREFIX,
                         text="Pipeline request has been canceled!"
                     ),
+                    # Store component to cache pipeline notes. It allows us to
+                    # use the same notes across multiple callbacks without
+                    # computing twice.
+                    dcc.Store({"type": "store_pipeline_notes",
+                               "index": pipeline["iid"]}, data={}),
                     html.Strong("Pipeline Details:"),
                     create_list_group(
                         children=[
@@ -518,32 +523,28 @@ def show_pipeline_data(pipeline_num):
 
 
 @callback(
-    Output({"type": "pipeline_stop_click", "index": MATCH}, "disabled"),
     Output({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
+    Output({"type": "pipeline_stop_click", "index": MATCH}, "disabled"),
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
+    Input({"type": "store_pipeline_notes", "index": MATCH}, "data"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
     Input({"type": "pipeline_stop_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_stop_popup", "index": MATCH}, "n_clicks"),
     State({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     prevent_initial_call=True
 )
-def toggle_stop_pipeline_button(active_tab, pipeline_num, pipeline_content,
-                                stop_pipeline, popup_click, close_popup):
+def toggle_stop_pipeline_button(active_tab, pipeline_num, cached_notes,
+                                pipeline_content, stop_pipeline, popup_click,
+                                close_popup):
     """Enable stop pipeline button only for opened tab and comments of that
-    pipeline are loaded. Also, open a popup notification when the user stop
+    pipeline are loaded. Also, open a popup notification when the user stops
     the pipeline (close GitLab issue)."""
 
     # Check for pipeline_num, opened tab, and pipeline content
     if not pipeline_num or active_tab != "opened" or \
             not isinstance(pipeline_content, dict):
         return no_update, no_update
-
-    # Get the issue comments
-    comments = request_gitlab.get_comments(pipeline_num)["comments"]
-
-    # Enable/Disable stop button based on 'cancel' comment in issue
-    is_disabled = comments and comments[0].lower() == "cancel"
 
     # Perform actions based on button clicks
     if stop_pipeline:
@@ -552,4 +553,7 @@ def toggle_stop_pipeline_button(active_tab, pipeline_num, pipeline_content,
     # Determine the state of the popup
     is_open = not close_popup if stop_pipeline or popup_click else close_popup
 
-    return is_disabled, is_open
+    # Determine the state of the stop pipeline button
+    is_disabled = cached_notes["is_canceled"]
+
+    return is_open, is_disabled
