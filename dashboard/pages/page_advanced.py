@@ -8,7 +8,7 @@ from ..components import (header_comp, checklist_comp, group_accordion,
                           popup_comp, button_comp, form_group_dropdown,
                           form_group_input, line_breaks, divider_line_comp,
                           dmc_chip_comp)
-from ..global_variables import request_gitlab, dvc_gitlab
+from ..gitlab import request_gitlab, dvc_gitlab
 
 
 def get_user_list():
@@ -18,13 +18,12 @@ def get_user_list():
 
 def get_advanced_template():
     """Fetch the advanced request template from request repo"""
-    return request_gitlab.read_file(
-        path=".gitlab/issue_templates/pipeline_request_advanced.md")
+    return request_gitlab.get_request_template(temp_type="advanced")
 
 
 def advanced_page_layout(refresh_path):
     """Creates advanced request page"""
-    model_meta_dict = dvc_gitlab.fetch_model_meta()
+    model_meta_dict = dvc_gitlab.get_model_metadata()
     return dbc.Toast(
         id="advanced_request_toast",
         header="Advanced Pipeline Request",
@@ -464,7 +463,7 @@ def advanced_page_layout(refresh_path):
     Input("advanced_unet_options", "key")
 )
 def cache_unet_options(unet_click, device, ftype, mpath_key):
-    meta_dict = dvc_gitlab.fetch_model_meta()[2]
+    meta_dict = dvc_gitlab.get_model_metadata()[2]
     if device and ftype and unet_click:
         model_path = meta_dict[device][ftype]
         unet_path = {mpath_key: model_path}

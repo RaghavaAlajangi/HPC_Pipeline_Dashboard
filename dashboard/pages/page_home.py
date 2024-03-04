@@ -10,7 +10,7 @@ import dash_mantine_components as dmc
 from ..components import (button_comp, chat_box, create_list_group,
                           header_comp, line_breaks, paragraph_comp,
                           progressbar_comp, popup_comp, web_link)
-from ..global_variables import request_gitlab
+from ..gitlab import request_gitlab
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
@@ -548,7 +548,7 @@ def toggle_stop_pipeline_button(active_tab, pipeline_num, cached_notes,
 
     # Perform actions based on button clicks
     if stop_pipeline:
-        request_gitlab.cancel_pipeline(pipeline_num)
+        request_gitlab.stop_pipeline(pipeline_num)
 
     # Determine the state of the popup
     is_open = not close_popup if stop_pipeline or popup_click else close_popup

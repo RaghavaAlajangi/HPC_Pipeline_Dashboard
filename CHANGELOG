@@ -1,4 +1,5 @@
 0.0.3
+ - ref: create gitlab submodule
  - fix: add username key in default dict
  - enh: cache pipeline notes to share across callbacks
  - enh: extract job stats by looping through issue comments just once
