@@ -431,18 +431,18 @@ def show_pipeline_number(active_tab):
 def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
-    ISSUE_PER_PAGE = 10
+    issues_per_page = 10
 
     if active_tab in ["welcome", "workflow"]:
-        return no_update, no_update, no_update, no_update, no_update
+        return [no_update] * 5
 
     if active_tab in ["opened", "closed"]:
         pipeline_meta = request_gitlab.get_issues_meta(state=active_tab,
                                                        page=page_num,
-                                                       per_page=ISSUE_PER_PAGE,
+                                                       per_page=issues_per_page,
                                                        search_term=search_term)
 
-        is_disabled = len(pipeline_meta) != ISSUE_PER_PAGE
+        is_disabled = len(pipeline_meta) != issues_per_page
         if len(pipeline_meta) == 0:
             return (
                 html.Div([
