@@ -1,7 +1,8 @@
+import re
+
 from dash import html
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
-import re
 
 
 def button_comp(label, comp_id, type="primary", disabled=False):
@@ -13,33 +14,53 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     )
 
 
-def chat_box(messages, gap=15):
+def chat_box(messages, gap=10):
+    """Creates a list of dbc.Card items from a dictionary of comments.
+
+    Parameters
+    ----------
+        messages: dict
+            Pass the messages dataframe to the chat_box function
+        gap: int
+            Set the vertical space between each comment card
+
+    Returns
+    -------
+        A dbc.ListGroupItem with a list of dbc.Card components
+    """
     comment_cards = []
 
     for comment, date in zip(messages["comments"], messages["dates"]):
         comment_card = dbc.Card(
-            [
-                dbc.CardBody(web_link_check(comment), style={"padding": "0"}),
-                dbc.Badge(
-                    date,
-                    color="secondary",
-                    text_color="white",
-                    className="position-absolute bottom-0 start-100",
-                ),
+            children=[
+                dmc.Stack(
+                    children=[
+                        html.P(
+                            web_link_check(comment),
+                            style={"color": "white", "fontSize": 15,
+                                   "margin": "0"}
+                        ),
+                        html.Code(
+                            date, lang="python",
+                            style={"color": "black", "fontSize": 12,
+                                   "margin": "1"}
+                        )
+                    ],
+                    spacing=0
+                )
             ],
             className="message-box",
             style={"margin-bottom": f"{gap}px", "border": "0"},
         )
         comment_cards.append(comment_card)
-
-    return dbc.Card(
-        dbc.CardBody(comment_cards),
+    return dbc.ListGroupItem(
+        children=comment_cards,
         style={
             "max-height": "30rem",
             "width": "100%",
             "overflow-y": "scroll",
             "overflowX": "hidden",
-        },
+        }
     )
 
 
@@ -124,9 +145,9 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
     )
 
 
-def group_items(items, horizontal=False):
+def create_list_group(children, horizontal=False):
     return dbc.ListGroup(
-        [dbc.ListGroupItem(item) for item in items],
+        children=[dbc.ListGroupItem(child) for child in children],
         horizontal=horizontal
     )
 
@@ -305,26 +326,42 @@ def web_link(label, url):
 
 
 def web_link_check(text):
-    """It takes a string as input and returns the same string with any web
-    links replaced by a clickable link. The function uses regular expressions
-    to find all instances of web links in the input text, then replaces each
-    instance with an HTML hyperlink tag that will display as a clickable link
-    when rendered.
+    """Replaces any web links in the given input string with clickable link.
+
     Parameters
     ----------
     text: str
         Pass the text to be checked for links
     Returns
     -------
-    A list of strings and web_link objects
+        A list of strings and web_link objects
     """
-    regex_exp = r"(?P<url>https?://[^\s]+)"
-    links = re.findall(regex_exp, text)
-    split_text = re.split(regex_exp, text)
-    if len(links) == 0:
+    regex_exp = r"(https?://[^\s]+)"
+
+    # Find all links and their indices
+    matches = re.finditer(regex_exp, text)
+    links = [(match.group(), match.start(), match.end()) for match in matches]
+
+    # If no links found, return original text
+    if not links:
         return text
-    else:
-        for link in links:
-            link_idx = split_text.index(link)
-            split_text[link_idx] = web_link(label=link, url=link)
-            return split_text
+
+    # Initialize variables
+    replaced_text_parts = []
+    start_idx = 0
+
+    # Iterate over each link found
+    for link, start, end in links:
+        # Add text before the link
+        replaced_text_parts.append(text[start_idx:start])
+
+        # Add clickable link
+        replaced_text_parts.append(web_link(label=link, url=link))
+
+        # Update start index for next iteration
+        start_idx = end
+
+    # Add remaining text after last link
+    replaced_text_parts.append(text[start_idx:])
+
+    return replaced_text_parts

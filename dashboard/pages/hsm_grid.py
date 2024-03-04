@@ -10,7 +10,7 @@ from dash import (callback, Input, Output, State, dcc, html)
 from ..components import (text_input_comp, drop_input_button, line_breaks,
                           paragraph_comp)
 
-HSM_DATA_DIR = Path(__file__).parents[2] / "resources"
+HSM_DATA_DIR = Path(__file__).parents[2] / "cache_hsm"
 
 
 def load_hsm_data():

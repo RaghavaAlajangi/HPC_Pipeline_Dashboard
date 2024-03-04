@@ -1,14 +1,15 @@
-from dash import callback_context as cc
+from dash import callback, dcc, html, Input, Output, State
+from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State, dcc, html
+import dash_mantine_components as dmc
 
-from .utils import update_simple_template
 from .hsm_grid import create_hsm_grid, create_show_grid
-from ..components import (header_comp, paragraph_comp, checklist_comp,
-                          group_accordion, popup_comp, button_comp, line_breaks,
-                          dmc_chip_comp)
+from .utils import update_simple_template
+from ..components import (button_comp, checklist_comp, dmc_chip_comp,
+                          group_accordion, header_comp, line_breaks,
+                          paragraph_comp, popup_comp)
 
-from ..global_variables import request_gitlab, dvc_gitlab
+from ..gitlab import request_gitlab, dvc_gitlab
 
 
 def get_user_list():
@@ -18,13 +19,12 @@ def get_user_list():
 
 def get_simple_template():
     """Fetch the simple request template from request repo"""
-    return request_gitlab.read_file(
-        path=".gitlab/issue_templates/pipeline_request_simple.md")
+    return request_gitlab.get_request_template(temp_type="simple")
 
 
-def simple_request(refresh_path):
+def simple_page_layout(refresh_path):
     """Creates simple request page"""
-    model_meta_dict = dvc_gitlab.fetch_model_meta()
+    model_meta_dict = dvc_gitlab.get_model_metadata()
     return dbc.Toast(
         id="simple_request_toast",
         header="Simple Pipeline Request",
@@ -193,7 +193,7 @@ def simple_request(refresh_path):
     Input("simple_unet_options", "key")
 )
 def cache_unet_options(unet_click, device, ftype, mpath_key):
-    meta_dict = dvc_gitlab.fetch_model_meta()[2]
+    meta_dict = dvc_gitlab.get_model_metadata()[2]
     if device and ftype and unet_click:
         model_path = meta_dict[device][ftype]
         unet_path = {mpath_key: model_path}
@@ -230,8 +230,6 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_unet,
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
     params = simple_segment + simple_classifier + simple_postana
-
-    print(simple_unet)
 
     # Update the template, only when author name, title, and data files
     # to process are entered
@@ -282,7 +280,7 @@ def toggle_simple_create_pipeline_button(author_name, title, selected_files,
 def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
-    button_trigger = [p["prop_id"] for p in cc.triggered][0]
+    button_trigger = [p["prop_id"] for p in ctx.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         request_gitlab.run_pipeline(cached_simp_temp)
         return not popup

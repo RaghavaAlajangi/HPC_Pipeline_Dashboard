@@ -1,3 +1,8 @@
+/* Adjust overall dashboard zoom level */
+body {
+    zoom: 85%;
+}
+
 #sidebar {
     text-align: center;
     padding: 2rem 1rem;
@@ -188,13 +193,12 @@ a:hover {
     color: darkgray;
 }
 
-/* Set the pagination color*/
-.my-custom-pagination .page-item .page-link {
-    background-color: #303030;
-    color: white;
-    border-color: white;
+/* Set the dmc.Tab active tab properties*/
+.mantine-Tabs-tab[data-active="true"] {
+    font-weight: bold;
 }
 
-.my-custom-pagination .page-item.active .page-link {
-    background-color: #017b50;
+/* Adjust the size of the dbc.Modal backdrop */
+.modal-backdrop.show {
+  transform: scale(2); /* Adjust the scale factor as needed */
 }
