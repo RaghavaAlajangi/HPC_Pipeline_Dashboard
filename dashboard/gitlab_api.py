@@ -117,7 +117,10 @@ class GitLabAPI:
 
     def parse_description(self, issue_text):
         lower_text = issue_text.lower()
-        data = {"type": "simple" if "simple" in lower_text else "advanced"}
+        data = {
+            "type": "simple" if "simple" in lower_text else "advanced",
+            "username": None
+        }
 
         # Search for the username in reverse order
         for line in reversed(lower_text.split("\n")):
