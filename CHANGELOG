@@ -1,3 +1,7 @@
+0.0.3
+ - enh: add search bar to filter pipelines
+ - enh: update tabs
+ - ref: clean main function
 0.0.2
  - fix: read only dvc file from model registry
  - ref: model selection with dmc chip component
