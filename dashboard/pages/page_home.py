@@ -10,49 +10,13 @@ import dash_mantine_components as dmc
 from ..components import (button_comp, chat_box, create_list_group,
                           header_comp, line_breaks, paragraph_comp,
                           progressbar_comp, popup_comp, web_link)
-from ..global_variables import request_gitlab, DCEVENT_DOCS
+from ..global_variables import request_gitlab
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
 
-PROGRESS_COMMENTS = [
-    "STATE: setup",
-    "STATE: queued",
-    "STATE: done"
-]
-
-JOB_COMMENTS = [
-    re.compile(r"^Completed job"),
-    re.compile(r"^We have (\d+) pipeline"),
-    re.compile(r"Access all your experiments at:\s*(https?://\S+)")
-]
-
-
-def parse_job_stats(pipeline_notes):
-    """Fetch total & completed no of pipelines info and results path from
-    pipeline comments"""
-    # Initialize variables
-    total_jobs = 0
-    finished_jobs = 0
-    results_path = "No result path"
-
-    # Iterate over comments
-    for cmt in pipeline_notes["comments"]:
-        # Check for total number of pipelines
-        total_match = JOB_COMMENTS[1].match(cmt)
-        if total_match:
-            total_jobs = int(total_match.group(1))
-
-        # Check for completed job
-        if JOB_COMMENTS[0].match(cmt):
-            finished_jobs += 1
-
-        # Check for results path
-        results_match = JOB_COMMENTS[2].search(cmt)
-        if results_match:
-            results_path = f"P:/{results_match.group(1).split('main/')[1]}"
-
-    return total_jobs, finished_jobs, results_path
+# dcevent documentation URL
+DCEVENT_DOCS = "https://blood_data_analysis.pages.gwdg.de/dcevent/"
 
 
 def welcome_tab_content():
@@ -498,45 +462,57 @@ def switch_tabs(active_tab, page_num, search_term):
 
 @callback(
     Output({"type": "pipeline_comments", "index": MATCH}, "children"),
-    Output({"type": "pipeline_progress_num", "index": MATCH}, "children"),
     Output({"type": "s3_proxy_path", "index": MATCH}, "children"),
+    Output({"type": "pipeline_progress_num", "index": MATCH}, "children"),
     Output({"type": "pipeline_progress_bar", "index": MATCH}, "value"),
     Output({"type": "pipeline_progress_bar", "index": MATCH}, "label"),
+    Output({"type": "store_pipeline_notes", "index": MATCH}, "data"),
     Input("pipeline_accordion", "value"),
     prevent_initial_call=True
 )
 def show_pipeline_data(pipeline_num):
     """Display pipeline data when the user clicks on pipeline accordion"""
+
+    progress_comments = [
+        "STATE: setup",
+        "STATE: queued",
+        "STATE: done"
+    ]
+
     # Check if there is an active_item selected
     if not pipeline_num:
-        return no_update, no_update, no_update, no_update, no_update
+        return [no_update] * 6
 
-    # Get the pipeline notes from GitLab
-    notes = request_gitlab.get_comments(pipeline_num)
+    # Get the processed pipeline notes from GitLab
+    pipeline_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
 
     # Create dash chat box from the notes
-    comment_cards = chat_box(notes)
+    chat = chat_box(pipeline_notes)
 
-    # Get pipeline stats from the notes
-    total_jobs, finished_jobs, result_path = parse_job_stats(notes)
+    finished_jobs = pipeline_notes["finished_jobs"]
+    total_jobs = pipeline_notes["total_jobs"]
+    result_path = pipeline_notes["results_path"]
 
     # Show only comments if total jobs equal to zero
     if total_jobs == 0:
-        return comment_cards, "Jobs: [0 / 0]", result_path, None, None
+        return chat, result_path, "Jobs: [0 / 0]", None, None, pipeline_notes
 
     # Calculate the progress percentage
     progress = (finished_jobs / total_jobs) * 85
 
     # Add 5% progress for specific state comments
-    for state_comment in PROGRESS_COMMENTS:
-        if state_comment in notes["comments"]:
+    for state_comment in progress_comments:
+        if state_comment in pipeline_notes["comments"]:
             progress += 5
 
-    result = [comment_cards,
-              f"Jobs: [{finished_jobs} / {total_jobs}]",
-              result_path,
-              progress,
-              f"{progress:.0f} %"]
+    result = [
+        chat,
+        result_path,
+        f"Jobs: [{finished_jobs} / {total_jobs}]",
+        progress,
+        f"{progress:.0f} %",
+        pipeline_notes
+    ]
 
     return result
 

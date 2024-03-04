@@ -38,43 +38,82 @@ class GitLabAPI:
         new_time_stamp = time_stamp + gmt_offset
         return new_time_stamp.strftime("%I:%M%p, %d-%b-%Y")
 
-    def total_issues(self, state):
-        return len(self.project.issues.list(state=state, get_all=True))
-
-    def get_comments(self, issue_iid):
-        """Fetch comments with dates of an issue"""
-        issue = self.project.issues.get(issue_iid)
-
-        # Fetch comments of the issue
-        issue_notes = issue.notes.list(all=True)
-
-        # Compile regex pattern
-        pattern = re.compile(r"```python.*?```", flags=re.DOTALL)
-
-        comments = []
-        dates = []
-
-        for note in issue_notes:
-            time_stamp = self.human_readable_date(note.created_at)
-
-            # Filter python error messages from comments
-            if "```python" in note.body:
-                note_wo_code = pattern.sub(
-                    f"Got some error! See the comment: "
-                    f"{issue.web_url}#note_{note.id}",
-                    note.body
-                )
-                comments.append(note_wo_code)
-            else:
-                comments.append(note.body)
-
-            dates.append(time_stamp)
-
-        return {"comments": comments, "dates": dates}
-
     def get_issue_obj(self, issue_iid):
         """Fetch the issue object based on issue iid"""
         return self.project.issues.get(issue_iid)
+
+    def total_issues(self, state):
+        return len(self.project.issues.list(state=state, get_all=True))
+
+    def get_processed_issue_notes(self, issue_iid):
+        """Fetch comments with dates of an issue and parse issue comments
+        for specific information"""
+
+        job_comments = [
+            re.compile(r"^Completed job"),
+            re.compile(r"^We have (\d+) pipeline"),
+            re.compile(r"Access all your experiments at:\s*(https?://\S+)")
+        ]
+
+        # Initialize variables
+        total_jobs = 0
+        finished_jobs = 0
+        results_path = "No result path"
+        comments = []
+        dates = []
+        is_canceled = False
+
+        issue_object = self.get_issue_obj(issue_iid)
+        # Fetch comments of the issue
+        issue_notes = issue_object.notes.list(all=True)
+
+        for note in issue_notes:
+            # Fetch human-readable date
+            time_stamp = self.human_readable_date(note.created_at)
+            dates.append(time_stamp)
+
+            # Filter python error messages from comments
+            if "```python" in note.body:
+                note_without_code = re.sub(
+                    r"```python.*?```",
+                    f"Got some error! See the comment: "
+                    f"{issue_object.web_url}#note_{note.id}",
+                    note.body,
+                    flags=re.DOTALL
+                )
+                comments.append(note_without_code)
+            elif note.body.lower() == "cancel":
+                is_canceled = True
+
+            else:
+                comments.append(note.body)
+
+            # Parse comments for specific information
+            # Check for total number of pipelines
+            total_match = job_comments[1].match(note.body)
+            if total_match:
+                total_jobs = int(total_match.group(1))
+
+            # Check for completed job
+            if job_comments[0].match(note.body):
+                finished_jobs += 1
+
+            # Check for results path
+            results_match = job_comments[2].search(note.body)
+            if results_match:
+                results_path = f"P:/{results_match.group(1).split('main/')[1]}"
+
+        if total_jobs == 0:
+            pass
+
+        return {
+            "total_jobs": total_jobs,
+            "finished_jobs": finished_jobs,
+            "results_path": results_path,
+            "comments": comments,
+            "dates": dates,
+            "is_canceled": is_canceled
+        }
 
     def parse_description(self, issue_text):
         lower_text = issue_text.lower()
