@@ -1,7 +1,7 @@
 from collections import defaultdict
 import yaml
 
-from .base_api import BaseAPI
+from .base import BaseAPI
 
 
 class DVCRepoAPI(BaseAPI):

@@ -3,9 +3,9 @@ from pathlib import Path
 
 import yaml
 
-from .base_api import AuthenticationError
-from .dvc_api import DVCRepoAPI
-from .req_api import RequestRepoAPI
+from .base import AuthenticationError
+from .dvc_repo import DVCRepoAPI
+from .requests_repo import RequestRepoAPI
 
 secret_yaml_path = Path(__file__).parents[2] / "secrets.yaml"
 

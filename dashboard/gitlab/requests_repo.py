@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import re
 
-from .base_api import BaseAPI
+from .base import BaseAPI
 
 
 class RequestRepoAPI(BaseAPI):
