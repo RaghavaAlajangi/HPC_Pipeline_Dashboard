@@ -1,4 +1,5 @@
 0.0.3
+ - ref: change hsm cache dir name
  - enh: exclude access tokens from user dropdown menu
  - ref: create gitlab submodule
  - fix: add username key in default dict

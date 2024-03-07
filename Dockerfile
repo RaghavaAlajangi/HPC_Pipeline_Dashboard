@@ -12,7 +12,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY dashboard /app/dashboard
-COPY cache_hsm /app/cache_hsm
+COPY hsm_cache /app/hsm_cache
 
 ENV PATHNAME_PREFIX="/"
 
