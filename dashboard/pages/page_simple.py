@@ -1,13 +1,12 @@
 from dash import callback, dcc, html, Input, Output, State
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
-import dash_mantine_components as dmc
 
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
-from ..components import (button_comp, checklist_comp, dmc_chip_comp,
-                          group_accordion, header_comp, line_breaks,
-                          paragraph_comp, popup_comp)
+from .common import (button_comp, checklist_comp, dmc_chip_comp,
+                     group_accordion, header_comp, line_breaks, paragraph_comp,
+                     popup_comp)
 
 from ..gitlab import request_gitlab, dvc_gitlab
 

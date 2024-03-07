@@ -1,4 +1,5 @@
 0.0.3
+ - ref: move common.py to pages submodule
  - ref: change hsm cache dir name
  - enh: exclude access tokens from user dropdown menu
  - ref: create gitlab submodule

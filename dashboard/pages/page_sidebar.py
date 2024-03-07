@@ -4,7 +4,7 @@ from dash import html
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
-from ..components import line_breaks
+from .common import line_breaks
 
 # GitLab repo URL
 PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \

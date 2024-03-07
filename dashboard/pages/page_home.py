@@ -1,5 +1,4 @@
 import os
-import re
 
 from dash import callback, dcc, html, Input, MATCH, no_update, Output, State
 from dash import callback_context as ctx
@@ -7,9 +6,9 @@ import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
-from ..components import (button_comp, chat_box, create_list_group,
-                          header_comp, line_breaks, paragraph_comp,
-                          progressbar_comp, popup_comp, web_link)
+from .common import (button_comp, chat_box, create_list_group, header_comp,
+                     line_breaks, paragraph_comp, progressbar_comp, popup_comp,
+                     web_link)
 from ..gitlab import request_gitlab
 
 # Get the BASENAME_PREFIX from environment variables if not default

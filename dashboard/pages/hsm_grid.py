@@ -7,8 +7,8 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from dash import (callback, Input, Output, State, dcc, html)
 
-from ..components import (text_input_comp, drop_input_button, line_breaks,
-                          paragraph_comp)
+from dashboard.pages.common import (text_input_comp, drop_input_button, line_breaks,
+                                    paragraph_comp)
 
 HSM_DATA_DIR = Path(__file__).parents[2] / "hsm_cache"
 

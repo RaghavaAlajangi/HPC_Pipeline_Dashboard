@@ -4,10 +4,9 @@ from dash import callback, Input, Output, State, html, dcc, ALL
 
 from .utils import update_advanced_template
 from .hsm_grid import create_hsm_grid, create_show_grid
-from ..components import (header_comp, checklist_comp, group_accordion,
-                          popup_comp, button_comp, form_group_dropdown,
-                          form_group_input, line_breaks, divider_line_comp,
-                          dmc_chip_comp)
+from .common import (header_comp, checklist_comp, group_accordion, popup_comp,
+                     button_comp, form_group_dropdown, form_group_input,
+                     line_breaks, divider_line_comp, dmc_chip_comp)
 from ..gitlab import request_gitlab, dvc_gitlab
 
 
@@ -444,13 +443,13 @@ def advanced_page_layout(refresh_path):
                       }),
             line_breaks(times=5),
             dcc.Store(id="store_advanced_template", storage_type="local"),
-            dcc.Store(id="store_advanced_unet_params",  storage_type="local"),
-            dcc.Store(id="store_legacy_params",  storage_type="local"),
-            dcc.Store(id="store_watershed_params",  storage_type="local"),
-            dcc.Store(id="store_std_params",  storage_type="local"),
-            dcc.Store(id="store_rollmed_params",  storage_type="local"),
-            dcc.Store(id="store_sparsemed_params",  storage_type="local"),
-            dcc.Store(id="store_ngate_params",  storage_type="local"),
+            dcc.Store(id="store_advanced_unet_params", storage_type="local"),
+            dcc.Store(id="store_legacy_params", storage_type="local"),
+            dcc.Store(id="store_watershed_params", storage_type="local"),
+            dcc.Store(id="store_std_params", storage_type="local"),
+            dcc.Store(id="store_rollmed_params", storage_type="local"),
+            dcc.Store(id="store_sparsemed_params", storage_type="local"),
+            dcc.Store(id="store_ngate_params", storage_type="local"),
         ]
     )
 
