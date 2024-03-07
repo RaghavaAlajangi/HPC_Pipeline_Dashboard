@@ -42,7 +42,12 @@ class BaseAPI:
 
     def get_project_members(self):
         """Return project members list"""
-        return self.project.members_all.list(get_all=True)
+        all_members = self.project.users.list(all=True)
+
+        # Exclude access tokens from the members list
+        filtered_members = [m for m in all_members if m.name != "****"]
+
+        return filtered_members
 
     def get_comments(self, issue_iid):
         """Fetch comments with dates of an issue"""

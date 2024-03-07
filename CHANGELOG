@@ -1,4 +1,5 @@
 0.0.3
+ - enh: exclude access tokens from user dropdown menu
  - ref: create gitlab submodule
  - fix: add username key in default dict
  - enh: cache pipeline notes to share across callbacks
