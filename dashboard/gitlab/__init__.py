@@ -14,7 +14,7 @@ def load_auth_data():
     """Loads auth_data from either environment variables or a secrets.yaml.
     """
     auth_data = {}
-    if os.getenv("GITLAB_URL"):
+    if os.getenv("REPO_URL"):
         print("Loading SECRETS from environment variables")
         # Load from environment variables
         auth_data["REPO_URL"] = os.getenv("REPO_URL")
