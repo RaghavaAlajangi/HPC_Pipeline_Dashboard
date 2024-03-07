@@ -8,15 +8,23 @@ HPC_Pipeline_requests repo
 
 https://guck-tools.intranet.mpl.mpg.de/hpc-pipeline-dashboard/
 
-## Installation
-
-### Clone the repository
+## 1. Local usage:
+### Clone the repo
 
 ```bash
 git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
 ```
 
-### Install prerequisites for deployment
+###  Run the below command (develop / debug)
+```bash
+python -m dashboard --local
+
+# Then open the http://127.0.0.1:8050/local-dashboard
+```
+
+## 2. Deployment:
+
+### I. Prerequisites
 
 - Make sure you have `Docker Desktop` installed on your computer.
 - To install, go to [Official Docker page](https://docs.docker.com/get-docker/).
@@ -25,28 +33,29 @@ git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
   on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
 
 
-## Build App and Cron docker images:
+### II. Build ``Dashboard`` and ``Cron`` docker images:
 
-- Open `command prompt` in administrative mode<br><br>
-- Check weather you have ``Docker`` installed or not.<br><br>
+- Open `command prompt` in administrative mode
+- Check weather you have ``Docker`` installed or not
 - Change directory: ``cd <path/to/repo>``<br><br>
-- Below command creates a docker image for the application
+- Run below command to create docker image for the``dashboard`` 
 ```bash
 docker build -t hpc-pipeline-dashboard .
 ```
-- Below command creates a docker image for the cron job
+- Run below command to create docker image for the``cron job`` 
 ```bash
 docker build -t hpc-pipeline-dashboard-cron --target cron .
 ```
 
-## Test webapp locally
-
-### Run the docker image:
+### III. Test docker images locally
+- Open command prompt in administrative mode, run the below command.
 
 ```bash
-# Test the app locally by running the below command
+# Replace `GITLAB_URL`, `REPO_TOKEN`, `PROJECT_NUMNER`, `DVC_REPO_TOKEN`, and
+# `DVC_REPO_PROJECT_NUM` with actual secrets
 
 # Windows command prompt:
+
 docker run -p 8050:8050 ^
 -e REPO_URL=<GITLAB_URL> ^
 -e REPO_TOKEN=<REPO_TOKEN> ^
@@ -57,6 +66,7 @@ docker run -p 8050:8050 ^
  hpc-pipeline-dashboard
  
  # Bash command prompt
+ 
  docker run -p 8050:8050 \
 -e REPO_URL=<GITLAB_URL> \
 -e REPO_TOKEN=<REPO_TOKEN> \
@@ -67,10 +77,10 @@ docker run -p 8050:8050 ^
  hpc-pipeline-dashboard
 ```
 
-- Open a browser and try reaching the following
+- Open the browser and try reaching the following
   address. http://localhost:8050/hpc-pipeline-dashboard/. This should start the
   app.
-- If container runs properly, the changes can be pushed for deployment.
+- If container runs properly, the changes can be pushed to the MPL harbour for deployment.
 - Look up for running container ID and stop it.
 
 ```bash
@@ -79,28 +89,23 @@ docker ps -a
 docker stop <containerID>
 ```
 
-### Committing the changes:
-
+### IV. Get Git latest commit ID:
+- Git last commit ID (sort form)
 ```bash
-# Add your changes:
-git add .
-
-# Commit your changes:
-git commit -m "My message"
-
-# Get the last commit ID (sort form) and copy it:
 git rev-parse --short HEAD
 ```
 
-## Deploy the webapp on server:
 
-- Login to harbor-intranet using your developer credentials:
+
+### V. Login to MPL harbor-intranet using your developer credentials:
 
 ```bash
 docker login harbor.intranet.mpl.mpg.de
 ```
 
-### Dashboard Image
+### VI. Tag & Push new docker images to the MPL server:
+
+#### a. Dashboard Image (tag & push)
 - Tag both your commit and latest versions:
 ```bash
 # Tag commit
@@ -119,7 +124,7 @@ docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcom
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
 ```
 
-### Cron Image
+#### b. Cron Image (tag & push)
 - Tag both your commit and latest versions:
 ```bash
 # Tag commit
