@@ -1,14 +1,15 @@
 from pathlib import Path
 import pickle
 
-import dash_ag_grid as dag
+from dash import callback, dcc, html, Input, Output, State
 from dash import callback_context as cc
+import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
-from dash import (callback, Input, Output, State, dcc, html)
+import dash_mantine_components as dmc
 
-from dashboard.pages.common import (text_input_comp, drop_input_button, line_breaks,
-                                    paragraph_comp)
+from .common import (drop_input_button, line_breaks, paragraph_comp,
+                     text_input_comp)
 
 HSM_DATA_DIR = Path(__file__).parents[2] / "hsm_cache"
 
@@ -101,7 +102,7 @@ def create_hsm_grid():
 
 def create_show_grid(comp_id):
     """Create show grid to display user selected files for final refining"""
-    show_btn = dbc.Button(
+    show_button = dbc.Button(
         [
             "Selected files:",
             dbc.Badge(id="num_files", color="danger", text_color="dark",
@@ -116,7 +117,7 @@ def create_show_grid(comp_id):
         className="ag-theme-alpine-dark",
         columnDefs=[{"field": "filepath", "checkboxSelection": True,
                      "headerCheckboxSelection": True}],
-        style={"width": "100%", "height": 400},
+        style={"width": "70%", "height": 400},
         dashGridOptions={
             "autoGroupColumnDef": {
                 "headerName": "filepath",
@@ -143,20 +144,10 @@ def create_show_grid(comp_id):
         # getRowId="params.data.filepath"
     )
 
-    return html.Div(
-        [
-            dbc.Row([
-                dbc.Col(show_btn, width="auto"),
-            ],
-                justify="center"
-            ),
-            dbc.Row([
-                dbc.Col(show_grid, width=9),
-            ],
-                justify="center"
-            )
-        ],
-        className="row justify-content-center"
+    return dmc.Stack(
+        children=[show_button, show_grid],
+        align="center",
+        spacing=1
     )
 
 
