@@ -1,12 +1,12 @@
-from dash import callback, dcc, html, Input, Output, State
+from dash import callback, dcc, html, Input, no_update, Output, State
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
 
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
-from .common import (button_comp, checklist_comp, dmc_chip_comp,
-                     group_accordion, header_comp, line_breaks, paragraph_comp,
-                     popup_comp)
+from .common import (button_comp, checklist_comp, group_accordion, header_comp,
+                     line_breaks, paragraph_comp, popup_comp)
 
 from ..gitlab import request_gitlab, dvc_gitlab
 
@@ -21,9 +21,135 @@ def get_simple_template():
     return request_gitlab.get_request_template(temp_type="simple")
 
 
+def title_section():
+    return dbc.AccordionItem(
+        title="Title (required)",
+        children=[
+            html.Div(
+                dbc.InputGroup(
+                    children=[
+                        dbc.Select(
+                            placeholder="Select Username",
+                            id="simple_title_drop",
+                            options=[
+                                {"label": member.name,
+                                 "value": member.username} for
+                                member in get_user_list()
+                            ],
+                            style={"width": "18%"},
+                        ),
+                        dbc.Input(
+                            type="text",
+                            id="simple_title_text",
+                            placeholder="Enter title of the pipeline...",
+                            style={"width": "72%"},
+                            class_name="custom-placeholder",
+                        )
+                    ],
+                    style={"width": "90%"},
+                ),
+                className="row justify-content-center",
+            )
+        ]
+    )
+
+
+def segmentation_section():
+    return dbc.AccordionItem(
+        title="Segmentation",
+        children=[
+            # MLUNet segmentor section
+            checklist_comp(comp_id="simple_unet_id",
+                           options={"mlunet": False}),
+            html.Ul(
+                id="simple_unet_options",
+                key="model_file",
+                children=[
+                    dmc.Group([
+                        dmc.Stack(
+                            children=[
+                                html.P(
+                                    "⦿ Select device:",
+                                    style={"margin": "0",
+                                           "padding-bottom": "5px"}
+                                ),
+                                # Placeholder to display device options
+                                # Ex: Accelerator or Naiad
+                                dmc.ChipGroup(id="simple_unet_device")
+                            ],
+                            spacing=5
+                        ),
+                        dmc.Stack(
+                            children=[
+                                html.P(
+                                    "⦿ Select type:",
+                                    style={"margin": "0",
+                                           "padding-bottom": "5px"}
+                                ),
+                                # Placeholder to display cell types
+                                # Ex: Blood or Beads
+                                dmc.ChipGroup(id="simple_unet_cell_type")
+                            ],
+                            spacing=5
+                        )
+                    ],
+                        spacing=50
+                    )
+                ]
+            ),
+            checklist_comp(
+                comp_id="simp_segm_id",
+                options={
+                    "legacy": False,
+                    "watershed": False,
+                    "std": False}
+            )
+        ]
+    )
+
+
+def prediction_section():
+    return dbc.AccordionItem(
+        title="Prediction",
+        children=[
+            paragraph_comp("Classification Model"),
+            checklist_comp(
+                comp_id="simp_classifier_id",
+                options={"bloody-bunny": False},
+                defaults=["bloody-bunny"]
+            )
+        ]
+    )
+
+
+def post_analysis_section():
+    return dbc.AccordionItem(
+        title="Post Analysis (Not Implemented)",
+        children=[
+            checklist_comp(
+                comp_id="simp_postana_id",
+                options={
+                    "Benchmarking": True,
+                    "Scatter Plots": True
+                }
+            )
+        ]
+    )
+
+
+def data_to_process_section():
+    return dbc.AccordionItem(
+        title="Data to Process",
+        item_id="hsm_accord",
+        children=[
+            create_hsm_grid(),
+            line_breaks(times=2),
+        ]
+    )
+
+
 def simple_page_layout(refresh_path):
     """Creates simple request page"""
-    model_meta_dict = dvc_gitlab.get_model_metadata()
     return dbc.Toast(
         id="simple_request_toast",
         header="Simple Pipeline Request",
@@ -45,117 +171,11 @@ def simple_page_layout(refresh_path):
             line_breaks(times=2),
             group_accordion(
                 children=[
-                    dbc.AccordionItem(
-                        title="Title (required)",
-                        children=[
-                            html.Div(
-                                dbc.InputGroup(
-                                    children=[
-                                        dbc.Select(
-                                            placeholder="Select Username",
-                                            id="simple_title_drop",
-                                            options=[
-                                                {"label": member.name,
-                                                 "value": member.username} for
-                                                member in get_user_list()
-                                            ],
-                                            style={"width": "18%"},
-                                        ),
-                                        dbc.Input(
-                                            type="text",
-                                            id="simple_title_text",
-                                            placeholder="Enter the name of "
-                                                        "the pipeline...",
-                                            style={"width": "72%"},
-                                            class_name="custom-placeholder",
-                                        )
-                                    ],
-                                    style={"width": "90%"},
-                                ),
-                                className="row justify-content-center",
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Segmentation",
-                        children=[
-                            # MLUNet segmentor section
-                            checklist_comp(
-                                comp_id="simple_unet_id",
-                                options={"mlunet": False},
-                            ),
-                            html.Ul(
-                                id="simple_unet_options",
-                                key="model_file",
-                                children=[
-                                    dbc.Row([
-                                        dbc.Col([
-                                            html.P("⦿ Select device:",
-                                                   style={
-                                                       "margin": "0",
-                                                       "padding-bottom": "5px"
-                                                   }
-                                                   ),
-                                            dmc_chip_comp(
-                                                comp_id="simple_unet_device",
-                                                option_list=model_meta_dict[0]
-                                            ),
-                                        ], width=2),
-                                        dbc.Col([
-                                            html.P("⦿ Select type:",
-                                                   style={
-                                                       "margin": "0",
-                                                       "padding-bottom": "5px"
-                                                   }
-                                                   ),
-                                            dmc_chip_comp(
-                                                comp_id="simple_unet_type",
-                                                option_list=model_meta_dict[1]
-                                            )
-                                        ])
-                                    ])
-                                ]
-                            ),
-                            checklist_comp(
-                                comp_id="simp_segm_id",
-                                options={
-                                    "legacy": False,
-                                    "watershed": False,
-                                    "std": False},
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Prediction",
-                        children=[
-                            paragraph_comp("Classification Model"),
-                            checklist_comp(
-                                comp_id="simp_classifier_id",
-                                options={"bloody-bunny": False},
-                                defaults=["bloody-bunny"]
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Post Analysis (Not Implemented)",
-                        children=[
-                            checklist_comp(
-                                comp_id="simp_postana_id",
-                                options={
-                                    "Benchmarking": True,
-                                    "Scatter Plots": True
-                                }
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Data to Process",
-                        item_id="hsm_accord",
-                        children=[
-                            create_hsm_grid(),
-                            line_breaks(times=2),
-                        ]
-                    )
+                    title_section(),
+                    segmentation_section(),
+                    prediction_section(),
+                    post_analysis_section(),
+                    data_to_process_section()
                 ],
                 middle=True,
                 open_first=True,
@@ -185,16 +205,38 @@ def simple_page_layout(refresh_path):
 
 
 @callback(
+    Output("simple_unet_device", "children"),
+    Output("simple_unet_cell_type", "children"),
+    Output("store_unet_options", "data"),
+    Input("simple_unet_id", "value"),
+)
+def show_unet_options(unet_click):
+    devices, cell_types, model_dict = dvc_gitlab.get_model_metadata()
+
+    device_chips = [
+        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in devices
+    ]
+    type_chips = [
+        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in
+        cell_types
+    ]
+    if unet_click:
+        return device_chips, type_chips, model_dict
+    return no_update, no_update, model_dict
+
+
+@callback(
     Output("store_simple_unet_params", "data"),
     Input("simple_unet_id", "value"),
     Input("simple_unet_device", "value"),
-    Input("simple_unet_type", "value"),
-    Input("simple_unet_options", "key")
+    Input("simple_unet_cell_type", "value"),
+    Input("simple_unet_options", "key"),
+    Input("store_unet_options", "data"),
+    prevent_initial_callbacks=True
 )
-def cache_unet_options(unet_click, device, ftype, mpath_key):
-    meta_dict = dvc_gitlab.get_model_metadata()[2]
-    if device and ftype and unet_click:
-        model_path = meta_dict[device][ftype]
+def cache_unet_options(unet_click, device, cell_type, mpath_key, model_meta):
+    if device and cell_type and unet_click:
+        model_path = model_meta[device][cell_type]
         unet_path = {mpath_key: model_path}
         return {unet_click[0]: unet_path}
     else:
