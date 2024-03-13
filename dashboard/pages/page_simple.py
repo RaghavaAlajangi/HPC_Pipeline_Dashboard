@@ -1,13 +1,12 @@
-from dash import callback, dcc, html, Input, no_update, Output, State
+from dash import callback, dcc, html, Input, Output, State
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
-from .hsm_grid import create_hsm_grid, create_show_grid
-from .utils import update_simple_template
 from .common import (button_comp, checklist_comp, group_accordion, header_comp,
                      line_breaks, paragraph_comp, popup_comp)
-
+from .hsm_grid import create_hsm_grid, create_show_grid
+from .utils import update_simple_template
 from ..gitlab import request_gitlab, dvc_gitlab
 
 
@@ -198,7 +197,6 @@ def simple_page_layout(refresh_path):
                       }),
             line_breaks(times=5),
             dcc.Store(id="store_simple_template", storage_type="local"),
-            dcc.Store(id="store_unet_options", storage_type="local"),
             dcc.Store(id="store_simple_unet_model_path", storage_type="local"),
         ]
     )
@@ -216,7 +214,7 @@ def simple_page_layout(refresh_path):
 def show_and_cache_unet_model_meta(unet_click, device, cell_type, mpath_key):
     """This circular callback fetches unet model metadata from the DVC repo
     and shows it as dmc.Chip options, enable the user to select the
-    appropriate same dmc.Chip options."""
+    appropriate options from the same dmc.Chip options."""
 
     devices, cell_types, model_dict = dvc_gitlab.get_model_metadata()
 
