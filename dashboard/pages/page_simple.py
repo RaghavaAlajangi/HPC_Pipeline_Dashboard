@@ -21,7 +21,7 @@ def get_simple_template():
     return request_gitlab.get_request_template(temp_type="simple")
 
 
-def title_section():
+def simple_title_section():
     return dbc.AccordionItem(
         title="Title (required)",
         children=[
@@ -54,7 +54,7 @@ def title_section():
     )
 
 
-def segmentation_section():
+def simple_segmentation_section():
     return dbc.AccordionItem(
         title="Segmentation",
         children=[
@@ -116,7 +116,7 @@ def segmentation_section():
     )
 
 
-def prediction_section():
+def simple_prediction_section():
     return dbc.AccordionItem(
         title="Prediction",
         children=[
@@ -130,7 +130,7 @@ def prediction_section():
     )
 
 
-def post_analysis_section():
+def simple_post_analysis_section():
     return dbc.AccordionItem(
         title="Post Analysis (Not Implemented)",
         children=[
@@ -145,7 +145,7 @@ def post_analysis_section():
     )
 
 
-def data_to_process_section():
+def simple_data_to_process_section():
     return dbc.AccordionItem(
         title="Data to Process",
         item_id="hsm_accord",
@@ -179,11 +179,11 @@ def simple_page_layout(refresh_path):
             line_breaks(times=2),
             group_accordion(
                 children=[
-                    title_section(),
-                    segmentation_section(),
-                    prediction_section(),
-                    post_analysis_section(),
-                    data_to_process_section()
+                    simple_title_section(),
+                    simple_segmentation_section(),
+                    simple_prediction_section(),
+                    simple_post_analysis_section(),
+                    simple_data_to_process_section()
                 ],
                 middle=True,
                 open_first=True,
