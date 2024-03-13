@@ -33,7 +33,7 @@ def sidebar_layout():
     return html.Div(
         children=[
             # Title for the dashboard
-            dmc.Title("HPC Pipelines", order=1),
+            dmc.Title("HPC Pipelines", order=1, align="center"),
             line_breaks(times=1),
             # Alert for the users
             dbc.Alert(
