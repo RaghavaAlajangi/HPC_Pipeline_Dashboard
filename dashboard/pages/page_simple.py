@@ -75,7 +75,11 @@ def segmentation_section():
                                 ),
                                 # Placeholder to display device options
                                 # Ex: Accelerator or Naiad
-                                dmc.ChipGroup(id="simple_unet_device")
+                                dbc.Spinner(
+                                    dmc.ChipGroup(id="simple_unet_device"),
+                                    color="#10e84a",
+                                    size="sm"
+                                )
                             ],
                             spacing=5
                         ),
@@ -88,7 +92,11 @@ def segmentation_section():
                                 ),
                                 # Placeholder to display cell types
                                 # Ex: Blood or Beads
-                                dmc.ChipGroup(id="simple_unet_cell_type")
+                                dbc.Spinner(
+                                    dmc.ChipGroup(id="simple_unet_cell_type"),
+                                    color="#10e84a",
+                                    size="sm"
+                                )
                             ],
                             spacing=5
                         )
