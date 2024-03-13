@@ -75,11 +75,7 @@ def simple_segmentation_section():
                                 ),
                                 # Placeholder to display device options
                                 # Ex: Accelerator or Naiad
-                                dbc.Spinner(
-                                    dmc.ChipGroup(id="simple_unet_device"),
-                                    color="#10e84a",
-                                    size="sm"
-                                )
+                                dmc.ChipGroup(id="simple_unet_device"),
                             ],
                             spacing=5
                         ),
@@ -92,11 +88,7 @@ def simple_segmentation_section():
                                 ),
                                 # Placeholder to display cell types
                                 # Ex: Blood or Beads
-                                dbc.Spinner(
-                                    dmc.ChipGroup(id="simple_unet_cell_type"),
-                                    color="#10e84a",
-                                    size="sm"
-                                )
+                                dmc.ChipGroup(id="simple_unet_cell_type"),
                             ],
                             spacing=5
                         )
@@ -207,7 +199,7 @@ def simple_page_layout(refresh_path):
             line_breaks(times=5),
             dcc.Store(id="store_simple_template", storage_type="local"),
             dcc.Store(id="store_unet_options", storage_type="local"),
-            dcc.Store(id="store_simple_unet_params", storage_type="local"),
+            dcc.Store(id="store_simple_unet_model_path", storage_type="local"),
         ]
     )
 
@@ -215,10 +207,17 @@ def simple_page_layout(refresh_path):
 @callback(
     Output("simple_unet_device", "children"),
     Output("simple_unet_cell_type", "children"),
-    Output("store_unet_options", "data"),
+    Output("store_simple_unet_model_path", "data"),
     Input("simple_unet_id", "value"),
+    Input("simple_unet_device", "value"),
+    Input("simple_unet_cell_type", "value"),
+    Input("simple_unet_options", "key"),
 )
-def show_unet_options(unet_click):
+def show_and_cache_unet_model_meta(unet_click, device, cell_type, mpath_key):
+    """This circular callback fetches unet model metadata from the DVC repo
+    and shows it as dmc.Chip options, enable the user to select the
+    appropriate same dmc.Chip options."""
+
     devices, cell_types, model_dict = dvc_gitlab.get_model_metadata()
 
     device_chips = [
@@ -228,27 +227,11 @@ def show_unet_options(unet_click):
         dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in
         cell_types
     ]
-    if unet_click:
-        return device_chips, type_chips, model_dict
-    return no_update, no_update, model_dict
-
-
-@callback(
-    Output("store_simple_unet_params", "data"),
-    Input("simple_unet_id", "value"),
-    Input("simple_unet_device", "value"),
-    Input("simple_unet_cell_type", "value"),
-    Input("simple_unet_options", "key"),
-    Input("store_unet_options", "data"),
-    prevent_initial_callbacks=True
-)
-def cache_unet_options(unet_click, device, cell_type, mpath_key, model_meta):
     if device and cell_type and unet_click:
-        model_path = model_meta[device][cell_type]
+        model_path = model_dict[device][cell_type]
         unet_path = {mpath_key: model_path}
-        return {unet_click[0]: unet_path}
-    else:
-        return None
+        return device_chips, type_chips, {unet_click[0]: unet_path}
+    return device_chips, type_chips, None
 
 
 @callback(
@@ -267,7 +250,7 @@ def toggle_unet_options(unet_click):
     Output("store_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
-    Input("store_simple_unet_params", "data"),
+    Input("store_simple_unet_model_path", "data"),
     Input("simp_segm_id", "value"),
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
@@ -300,7 +283,7 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_unet,
     Input("simple_title_text", "value"),
     Input("show_grid", "selectedRows"),
     Input("simple_unet_id", "value"),
-    Input("store_simple_unet_params", "data")
+    Input("store_simple_unet_model_path", "data")
 )
 def toggle_simple_create_pipeline_button(author_name, title, selected_files,
                                          unet_click, unet_mpath):
