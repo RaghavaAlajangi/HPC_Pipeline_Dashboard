@@ -488,20 +488,33 @@ def advanced_page_layout(refresh_path):
 
 
 @callback(
+    Output("advanced_unet_device", "children"),
+    Output("advanced_unet_cell_type", "children"),
     Output("store_advanced_unet_model_path", "data"),
     Input("advanced_unet_id", "value"),
     Input("advanced_unet_device", "value"),
-    Input("advanced_unet_type", "value"),
-    Input("advanced_unet_options", "key")
+    Input("advanced_unet_cell_type", "value"),
+    Input("advanced_unet_options", "key"),
 )
-def cache_unet_options(unet_click, device, ftype, mpath_key):
-    meta_dict = dvc_gitlab.get_model_metadata()[2]
-    if device and ftype and unet_click:
-        model_path = meta_dict[device][ftype]
+def show_and_cache_unet_model_meta(unet_click, device, cell_type, mpath_key):
+    """This circular callback fetches unet model metadata from the DVC repo
+    and shows it as dmc.Chip options, enable the user to select the
+    appropriate options from the same dmc.Chip options."""
+
+    devices, cell_types, model_dict = dvc_gitlab.get_model_metadata()
+
+    device_chips = [
+        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in devices
+    ]
+    type_chips = [
+        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in
+        cell_types
+    ]
+    if device and cell_type and unet_click:
+        model_path = model_dict[device][cell_type]
         unet_path = {mpath_key: model_path}
-        return {unet_click[0]: unet_path}
-    else:
-        return {}
+        return device_chips, type_chips, {unet_click[0]: unet_path}
+    return device_chips, type_chips, {}
 
 
 @callback(
