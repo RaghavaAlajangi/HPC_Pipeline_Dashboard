@@ -1,4 +1,5 @@
 0.0.3
+ - enh: implement circular callback for unet model options
  - ref: move common.py to pages submodule
  - ref: change hsm cache dir name
  - enh: exclude access tokens from user dropdown menu
