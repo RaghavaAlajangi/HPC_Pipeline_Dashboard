@@ -221,22 +221,6 @@ def drop_input_button(comp_id, drop_options, disable_drop=False,
     )
 
 
-def loading_comp(children):
-    """
-    The loading_comp function takes in a list of children and returns a
-    dbc.Spinner component with the given children and color set to
-    &quot;success&quot;. The size is set to &quot;sm&quot; by default.
-    Parameters
-    ----------
-    children
-        Pass the children of the component
-    Returns
-    -------
-    A spinner component
-    """
-    return dbc.Spinner(size="sm", children=children, color="success")
-
-
 def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
     if middle:
         style = {"text-align": "center"}
@@ -284,26 +268,6 @@ def popup_comp(comp_id, refresh_path, text):
         backdrop="static",
         style={"color": "white"}
     )
-
-
-def dmc_chip_comp(comp_id, option_list):
-    styles = {
-        "label": {
-            "&[data-checked]": {
-                "&, &:hover": {
-                    "backgroundColor": "#13bd40",
-                    "color": "black",
-                },
-            },
-        }
-    }
-    return html.Div(dmc.ChipGroup(
-        [
-            dmc.Chip(opt.capitalize(), value=opt, styles=styles) for opt in
-            option_list
-        ],
-        id=comp_id,
-    ))
 
 
 def web_link(label, url):
