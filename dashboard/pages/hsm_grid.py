@@ -8,8 +8,7 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
-from .common import (drop_input_button, line_breaks, paragraph_comp,
-                     text_input_comp)
+from .common import drop_input_button, line_breaks, paragraph_comp
 
 HSM_DATA_DIR = Path(__file__).parents[2] / "hsm_cache"
 
