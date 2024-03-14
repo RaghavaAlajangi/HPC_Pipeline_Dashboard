@@ -44,9 +44,14 @@ def create_hsm_grid():
             ),
             line_breaks(times=2),
             paragraph_comp("Select HSMFS file/s:"),
-            text_input_comp(comp_id="grid_filter",
-                            placeholder="Search dataset name with a keyword",
-                            width=30, middle=False),
+            dbc.Input(
+                id="grid_filter",
+                disabled=False,
+                type="text",
+                placeholder="Search dataset name with a keyword",
+                class_name="custom-placeholder",
+                style={"width": "30rem"}
+            ),
             dag.AgGrid(
                 id="hsm_grid",
                 className="ag-theme-alpine-dark",

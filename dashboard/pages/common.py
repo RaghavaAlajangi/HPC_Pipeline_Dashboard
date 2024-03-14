@@ -306,23 +306,8 @@ def dmc_chip_comp(comp_id, option_list):
     ))
 
 
-def text_input_comp(comp_id, placeholder, width=50, middle=True):
-    return html.Div(
-        dbc.Input(
-            id=comp_id,
-            disabled=False,
-            type="text",
-            placeholder=placeholder,
-            class_name="custom-placeholder",
-            style={"width": f"{width}rem"}
-        ),
-        className="row justify-content-center" if middle else "",
-    )
-
-
 def web_link(label, url):
-    return html.A(label, href=url, target="_blank",
-                  className="custom-link")
+    return html.A(label, href=url, target="_blank", className="custom-link")
 
 
 def web_link_check(text):
