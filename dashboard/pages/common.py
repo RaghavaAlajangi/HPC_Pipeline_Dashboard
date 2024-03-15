@@ -14,7 +14,7 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     )
 
 
-def chat_box(messages, gap=10):
+def chat_box(messages, gap=20):
     """Creates a list of dbc.Card items from a dictionary of comments.
 
     Parameters
@@ -30,7 +30,9 @@ def chat_box(messages, gap=10):
     """
     comment_cards = []
 
-    for comment, date in zip(messages["comments"], messages["dates"]):
+    for comment, author, date in zip(messages["comments"],
+                                     messages["comment_authors"],
+                                     messages["dates"]):
         comment_card = dbc.Card(
             children=[
                 dmc.Stack(
@@ -47,6 +49,11 @@ def chat_box(messages, gap=10):
                         )
                     ],
                     spacing=0
+                ),
+                dbc.Badge(
+                    author, pill=True, color="info", text_color="black",
+                    className="position-absolute top-0 start-100 "
+                              "translate-middle",
                 )
             ],
             className="message-box",
