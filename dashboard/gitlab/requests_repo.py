@@ -143,7 +143,7 @@ class RequestRepoAPI(BaseAPI):
         """Parse username and type of issue from description"""
         lower_text = issue_text.lower()
         data = {
-            "type": "simple" if "simple" in lower_text else "advanced",
+            "type": "advanced" if "advanced" in lower_text else "simple",
             "username": None
         }
 
