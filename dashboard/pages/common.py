@@ -103,10 +103,10 @@ def checklist_comp(comp_id, options, defaults=None):
     )
 
 
-def divider_line_comp(width=100, middle=True):
+def divider_line_comp(variant="dashed", pad=10):
     return html.Div(
-        html.Hr(style={"width": f"{width}%"}),
-        className="row justify-content-center" if middle else ""
+        dmc.Divider(variant=variant),
+        style={"padding-top": f"{pad}px", "padding-bottom": f"{pad}px"}
     )
 
 
