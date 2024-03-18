@@ -5,10 +5,11 @@ from dash import callback, dcc, html, Input, Output, State
 from dash import callback_context as cc
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
-from .common import drop_input_button, line_breaks, paragraph_comp
+from .common import drop_input_button, line_breaks, hover_card
 
 HSM_DATA_DIR = Path(__file__).parents[2] / "hsm_cache"
 
@@ -29,7 +30,19 @@ def create_hsm_grid():
             dcc.Store(id="store_dcor_files", data=[]),
             dcc.Store(id="store_hsm_files", data=[]),
 
-            paragraph_comp("Select DCOR-Colab file:"),
+            dmc.Group(
+                children=[
+                    dmc.Text("Select DCOR-Colab file:", size="md"),
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=22),
+                        notes="Copy and paste dataset ID / Circle name / "
+                              "Collection from dcor-colab"
+                    )
+                ],
+                spacing=5
+            ),
 
             line_breaks(times=1),
             drop_input_button(
@@ -42,14 +55,28 @@ def create_hsm_grid():
                 width=80
             ),
             line_breaks(times=2),
-            paragraph_comp("Select HSMFS file/s:"),
-            dbc.Input(
+            dmc.Group(
+                children=[
+                    dmc.Text("Select HSMFS file/s:", size="md"),
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=22
+                        ),
+                        notes="NOTE: The HSMFS drive gets updated every one "
+                              "hour. If you do not find your dataset in the "
+                              "below grid, please comeback after one hour."
+                    )
+                ],
+                spacing=5
+            ),
+            line_breaks(times=1),
+            dmc.TextInput(
                 id="grid_filter",
-                disabled=False,
-                type="text",
+                style={"width": 500, "color": "white"},
                 placeholder="Search dataset name with a keyword",
-                class_name="custom-placeholder",
-                style={"width": "30rem"}
+                icon=DashIconify(icon="tabler:search", width=30),
+                size="md"
             ),
             dag.AgGrid(
                 id="hsm_grid",

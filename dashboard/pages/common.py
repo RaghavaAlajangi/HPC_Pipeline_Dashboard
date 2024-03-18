@@ -185,6 +185,23 @@ def header_comp(text, indent=0, middle=False):
     return html.Div(html.H6(text, style=style))
 
 
+def hover_card(target, notes):
+    return dmc.HoverCard(
+        children=[
+            dmc.HoverCardTarget(target),
+            dmc.HoverCardDropdown(
+                dmc.Text(notes, size="xs", color="black"),
+                # style={"background-color": "yellow", "border-color": "black"}
+            )
+        ],
+        position="right",
+        shadow="xs",
+        width=400,
+        withArrow=True,
+        transition="pop"
+    )
+
+
 def line_breaks(times=1):
     br_list = [html.Br() for _ in range(times)]
     return html.Div(children=br_list)
