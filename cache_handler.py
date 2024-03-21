@@ -6,7 +6,7 @@ import time
 
 # Restrict the dashboard to scan only `Data` directory from mounted HSMFS
 HSM_PATH = Path(__file__).parents[1] / "HSMFS" / "Data"
-RESOURCE_PATH = Path(__file__).parents[0] / "hsm_cache"
+RESOURCE_PATH = Path(__file__).parents[0] / "resources"
 
 
 class HSMDataProcessor:
@@ -17,7 +17,7 @@ class HSMDataProcessor:
             resource_path.mkdir(parents=True, exist_ok=True)
 
     def clear_resource_dir(self):
-        """Erase previously created HSMFS drive pickle from hsm_cache dir."""
+        """Erase previously created HSMFS drive pickle from resources dir."""
         for item in self.resource_path.iterdir():
             if item.is_file():
                 item.unlink()
@@ -35,7 +35,7 @@ class HSMDataProcessor:
 
     def save_hsm_data(self, hsm_data):
         """Save extracted rtdc paths from HSMFS as a pickle file in
-        hsm_cache dir."""
+        resources dir."""
         with open(self.resource_path / "hsm_drive.pkl", "wb") as f:
             pickle.dump(hsm_data, f)
 

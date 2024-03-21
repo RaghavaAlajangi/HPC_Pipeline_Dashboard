@@ -11,7 +11,7 @@ import dash_mantine_components as dmc
 
 from .common import drop_input_button, line_breaks, hover_card
 
-HSM_DATA_DIR = Path(__file__).parents[2] / "hsm_cache"
+HSM_DATA_DIR = Path(__file__).parents[2] / "resources"
 
 
 def load_hsm_data():
