@@ -75,7 +75,7 @@ def create_hsm_grid():
                 id="grid_filter",
                 style={"width": 500, "color": "white"},
                 placeholder="Search dataset name with a keyword",
-                icon=DashIconify(icon="tabler:search", width=30),
+                icon=DashIconify(icon="tabler:search", width=22),
                 size="md"
             ),
             dag.AgGrid(
