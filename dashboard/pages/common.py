@@ -14,7 +14,7 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     )
 
 
-def chat_box(messages, gap=20):
+def chat_box(messages, gap=18):
     """Creates a list of dbc.Card items from a dictionary of comments.
 
     Parameters
@@ -51,13 +51,15 @@ def chat_box(messages, gap=20):
                     spacing=0
                 ),
                 dbc.Badge(
-                    author, pill=True, color="info", text_color="black",
+                    author, pill=False, color="primary", text_color="white",
+                    style={"font-weight": "normal"},
                     className="position-absolute top-0 start-100 "
                               "translate-middle",
                 )
             ],
             className="message-box",
-            style={"margin-bottom": f"{gap}px", "border": "0"},
+            style={"margin-bottom": f"{gap}px", "margin-top": f"{gap}px",
+                   "border": "0"},
         )
         comment_cards.append(comment_card)
     return dbc.ListGroupItem(
