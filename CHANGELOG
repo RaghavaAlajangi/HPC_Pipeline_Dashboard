@@ -1,4 +1,5 @@
 0.0.3
+ - enh: update dcor-colab in dropdown
  - enh: show comment author
  - enh: implement circular callback for unet model options
  - ref: move common.py to pages submodule
