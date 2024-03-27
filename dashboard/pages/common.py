@@ -209,44 +209,6 @@ def line_breaks(times=1):
     return html.Div(children=br_list)
 
 
-def drop_input_button(comp_id, drop_options, disable_drop=False,
-                      drop_placeholder="Source", default_drop=None,
-                      input_placeholder="text", disable_input=False,
-                      disable_button=False,
-                      with_button=True, width=100
-                      ):
-    default_drop = default_drop if default_drop else []
-    return html.Div(
-        dbc.InputGroup([
-            dbc.Select(
-                placeholder=drop_placeholder,
-                id=f"{comp_id}_drop",
-                options=[
-                    {"label": i, "value": i} for i in drop_options
-                ],
-                value=default_drop,
-                style={"width": "15%"},
-                disabled=disable_drop
-            ),
-            dbc.Input(
-                type="text", id=f"{comp_id}_text",
-                placeholder=input_placeholder,
-                style={"width": "75%"},
-                class_name="custom-placeholder",
-                disabled=disable_input,
-            ),
-            dbc.Button(
-                "Add", id=f"{comp_id}_button", color="info",
-                style={"width": "10%"},
-                disabled=disable_button
-            ) if with_button else None,
-        ],
-            style={"width": f"{width}%"}
-        ),
-        className="row justify-content-center",
-    )
-
-
 def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
     if middle:
         style = {"text-align": "center"}

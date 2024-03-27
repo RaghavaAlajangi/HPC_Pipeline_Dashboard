@@ -9,7 +9,7 @@ from dash_iconify import DashIconify
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
-from .common import drop_input_button, line_breaks, hover_card
+from .common import hover_card, line_breaks
 
 HSM_DATA_DIR = Path(__file__).parents[2] / "resources"
 
@@ -38,22 +38,44 @@ def create_hsm_grid():
                             icon="mage:message-question-mark-round-fill",
                             color="yellow", width=22),
                         notes="Copy and paste dataset ID / Circle name / "
-                              "Collection from dcor-colab"
+                              "Collection name from DCOR-Colab and click 'add button' to add it to the pipeline "
                     )
                 ],
                 spacing=5
             ),
+            dmc.Text("NOTE: HPC Pipeline does not work with DCOR data.",
+                     size="sm", color="red"),
 
             line_breaks(times=1),
-            drop_input_button(
-                comp_id="input_group",
-                drop_options=["DCOR"],
-                default_drop="DCOR",
-                drop_placeholder="Source",
-                input_placeholder="Enter DVC path or DCOR-colab Id, "
-                                  "Circle, or Dataset etc...",
-                width=80
+
+            dbc.InputGroup([
+                dbc.Select(
+                    placeholder="Source",
+                    id="input_group_drop",
+                    options=[
+                        {"label": "DCOR-Colab", "value": "DCOR"},
+                    ],
+                    value="DCOR",
+                    style={"width": "20%"},
+                    disabled=False
+                ),
+                dbc.Input(
+                    type="text", id="input_group_text",
+                    placeholder="Enter DVC path or DCOR-colab Id, "
+                                "Circle, or Dataset etc...",
+                    style={"width": "70%"},
+                    class_name="custom-placeholder",
+                    disabled=False,
+                ),
+                dbc.Button(
+                    "Add", id="input_group_button", color="info",
+                    style={"width": "10%"},
+                    disabled=False
+                ),
+            ],
+                style={"width": "80%"}
             ),
+
             line_breaks(times=2),
             dmc.Group(
                 children=[
@@ -205,6 +227,7 @@ def update_show_grid_data(dcor_files, hsm_files):
     """Collect the user-selected data files and send them to `show_grid`"""
     # Convert list of strings into ag grid rowdata
     rowdata = [{"filepath": i} for i in (dcor_files + hsm_files)]
+    print(rowdata)
     return rowdata, rowdata
 
 
