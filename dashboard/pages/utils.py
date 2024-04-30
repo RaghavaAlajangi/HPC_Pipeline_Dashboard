@@ -1,7 +1,7 @@
 import re
 
 
-def update_simple_template(params, simple_mlunet, author_name, rtdc_paths,
+def update_simple_template(params, segment_options, author_name, rtdc_paths,
                            template):
     """Update th simple issue template with user selected options"""
     # Uncheck all the boxes in the template before update
@@ -13,24 +13,32 @@ def update_simple_template(params, simple_mlunet, author_name, rtdc_paths,
             template = re.sub(re.escape(f"[ ] {param}"), f"[x] {param}",
                               template, flags=re.IGNORECASE)
 
-    if simple_mlunet:
-        template = re.sub(re.escape("[ ] mlunet"), "[x] mlunet",
+    for seg in segment_options:
+        template = re.sub(re.escape(f"[ ] {seg}"), f"[x] {seg}",
                           template, flags=re.IGNORECASE)
 
-        # Option after which you want to add a new line
-        mlunet_option = "mlunet: UNET"
+        # Template option after which you want to add a new line
+        template_options = ["mlunet: UNET",
+                            "legacy: Legacy thresholding with OpenCV"]
 
-        # Find the position of the mlunet option in the template
-        word_index = template.find(mlunet_option)
+        for temp_opt in template_options:
 
-        # Split the string at the position of the specific word
-        first_part = template[:word_index + len(mlunet_option)]
-        second_part = template[word_index + len(mlunet_option):]
+            if seg in temp_opt:
+                # Find the position of the segmentation option in the template
+                word_index = template.find(temp_opt)
 
-        ckp_part = f"\n        - [x] model_file={simple_mlunet['model_file']}"
+                # Split the string at the position of the specific word
+                first_part = template[:word_index + len(temp_opt)]
+                second_part = template[word_index + len(temp_opt):]
 
-        # Join the parts with a model_file in between
-        template = first_part + ckp_part + second_part
+                # Get the segmentation kwarg from the segment_options dict
+                segm_kwarg = next(iter(segment_options[seg].items()))
+
+                # Create md string of kwarg
+                kwarg_part = f"\n        - [x] {segm_kwarg[0]}={segm_kwarg[1]}"
+
+                # Join the parts with a kwarg_part in between
+                template = first_part + kwarg_part + second_part
 
     template = template.split("- **Data to Process**")[0]
     template = template + "- **Data to Process**"
