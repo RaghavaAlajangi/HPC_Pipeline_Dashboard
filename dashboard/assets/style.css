@@ -200,5 +200,13 @@ a:hover {
 
 /* Adjust the size of the dbc.Modal backdrop */
 .modal-backdrop.show {
-  transform: scale(2); /* Adjust the scale factor as needed */
+    transform: scale(2); /* Adjust the scale factor as needed */
+}
+
+.mantine-RadioGroup-label {
+    color: white;
+}
+
+.mantine-Radio-label {
+    color: white;
 }
