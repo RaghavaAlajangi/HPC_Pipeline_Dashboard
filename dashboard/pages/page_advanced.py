@@ -1,11 +1,12 @@
 from dash import ALL, callback, dcc, html, Input, Output, State
 from dash import callback_context as cc
 import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from .common import (button_comp, checklist_comp, divider_line_comp,
                      form_group_dropdown, form_group_input, group_accordion,
-                     header_comp, line_breaks, popup_comp)
+                     header_comp, hover_card, line_breaks, popup_comp)
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_advanced_template
 from ..gitlab import request_gitlab, dvc_gitlab
@@ -75,44 +76,47 @@ def advanced_segmentation_section():
         title="Segmentation Algorithm",
         children=[
             # MLUNet segmentor section
-            checklist_comp(
-                comp_id="advanced_unet_id",
-                options={"mlunet: UNET": False},
-                defaults=["mlunet: UNET"]
+            dmc.Group(
+                children=[
+                    # UNet checkbox (switch)
+                    dbc.Checklist(
+                        options=[
+                            {"label": "U-Net Segmentation",
+                             "value": "mlunet: UNET"},
+                        ],
+                        id="advanced_unet_id",
+                        switch=True,
+                        value=[],
+                        labelCheckedClassName="text-success",
+                        inputCheckedClassName="border-success bg-success",
+                    ),
+                    # UNet question mark icon and hover info
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=22),
+                        notes="A deep learning based image segmentation "
+                              "method.\nWarning: U-Net is trained only on "
+                              "Blood cells."
+                    )
+                ],
+                spacing=5
             ),
+            # UNet segmentation options
             html.Ul(
                 id="advanced_unet_options",
-                key="model_file",
                 children=[
-                    dmc.Group([
-                        dmc.Stack(
-                            children=[
-                                html.P(
-                                    "⦿ Select device:",
-                                    style={"margin": "0",
-                                           "padding-bottom": "5px"}
-                                ),
-                                # Placeholder to display device options
-                                # Ex: Accelerator or Naiad
-                                dmc.ChipGroup(id="advanced_unet_device"),
-                            ],
-                            spacing=5
-                        ),
-                        dmc.Stack(
-                            children=[
-                                html.P(
-                                    "⦿ Select type:",
-                                    style={"margin": "0",
-                                           "padding-bottom": "5px"}
-                                ),
-                                # Placeholder to display cell types
-                                # Ex: Blood or Beads
-                                dmc.ChipGroup(id="advanced_unet_cell_type"),
-                            ],
-                            spacing=5
-                        )
-                    ],
-                        spacing=50
+                    dmc.RadioGroup(
+                        id="advanced_measure_options",
+                        label="Select Measurement Type",
+                        description="Please make sure that you select the "
+                                    "right option. Otherwise, the pipeline "
+                                    "might fail.",
+                        orientation="vertical",
+                        withAsterisk=True,
+                        offset="md",
+                        mb=10,
+                        spacing=10
                     )
                 ]
             ),
@@ -509,33 +513,29 @@ def advanced_page_layout(refresh_path):
 
 
 @callback(
-    Output("advanced_unet_device", "children"),
-    Output("advanced_unet_cell_type", "children"),
+    Output("advanced_measure_options", "children"),
     Output("store_advanced_unet_model_path", "data"),
     Input("advanced_unet_id", "value"),
-    Input("advanced_unet_device", "value"),
-    Input("advanced_unet_cell_type", "value"),
-    Input("advanced_unet_options", "key"),
+    Input("advanced_measure_options", "value")
 )
-def show_and_cache_unet_model_meta(unet_click, device, cell_type, mpath_key):
+def show_and_cache_unet_model_meta(unet_click, measure_option):
     """This circular callback fetches unet model metadata from the DVC repo
-    and shows it as dmc.Chip options, enable the user to select the
-    appropriate options from the same dmc.Chip options."""
+    and shows it as dmc.RadioGroup options, enable the user to select the
+    appropriate options from the same dmc.RadioItem options."""
 
-    devices, cell_types, model_dict = dvc_gitlab.get_model_metadata()
+    model_dict = dvc_gitlab.get_model_metadata()
 
-    device_chips = [
-        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in devices
-    ]
-    type_chips = [
-        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in
-        cell_types
-    ]
-    if device and cell_type and unet_click:
-        model_path = model_dict[device][cell_type]
-        unet_path = {mpath_key: model_path}
-        return device_chips, type_chips, {unet_click[0]: unet_path}
-    return device_chips, type_chips, {}
+    check_boxes = [
+        dmc.Radio(
+            label=f"{meta['device'].capitalize()} device, "
+                  f"{meta['type'].capitalize()} cells",
+            value=model_ckp, color="green"
+        ) for model_ckp, meta in model_dict.items()]
+
+    segm_options = {}
+    if unet_click and measure_option:
+        segm_options[unet_click[0]] = {"model_file": measure_option}
+    return check_boxes, segm_options
 
 
 @callback(
