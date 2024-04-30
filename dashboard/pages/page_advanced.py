@@ -129,7 +129,8 @@ def advanced_segmentation_section():
                     form_group_input(
                         comp_id={"type": "legacy_param",
                                  "index": 1},
-                        label="thresh",
+                        label="Threshold Value",
+                        label_key="thresh",
                         min=-10, max=10, step=1,
                         default=-6
                     ),
@@ -137,27 +138,31 @@ def advanced_segmentation_section():
                         comp_id={"type": "legacy_param",
                                  "index": 2},
                         label="blur",
-                        min=0, max=10, step=1,
+                        label_key="blur",
+                        min=0, max=20, step=1,
                         default=0
                     ),
                     form_group_input(
                         comp_id={"type": "legacy_param",
                                  "index": 3},
                         label="binaryops",
+                        label_key="binaryops",
                         min=0, max=10, step=1,
                         default=5
                     ),
-                    form_group_input(
+                    form_group_dropdown(
                         comp_id={"type": "legacy_param",
                                  "index": 4},
                         label="diff_method",
-                        min=0, max=10, step=1,
+                        label_key="diff_method",
+                        options=[0, 1],
                         default=1
                     ),
                     form_group_dropdown(
                         comp_id={"type": "legacy_param",
                                  "index": 5},
                         label="clear_border",
+                        label_key="clear_border",
                         options=["True", "False"],
                         default="True"
                     ),
@@ -165,6 +170,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "legacy_param",
                                  "index": 6},
                         label="fill_holes",
+                        label_key="fill_holes",
                         options=["True", "False"],
                         default="True"
                     ),
@@ -173,6 +179,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "legacy_param",
                                  "index": 7},
                         label="closing_disk",
+                        label_key="closing_disk",
                         min=0, max=10, step=1,
                         default=5
                     ),
@@ -192,6 +199,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "watershed_param",
                                  "index": 1},
                         label="clear_border",
+                        label_key="clear_border",
                         options=["True", "False"],
                         default="True"
                     ),
@@ -199,6 +207,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "watershed_param",
                                  "index": 2},
                         label="fill_holes",
+                        label_key="fill_holes",
                         options=["True", "False"],
                         default="True"
                     ),
@@ -206,6 +215,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "watershed_param",
                                  "index": 3},
                         label="closing_disk",
+                        label_key="closing_disk",
                         min=0, max=10, step=1,
                         default=5
                     ),
@@ -227,6 +237,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "std_param",
                                  "index": 1},
                         label="clear_border",
+                        label_key="clear_border",
                         options=["True", "False"],
                         default="True"
                     ),
@@ -234,6 +245,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "std_param",
                                  "index": 2},
                         label="fill_holes",
+                        label_key="fill_holes",
                         options=["True", "False"],
                         default="True"
                     ),
@@ -241,6 +253,7 @@ def advanced_segmentation_section():
                         comp_id={"type": "std_param",
                                  "index": 3},
                         label="closing_disk",
+                        label_key="closing_disk",
                         min=0, max=10, step=1,
                         default=5
                     )
@@ -269,6 +282,7 @@ def background_correction_section():
                         comp_id={"type": "rollmed_param",
                                  "index": 1},
                         label="kernel_size",
+                        label_key="kernel_size",
                         min=50, max=500, step=1,
                         default=100
                     ),
@@ -276,6 +290,7 @@ def background_correction_section():
                         comp_id={"type": "rollmed_param",
                                  "index": 2},
                         label="batch_size",
+                        label_key="batch_size",
                         min=0, max=100000, step=1,
                         default=10000
                     )
@@ -300,6 +315,7 @@ def background_correction_section():
                         comp_id={"type": "sparsemed_param",
                                  "index": 1},
                         label="kernel_size",
+                        label_key="kernel_size",
                         min=50, max=500, step=1,
                         default=200
                     ),
@@ -307,6 +323,7 @@ def background_correction_section():
                         comp_id={"type": "sparsemed_param",
                                  "index": 2},
                         label="split_time",
+                        label_key="split_time",
                         min=1, max=30, step=1,
                         default=1
                     ),
@@ -314,6 +331,7 @@ def background_correction_section():
                         comp_id={"type": "sparsemed_param",
                                  "index": 3},
                         label="thresh_cleansing",
+                        label_key="thresh_cleansing",
                         min=0, max=1, step=0.1,
                         default=0
                     ),
@@ -321,6 +339,7 @@ def background_correction_section():
                         comp_id={"type": "sparsemed_param",
                                  "index": 4},
                         label="frac_cleansing",
+                        label_key="frac_cleansing",
                         min=0, max=1, step=0.1,
                         default=0.8
                     )
@@ -347,6 +366,7 @@ def gating_options_section():
                         comp_id={"type": "ngate_param",
                                  "index": 1},
                         label="online_gates",
+                        label_key="online_gates",
                         options=["True", "False"],
                         default="False",
                     ),
@@ -354,6 +374,7 @@ def gating_options_section():
                         comp_id={"type": "ngate_param",
                                  "index": 2},
                         label="size_thresh_mask",
+                        label_key="size_thresh_mask",
                         min=0, max=10, step=1,
                         default=0
                     )
