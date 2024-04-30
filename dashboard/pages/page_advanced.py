@@ -94,10 +94,12 @@ def advanced_segmentation_section():
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=22),
+                            color="yellow", width=20),
                         notes="A deep learning based image segmentation "
-                              "method.\nWarning: U-Net is trained only on "
-                              "Blood cells."
+                              "method.\n Warning: U-Net is trained on "
+                              "specific cell types. When you select correct "
+                              "option from below, appropriate model file "
+                              "will be used for segmentation."
                     )
                 ],
                 spacing=5

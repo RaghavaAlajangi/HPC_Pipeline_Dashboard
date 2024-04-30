@@ -77,10 +77,12 @@ def simple_segmentation_section():
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=22),
+                            color="yellow", width=20),
                         notes="A deep learning based image segmentation "
-                              "method.\nWarning: U-Net is trained only on "
-                              "Blood cells."
+                              "method.\n Warning: U-Net is trained on "
+                              "specific cell types. When you select correct "
+                              "option from below, appropriate model file "
+                              "will be used for segmentation."
                     )
                 ],
                 spacing=5
@@ -121,7 +123,10 @@ def simple_segmentation_section():
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
                             color="yellow", width=20),
-                        notes="Default threshold value [-6]"
+                        notes="This is a thresholding based segmentation "
+                              "same as the segmentation available in shapeIn "
+                              "(ZMD device). \n Default threshold value [-6]. "
+                              "Tune it according to your use case."
                     )
                 ],
                 align="left",
@@ -267,8 +272,6 @@ def show_and_cache_segment_options(unet_click, measure_option, legacy_click,
 
     if legacy_click and legacy_thresh:
         segm_options[legacy_click[0]] = {"thresh": legacy_thresh}
-
-    print(segm_options)
 
     return check_boxes, segm_options
 
