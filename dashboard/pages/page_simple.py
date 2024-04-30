@@ -1,10 +1,12 @@
 from dash import callback, dcc, html, Input, Output, State
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
-from .common import (button_comp, checklist_comp, group_accordion, header_comp,
-                     line_breaks, paragraph_comp, popup_comp)
+from .common import (button_comp, checklist_comp, divider_line_comp,
+                     form_group_input, group_accordion, header_comp,
+                     hover_card, line_breaks, paragraph_comp, popup_comp)
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
 from ..gitlab import request_gitlab, dvc_gitlab
@@ -58,50 +60,89 @@ def simple_segmentation_section():
         title="Segmentation",
         children=[
             # MLUNet segmentor section
-            checklist_comp(comp_id="simple_unet_id",
-                           options={"mlunet": False}),
+            dmc.Group(
+                children=[
+                    # UNet checkbox (switch)
+                    dbc.Checklist(
+                        options=[
+                            {"label": "U-Net Segmentation", "value": "mlunet"},
+                        ],
+                        id="simple_unet_id",
+                        switch=True,
+                        value=[],
+                        labelCheckedClassName="text-success",
+                        inputCheckedClassName="border-success bg-success",
+                    ),
+                    # UNet question mark icon and hover info
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=20),
+                        notes="A deep learning based image segmentation "
+                              "method.\n Warning: U-Net is trained on "
+                              "specific cell types. When you select correct "
+                              "option from below, appropriate model file "
+                              "will be used for segmentation."
+                    )
+                ],
+                spacing=5
+            ),
+            # UNet segmentation options
             html.Ul(
                 id="simple_unet_options",
-                key="model_file",
                 children=[
-                    dmc.Group([
-                        dmc.Stack(
-                            children=[
-                                html.P(
-                                    "⦿ Select device:",
-                                    style={"margin": "0",
-                                           "padding-bottom": "5px"}
-                                ),
-                                # Placeholder to display device options
-                                # Ex: Accelerator or Naiad
-                                dmc.ChipGroup(id="simple_unet_device"),
-                            ],
-                            spacing=5
-                        ),
-                        dmc.Stack(
-                            children=[
-                                html.P(
-                                    "⦿ Select type:",
-                                    style={"margin": "0",
-                                           "padding-bottom": "5px"}
-                                ),
-                                # Placeholder to display cell types
-                                # Ex: Blood or Beads
-                                dmc.ChipGroup(id="simple_unet_cell_type"),
-                            ],
-                            spacing=5
-                        )
-                    ],
-                        spacing=50
+                    dmc.RadioGroup(
+                        id="simple_measure_options",
+                        label="Select Measurement Type",
+                        description="Please make sure that you select the "
+                                    "right option. Otherwise, the pipeline "
+                                    "might fail.",
+                        orientation="vertical",
+                        withAsterisk=True,
+                        offset="md",
+                        mb=10,
+                        spacing=10
                     )
                 ]
             ),
-            checklist_comp(
-                comp_id="simp_segm_id",
-                options={
-                    "legacy": False,
-                    "watershed": False,
-                    "std": False}
+            divider_line_comp(),
+            dmc.Group(
+                children=[
+                    dbc.Checklist(
+                        options=[
+                            {"label": "Legacy Thresholding Segmentation",
+                             "value": "legacy"},
+                        ],
+                        id="simple_legacy_id",
+                        switch=True,
+                        value=[],
+                        labelCheckedClassName="text-success",
+                        inputCheckedClassName="border-success bg-success",
+                    ),
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=20),
+                        notes="This is a thresholding based segmentation "
+                              "same as the segmentation available in shapeIn "
+                              "(ZMD device). \n Default threshold value [-6]. "
+                              "Tune it according to your use case."
+                    )
+                ],
+                align="left",
+                spacing=5
+            ),
+            html.Ul(
+                id="simple_legacy_options",
+                children=[
+                    form_group_input(
+                        comp_id="simple_legacy_thresh_id",
+                        label="Threshold Value:",
+                        label_key="thresh",
+                        min=-10, max=10, step=1,
+                        default=-6
+                    )
+                ]
             )
         ]
     )
@@ -197,39 +238,42 @@ def simple_page_layout(refresh_path):
                       }),
             line_breaks(times=5),
             dcc.Store(id="store_simple_template", storage_type="local"),
-            dcc.Store(id="store_simple_unet_model_path", storage_type="local"),
+            dcc.Store(id="store_simple_segm_data", storage_type="local"),
         ]
     )
 
 
 @callback(
-    Output("simple_unet_device", "children"),
-    Output("simple_unet_cell_type", "children"),
-    Output("store_simple_unet_model_path", "data"),
+    Output("simple_measure_options", "children"),
+    Output("store_simple_segm_data", "data"),
     Input("simple_unet_id", "value"),
-    Input("simple_unet_device", "value"),
-    Input("simple_unet_cell_type", "value"),
-    Input("simple_unet_options", "key"),
+    Input("simple_measure_options", "value"),
+    Input("simple_legacy_id", "value"),
+    Input("simple_legacy_thresh_id", "value")
 )
-def show_and_cache_unet_model_meta(unet_click, device, cell_type, mpath_key):
+def show_and_cache_segment_options(unet_click, measure_option, legacy_click,
+                                   legacy_thresh):
     """This circular callback fetches unet model metadata from the DVC repo
-    and shows it as dmc.Chip options, enable the user to select the
-    appropriate options from the same dmc.Chip options."""
+    and shows it as dmc.RadioGroup options, enable the user to select the
+    appropriate options from the same dmc.RadioItem options."""
 
-    devices, cell_types, model_dict = dvc_gitlab.get_model_metadata()
+    model_dict = dvc_gitlab.get_model_metadata()
 
-    device_chips = [
-        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in devices
-    ]
-    type_chips = [
-        dmc.Chip(opt.capitalize(), color="green", value=opt) for opt in
-        cell_types
-    ]
-    if device and cell_type and unet_click:
-        model_path = model_dict[device][cell_type]
-        unet_path = {mpath_key: model_path}
-        return device_chips, type_chips, {unet_click[0]: unet_path}
-    return device_chips, type_chips, None
+    check_boxes = [
+        dmc.Radio(
+            label=f"{meta['device'].capitalize()} device, "
+                  f"{meta['type'].capitalize()} cells",
+            value=model_ckp, color="green"
+        ) for model_ckp, meta in model_dict.items()]
+
+    segm_options = {}
+    if unet_click and measure_option:
+        segm_options[unet_click[0]] = {"model_file": measure_option}
+
+    if legacy_click and legacy_thresh:
+        segm_options[legacy_click[0]] = {"thresh": legacy_thresh}
+
+    return check_boxes, segm_options
 
 
 @callback(
@@ -245,30 +289,41 @@ def toggle_unet_options(unet_click):
 
 
 @callback(
+    Output("simple_legacy_options", "style"),
+    Input("simple_legacy_id", "value"),
+)
+def toggle_legacy_options(legacy_click):
+    """Toggle legacy segmentation options with legacy switch"""
+    if legacy_click:
+        return {"display": "block"}
+    else:
+        return {"display": "none"}
+
+
+@callback(
     Output("store_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
-    Input("store_simple_unet_model_path", "data"),
-    Input("simp_segm_id", "value"),
+    Input("store_simple_segm_data", "data"),
     Input("simp_classifier_id", "value"),
     Input("simp_postana_id", "value"),
     Input("show_grid", "selectedRows")
 )
-def collect_simple_pipeline_params(author_name, simple_title, simple_unet,
-                                   simple_segment, simple_classifier,
-                                   simple_postana, selected_files):
+def collect_simple_pipeline_params(author_name, simple_title, segment_options,
+                                   simple_classifier, simple_postana,
+                                   selected_files):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    params = simple_segment + simple_classifier + simple_postana
+    params = list(segment_options.keys()) + simple_classifier + simple_postana
 
     # Update the template, only when author name, title, and data files
     # to process are entered
-    if author_name and simple_title and selected_files and simple_unet:
+    if author_name and simple_title and selected_files and segment_options:
         rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
-        description = update_simple_template(params, simple_unet["mlunet"],
+        description = update_simple_template(params, segment_options,
                                              author_name, rtdc_files,
                                              get_simple_template())
         pipeline_template["description"] = description
@@ -281,7 +336,7 @@ def collect_simple_pipeline_params(author_name, simple_title, simple_unet,
     Input("simple_title_text", "value"),
     Input("show_grid", "selectedRows"),
     Input("simple_unet_id", "value"),
-    Input("store_simple_unet_model_path", "data")
+    Input("store_simple_segm_data", "data")
 )
 def toggle_simple_create_pipeline_button(author_name, title, selected_files,
                                          unet_click, unet_mpath):

@@ -1,3 +1,7 @@
+0.0.4
+ - enh: improve user experience for segmentation selection
+ - fix: use model name as key to fetch metadata from dvc data repo
+ - enh: make simple template parser handles legacy thresh value
 0.0.3
  - enh: update dcor-colab in dropdown
  - enh: show comment author

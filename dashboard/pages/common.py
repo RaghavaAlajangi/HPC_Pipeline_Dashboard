@@ -112,14 +112,15 @@ def divider_line_comp(variant="dashed", pad=10):
     )
 
 
-def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=2):
+def form_group_dropdown(comp_id, label, label_key, options, default,
+                        box_width=6, gap=2):
     options = [{"label": op, "value": op} for op in sorted(options)]
     dropdown = dbc.Select(
         id=comp_id,
         disabled=False,
         options=options,
         value=default,
-        key=label,
+        key=label_key,
         style={"width": f"{box_width}rem"}
     )
     return dbc.Form(
@@ -132,15 +133,15 @@ def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=2):
     )
 
 
-def form_group_input(comp_id, label, min, max, step, default, box_width=6,
-                     gap=2):
-    input = dbc.Input(
+def form_group_input(comp_id, label, label_key, min, max, step, default,
+                     box_width=6, gap=2):
+    dbc_input = dbc.Input(
         id=comp_id,
         disabled=False,
         min=min, max=max, step=step,
         value=default,
         type="number",
-        key=label,
+        key=label_key,
         placeholder="Enter a number...",
         style={"width": f"{box_width}rem"}
     )
@@ -148,7 +149,7 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
         dbc.Row(
             [
                 dbc.Label(label, width=gap),
-                dbc.Col(input),
+                dbc.Col(dbc_input)
             ]
         )
     )
