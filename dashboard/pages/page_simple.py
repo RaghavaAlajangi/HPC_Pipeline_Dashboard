@@ -154,7 +154,7 @@ def simple_prediction_section():
         children=[
             paragraph_comp("Classification Model"),
             checklist_comp(
-                comp_id="simp_classifier_id",
+                comp_id="simple_classifier_name",
                 options={"bloody-bunny": False},
                 defaults=["bloody-bunny"]
             )
@@ -167,7 +167,7 @@ def simple_post_analysis_section():
         title="Post Analysis (Not Implemented)",
         children=[
             checklist_comp(
-                comp_id="simp_postana_id",
+                comp_id="simple_post_analysis_flag",
                 options={
                     "Benchmarking": True,
                     "Scatter Plots": True
@@ -237,15 +237,15 @@ def simple_page_layout(refresh_path):
                           "margin": "auto",
                       }),
             line_breaks(times=5),
-            dcc.Store(id="store_simple_template", storage_type="local"),
-            dcc.Store(id="store_simple_segm_data", storage_type="local"),
+            dcc.Store(id="cache_simple_template", storage_type="local"),
+            dcc.Store(id="cache_simple_segm_data", storage_type="local"),
         ]
     )
 
 
 @callback(
     Output("simple_measure_options", "children"),
-    Output("store_simple_segm_data", "data"),
+    Output("cache_simple_segm_data", "data"),
     Input("simple_unet_id", "value"),
     Input("simple_measure_options", "value"),
     Input("simple_legacy_id", "value"),
@@ -301,12 +301,12 @@ def toggle_legacy_options(legacy_click):
 
 
 @callback(
-    Output("store_simple_template", "data"),
+    Output("cache_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
-    Input("store_simple_segm_data", "data"),
-    Input("simp_classifier_id", "value"),
-    Input("simp_postana_id", "value"),
+    Input("cache_simple_segm_data", "data"),
+    Input("simple_classifier_name", "value"),
+    Input("simple_post_analysis_flag", "value"),
     Input("show_grid", "selectedRows")
 )
 def collect_simple_pipeline_params(author_name, simple_title, segment_options,
@@ -336,7 +336,7 @@ def collect_simple_pipeline_params(author_name, simple_title, segment_options,
     Input("simple_title_text", "value"),
     Input("show_grid", "selectedRows"),
     Input("simple_unet_id", "value"),
-    Input("store_simple_segm_data", "data")
+    Input("cache_simple_segm_data", "data")
 )
 def toggle_simple_create_pipeline_button(author_name, title, selected_files,
                                          unet_click, unet_mpath):
@@ -358,7 +358,7 @@ def toggle_simple_create_pipeline_button(author_name, title, selected_files,
 @callback(
     Output("simple_popup", "is_open"),
     Input("create_simple_pipeline_button", "n_clicks"),
-    Input("store_simple_template", "data"),
+    Input("cache_simple_template", "data"),
     Input("simple_popup_close", "n_clicks"),
     State("simple_popup", "is_open")
 )

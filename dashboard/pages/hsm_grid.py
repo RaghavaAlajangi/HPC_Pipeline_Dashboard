@@ -27,8 +27,8 @@ def create_hsm_grid():
     """Creates the HSMFS file explorer grid"""
     return html.Div(
         [
-            dcc.Store(id="store_dcor_files", data=[]),
-            dcc.Store(id="store_hsm_files", data=[]),
+            dcc.Store(id="cache_dcor_files", data=[]),
+            dcc.Store(id="cache_hsm_files", data=[]),
 
             dmc.Group(
                 children=[
@@ -219,15 +219,14 @@ def load_hms_grid_data(pipeline_active_accord):
 @callback(
     Output("show_grid", "rowData"),
     Output("show_grid", "selectedRows"),
-    Input("store_dcor_files", "data"),
-    Input("store_hsm_files", "data"),
+    Input("cache_dcor_files", "data"),
+    Input("cache_hsm_files", "data"),
     prevent_initial_call=True
 )
 def update_show_grid_data(dcor_files, hsm_files):
     """Collect the user-selected data files and send them to `show_grid`"""
     # Convert list of strings into ag grid rowdata
     rowdata = [{"filepath": i} for i in (dcor_files + hsm_files)]
-    print(rowdata)
     return rowdata, rowdata
 
 
@@ -256,13 +255,13 @@ def toggle_input_group_button(drop_value, filename):
 
 
 @callback(
-    Output("store_dcor_files", "data"),
+    Output("cache_dcor_files", "data"),
     Output("input_group_drop", "value"),
     Output("input_group_text", "value"),
     Input("input_group_button", "n_clicks"),
     Input("input_group_drop", "value"),
     Input("input_group_text", "value"),
-    State("store_dcor_files", "data"),
+    State("cache_dcor_files", "data"),
     prevent_initial_call=True
 )
 def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
@@ -279,9 +278,9 @@ def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
 
 
 @callback(
-    Output("store_hsm_files", "data"),
+    Output("cache_hsm_files", "data"),
     Input("hsm_grid", "selectedRows"),
-    State("store_hsm_files", "data"),
+    State("cache_hsm_files", "data"),
     prevent_initial_call=True
 )
 def cache_user_given_hsm_files(hsm_selection, cached_files):

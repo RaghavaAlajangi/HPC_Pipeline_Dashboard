@@ -264,7 +264,7 @@ def advanced_segmentation_section():
                         default=5
                     )
                 ]
-            ),
+            )
         ]
     )
 
@@ -360,16 +360,16 @@ def gating_options_section():
         title="Available gating options",
         children=[
             checklist_comp(
-                comp_id="ngate_id",
+                comp_id="norm_gate_id",
                 options={
                     "norm gating": False,
                 },
             ),
             html.Ul(
-                id="ngate_options",
+                id="norm_gate_options",
                 children=[
                     form_group_dropdown(
-                        comp_id={"type": "ngate_param",
+                        comp_id={"type": "norm_gate_param",
                                  "index": 1},
                         label="online_gates",
                         label_key="online_gates",
@@ -377,7 +377,7 @@ def gating_options_section():
                         default="False",
                     ),
                     form_group_input(
-                        comp_id={"type": "ngate_param",
+                        comp_id={"type": "norm_gate_param",
                                  "index": 2},
                         label="size_thresh_mask",
                         label_key="size_thresh_mask",
@@ -395,7 +395,7 @@ def further_options_section():
         title="Further Options",
         children=[
             checklist_comp(
-                comp_id="repro_id",
+                comp_id="reproduce_flag",
                 options={
                     "--reproduce": False,
                 }
@@ -409,7 +409,7 @@ def advanced_prediction_section():
         title="Classification Model",
         children=[
             checklist_comp(
-                comp_id="classifier_id",
+                comp_id="classifier_name",
                 options={
                     "bloody-bunny_g1_bacae: "
                     "Bloody Bunny": False,
@@ -426,7 +426,7 @@ def advanced_post_analysis_section():
         title="Post Analysis (Not Implemented)",
         children=[
             checklist_comp(
-                comp_id="adv_postana_id",
+                comp_id="advanced_post_analysis_flag",
                 options={
                     "Benchmarking": True,
                     "Scatter Plot": True,
@@ -501,22 +501,22 @@ def advanced_page_layout(refresh_path):
                           "margin": "auto",
                       }),
             line_breaks(times=5),
-            dcc.Store(id="store_advanced_template", storage_type="local"),
-            dcc.Store(id="store_advanced_unet_model_path",
+            dcc.Store(id="cache_advanced_template", storage_type="local"),
+            dcc.Store(id="cache_advanced_unet_model_path",
                       storage_type="local"),
-            dcc.Store(id="store_legacy_params", storage_type="local"),
-            dcc.Store(id="store_watershed_params", storage_type="local"),
-            dcc.Store(id="store_std_params", storage_type="local"),
-            dcc.Store(id="store_rollmed_params", storage_type="local"),
-            dcc.Store(id="store_sparsemed_params", storage_type="local"),
-            dcc.Store(id="store_ngate_params", storage_type="local"),
+            dcc.Store(id="cache_legacy_params", storage_type="local"),
+            dcc.Store(id="cache_watershed_params", storage_type="local"),
+            dcc.Store(id="cache_std_params", storage_type="local"),
+            dcc.Store(id="cache_rollmed_params", storage_type="local"),
+            dcc.Store(id="cache_sparsemed_params", storage_type="local"),
+            dcc.Store(id="cache_norm_gate_params", storage_type="local"),
         ]
     )
 
 
 @callback(
     Output("advanced_measure_options", "children"),
-    Output("store_advanced_unet_model_path", "data"),
+    Output("cache_advanced_unet_model_path", "data"),
     Input("advanced_unet_id", "value"),
     Input("advanced_measure_options", "value")
 )
@@ -553,7 +553,7 @@ def toggle_unet_options(unet_click):
 
 
 @callback(
-    Output("store_legacy_params", "data"),
+    Output("cache_legacy_params", "data"),
     Output("legacy_options", "style"),
     Input("legacy_id", "value"),
     Input({"type": "legacy_param", "index": ALL}, "key"),
@@ -571,7 +571,7 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
 
 
 @callback(
-    Output("store_watershed_params", "data"),
+    Output("cache_watershed_params", "data"),
     Output("watershed_options", "style"),
     Input("watershed_id", "value"),
     Input({"type": "watershed_param", "index": ALL}, "key"),
@@ -588,7 +588,7 @@ def toggle_watershed_options(watershed_opt, water_keys, water_values):
 
 
 @callback(
-    Output("store_std_params", "data"),
+    Output("cache_std_params", "data"),
     Output("std_options", "style"),
     Input("std_id", "value"),
     Input({"type": "std_param", "index": ALL}, "key"),
@@ -605,7 +605,7 @@ def toggle_std_options(std_opt, std_keys, std_values):
 
 
 @callback(
-    Output("store_rollmed_params", "data"),
+    Output("cache_rollmed_params", "data"),
     Output("rollmed_options", "style"),
     Input("rollmed_id", "value"),
     Input({"type": "rollmed_param", "index": ALL}, "key"),
@@ -622,7 +622,7 @@ def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
 
 
 @callback(
-    Output("store_sparsemed_params", "data"),
+    Output("cache_sparsemed_params", "data"),
     Output("sparsemed_options", "style"),
     Input("sparsemed_id", "value"),
     Input({"type": "sparsemed_param", "index": ALL}, "key"),
@@ -639,39 +639,38 @@ def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
 
 
 @callback(
-    Output("store_ngate_params", "data"),
-    Output("ngate_options", "style"),
-    Input("ngate_id", "value"),
-    Input({"type": "ngate_param", "index": ALL}, "key"),
-    Input({"type": "ngate_param", "index": ALL}, "value"),
+    Output("cache_norm_gate_params", "data"),
+    Output("norm_gate_options", "style"),
+    Input("norm_gate_id", "value"),
+    Input({"type": "norm_gate_param", "index": ALL}, "key"),
+    Input({"type": "norm_gate_param", "index": ALL}, "value"),
 )
-def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
+def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     """Toggle norm gating options with norm gating switch, selected options
     will be cached"""
-    ngate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
+    norm_gate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
     if len(ngate_opt) == 1:
-        return {ngate_opt[0]: ngate_params}, {"display": "block"}
+        return {ngate_opt[0]: norm_gate_params}, {"display": "block"}
     else:
         return {}, {"display": "none"}
 
 
 @callback(
-    Output("store_advanced_template", "data"),
+    Output("cache_advanced_template", "data"),
     Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
     # Direct options
-    Input("dcevent_ver_id", "value"),
-    Input("repro_id", "value"),
-    Input("classifier_id", "value"),
-    Input("adv_postana_id", "value"),
+    Input("reproduce_flag", "value"),
+    Input("classifier_name", "value"),
+    Input("advanced_post_analysis_flag", "value"),
     # Cached options
-    Input("store_advanced_unet_model_path", "data"),
-    Input("store_legacy_params", "data"),
-    Input("store_watershed_params", "data"),
-    Input("store_std_params", "data"),
-    Input("store_rollmed_params", "data"),
-    Input("store_sparsemed_params", "data"),
-    Input("store_ngate_params", "data"),
+    Input("cache_advanced_unet_model_path", "data"),
+    Input("cache_legacy_params", "data"),
+    Input("cache_watershed_params", "data"),
+    Input("cache_std_params", "data"),
+    Input("cache_rollmed_params", "data"),
+    Input("cache_sparsemed_params", "data"),
+    Input("cache_norm_gate_params", "data"),
     # Data to process
     Input("show_grid", "selectedRows")
 )
@@ -706,7 +705,7 @@ def collect_advanced_pipeline_params(*args):
 @callback(
     Output("advanced_popup", "is_open"),
     Input("create_advanced_pipeline_button", "n_clicks"),
-    Input("store_advanced_template", "data"),
+    Input("cache_advanced_template", "data"),
     Input("advanced_popup_close", "n_clicks"),
     State("advanced_popup", "is_open")
 )
@@ -728,7 +727,7 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     Input("advanced_title_text", "value"),
     Input("show_grid", "selectedRows"),
     Input("advanced_unet_id", "value"),
-    Input("store_advanced_unet_model_path", "data")
+    Input("cache_advanced_unet_model_path", "data")
 )
 def toggle_advanced_create_pipeline_button(author_name, title, selected_files,
                                            unet_click, unet_mpath):
