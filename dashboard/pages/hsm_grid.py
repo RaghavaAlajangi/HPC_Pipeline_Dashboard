@@ -38,7 +38,8 @@ def create_hsm_grid():
                             icon="mage:message-question-mark-round-fill",
                             color="yellow", width=22),
                         notes="Copy and paste dataset ID / Circle name / "
-                              "Collection name from DCOR-Colab and click 'add button' to add it to the pipeline "
+                              "Collection name from DCOR-Colab and click "
+                              "'add button' to add it to the pipeline "
                     )
                 ],
                 spacing=5

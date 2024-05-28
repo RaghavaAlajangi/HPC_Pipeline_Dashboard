@@ -35,8 +35,9 @@ def welcome_tab_content():
                         # Warning icon
                         html.I(className="bi bi-info-circle-fill me-2"),
                         paragraph_comp(
-                            text="If you want to segment or/and classify your "
-                                 "data, use the Simple Request on the left.",
+                            text="If you want to segment or/and classify "
+                                 "your data, use the Simple Request on "
+                                 "the left.",
                             comp_id="dummy2"
                         ),
                     ],
@@ -188,8 +189,8 @@ def create_pipeline_accordion_item(pipeline, mode):
                         refresh_path=BASENAME_PREFIX,
                         text="Pipeline request has been canceled!"
                     ),
-                    # Store component to cache pipeline notes. It allows us to
-                    # use the same notes across multiple callbacks without
+                    # Store component to cache pipeline notes. It allows us
+                    # to use the same notes across multiple callbacks without
                     # computing twice.
                     dcc.Store({"type": "cache_pipeline_notes",
                                "index": pipeline["iid"]}, data={}),
@@ -436,10 +437,12 @@ def switch_tabs(active_tab, page_num, search_term):
         return [no_update] * 5
 
     if active_tab in ["opened", "closed"]:
-        pipeline_meta = request_gitlab.get_issues_meta(state=active_tab,
-                                                       page=page_num,
-                                                       per_page=issues_per_page,
-                                                       search_term=search_term)
+        pipeline_meta = request_gitlab.get_issues_meta(
+            state=active_tab,
+            page=page_num,
+            per_page=issues_per_page,
+            search_term=search_term
+        )
 
         is_disabled = len(pipeline_meta) != issues_per_page
         if len(pipeline_meta) == 0:

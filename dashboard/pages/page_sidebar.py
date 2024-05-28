@@ -40,7 +40,8 @@ def sidebar_layout():
                         children=[
                             html.I(
                                 children="Warning!",
-                                className="bi bi-exclamation-triangle-fill me-2"
+                                className="bi bi-exclamation-triangle-"
+                                          "fill me-2"
                             ),
                             # Warning text
                             "Running a pipeline is computationally expensive "

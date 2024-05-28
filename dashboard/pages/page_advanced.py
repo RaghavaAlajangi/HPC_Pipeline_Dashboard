@@ -560,8 +560,8 @@ def toggle_unet_options(unet_click):
     Input({"type": "legacy_param", "index": ALL}, "value"),
 )
 def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
-    """Toggle legacy segmentation options with legacy switch, selected options
-    will be cached"""
+    """Toggle legacy segmentation options with legacy switch, selected
+    options will be cached"""
     legacy_params = {k: v for k, v in zip(leg_keys, leg_values)}
 
     if len(legacy_opt) == 1:
@@ -578,8 +578,8 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
     Input({"type": "watershed_param", "index": ALL}, "value"),
 )
 def toggle_watershed_options(watershed_opt, water_keys, water_values):
-    """Toggle watershed segmentation options with watershed switch, selected
-    options will be cached"""
+    """Toggle watershed segmentation options with watershed switch,
+    selected options will be cached"""
     water_params = {k: v for k, v in zip(water_keys, water_values)}
     if len(watershed_opt) == 1:
         return {watershed_opt[0]: water_params}, {"display": "block"}
