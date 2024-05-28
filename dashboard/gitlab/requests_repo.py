@@ -74,7 +74,7 @@ class RequestRepoAPI(BaseAPI):
         # Initialize variables
         total_jobs = 0
         finished_jobs = 0
-        results_path = "No result path"
+        results_path = "Result path is not found!"
         comments = []
         comment_authors = []
         dates = []
