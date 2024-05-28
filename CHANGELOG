@@ -1,4 +1,5 @@
 0.0.5
+ - enh: remove dcevent option from advanced pipeline
  - enh: update component id naming conventions
 0.0.4
  - enh: improve user experience for segmentation selection

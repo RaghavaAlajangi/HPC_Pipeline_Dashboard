@@ -56,21 +56,6 @@ def advanced_title_section():
     )
 
 
-def dcevent_version_section():
-    return dbc.AccordionItem(
-        title="dcevent version",
-        children=[
-            checklist_comp(
-                comp_id="dcevent_ver_id",
-                options={
-                    "dcevent version=latest": False,
-                },
-                defaults=["dcevent version=latest"]
-            )
-        ]
-    )
-
-
 def advanced_segmentation_section():
     return dbc.AccordionItem(
         title="Segmentation Algorithm",
@@ -472,7 +457,6 @@ def advanced_page_layout(refresh_path):
             group_accordion(
                 children=[
                     advanced_title_section(),
-                    dcevent_version_section(),
                     advanced_segmentation_section(),
                     background_correction_section(),
                     gating_options_section(),
@@ -674,32 +658,50 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     # Data to process
     Input("show_grid", "selectedRows")
 )
-def collect_advanced_pipeline_params(*args):
-    """Collect all the user selected and cached parameters. Then, it updates
-    the advanced issue template. Updated template will be cached"""
-    # Get the title of the request
-    author_name, advanced_title = args[0:2]
-    # Get the params value list and convert it to a dictionary
-    params = [item for sublist in args[2:5] for item in sublist]
-    params_dict = {params: {} for params in params}
-    # Get the cached selections and update the dictionary
-    for d in args[6:-1]:
-        params_dict.update(d)
-    # Get the data files
-    selected_files = args[-1]
+def collect_advanced_pipeline_params(
+        author_name, advanced_title,
+        reproduce_flag, classifier_name, post_analysis_flag,
+        cached_unet_model_path, cached_legacy_params,
+        cache_watershed_params,
+        cache_std_params, cache_rollmed_params, cache_sparsemed_params,
+        cache_norm_gate_params,
+        selected_rows
+):
+    """
+    Collects all the user-selected and cached parameters to update
+    the advanced issue template. The updated template will be cached.
+    """
+    # Combine params from direct options
+    direct_params = [reproduce_flag, classifier_name, post_analysis_flag]
+    params_list = [item for sublist in direct_params if sublist for item in
+                   sublist]
+    params_dict = {param: {} for param in params_list}
 
-    # Update the template, only when author name, title, and data files
-    # to process are entered
-    if author_name and advanced_title and selected_files:
-        rtdc_files = [s["filepath"] for s in selected_files]
-        # Create a template dict with title
+    # Combine params from cached options
+    cached_params = [
+        cached_unet_model_path, cached_legacy_params,
+        cache_watershed_params,
+        cache_std_params, cache_rollmed_params, cache_sparsemed_params,
+        cache_norm_gate_params
+    ]
+    for param in cached_params:
+        if param:
+            params_dict.update(param)
+
+    # Extract file paths from selected rows
+    rtdc_files = [s["filepath"] for s in selected_rows] \
+        if selected_rows else []
+
+    # Update the template if required fields are provided
+    if author_name and advanced_title and rtdc_files:
         pipeline_template = {"title": advanced_title}
-        # Update the advanced template from request repo
-        description = update_advanced_template(params_dict, author_name,
-                                               rtdc_files,
-                                               get_advanced_template())
+        description = update_advanced_template(
+            params_dict, author_name, rtdc_files, get_advanced_template()
+        )
         pipeline_template["description"] = description
         return pipeline_template
+
+    return None
 
 
 @callback(
