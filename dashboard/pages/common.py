@@ -14,7 +14,7 @@ def button_comp(label, comp_id, type="primary", disabled=False):
     )
 
 
-def chat_box(messages, gap=10):
+def chat_box(messages, gap=18):
     """Creates a list of dbc.Card items from a dictionary of comments.
 
     Parameters
@@ -30,7 +30,9 @@ def chat_box(messages, gap=10):
     """
     comment_cards = []
 
-    for comment, date in zip(messages["comments"], messages["dates"]):
+    for comment, author, date in zip(messages["comments"],
+                                     messages["comment_authors"],
+                                     messages["dates"]):
         comment_card = dbc.Card(
             children=[
                 dmc.Stack(
@@ -47,10 +49,17 @@ def chat_box(messages, gap=10):
                         )
                     ],
                     spacing=0
+                ),
+                dbc.Badge(
+                    author, pill=False, color="primary", text_color="white",
+                    style={"font-weight": "normal"},
+                    className="position-absolute top-0 start-100 "
+                              "translate-middle",
                 )
             ],
             className="message-box",
-            style={"margin-bottom": f"{gap}px", "border": "0"},
+            style={"margin-bottom": f"{gap}px", "margin-top": f"{gap}px",
+                   "border": "0"},
         )
         comment_cards.append(comment_card)
     return dbc.ListGroupItem(
@@ -96,21 +105,22 @@ def checklist_comp(comp_id, options, defaults=None):
     )
 
 
-def divider_line_comp(width=100, middle=True):
+def divider_line_comp(variant="dashed", pad=10):
     return html.Div(
-        html.Hr(style={"width": f"{width}%"}),
-        className="row justify-content-center" if middle else ""
+        dmc.Divider(variant=variant),
+        style={"padding-top": f"{pad}px", "padding-bottom": f"{pad}px"}
     )
 
 
-def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=2):
+def form_group_dropdown(comp_id, label, label_key, options, default,
+                        box_width=6, gap=2):
     options = [{"label": op, "value": op} for op in sorted(options)]
     dropdown = dbc.Select(
         id=comp_id,
         disabled=False,
         options=options,
         value=default,
-        key=label,
+        key=label_key,
         style={"width": f"{box_width}rem"}
     )
     return dbc.Form(
@@ -123,15 +133,15 @@ def form_group_dropdown(comp_id, label, options, default, box_width=6, gap=2):
     )
 
 
-def form_group_input(comp_id, label, min, max, step, default, box_width=6,
-                     gap=2):
-    input = dbc.Input(
+def form_group_input(comp_id, label, label_key, min, max, step, default,
+                     box_width=6, gap=2):
+    dbc_input = dbc.Input(
         id=comp_id,
         disabled=False,
         min=min, max=max, step=step,
         value=default,
         type="number",
-        key=label,
+        key=label_key,
         placeholder="Enter a number...",
         style={"width": f"{box_width}rem"}
     )
@@ -139,7 +149,7 @@ def form_group_input(comp_id, label, min, max, step, default, box_width=6,
         dbc.Row(
             [
                 dbc.Label(label, width=gap),
-                dbc.Col(input),
+                dbc.Col(dbc_input)
             ]
         )
     )
@@ -178,63 +188,26 @@ def header_comp(text, indent=0, middle=False):
     return html.Div(html.H6(text, style=style))
 
 
-def line_breaks(times=1):
-    br_list = [html.Br() for _ in range(times)]
-    return html.Div(children=br_list)
-
-
-def drop_input_button(comp_id, drop_options, disable_drop=False,
-                      drop_placeholder="Source", default_drop=None,
-                      input_placeholder="text", disable_input=False,
-                      disable_button=False,
-                      with_button=True, width=100
-                      ):
-    default_drop = default_drop if default_drop else []
-    return html.Div(
-        dbc.InputGroup([
-            dbc.Select(
-                placeholder=drop_placeholder,
-                id=f"{comp_id}_drop",
-                options=[
-                    {"label": i, "value": i} for i in drop_options
-                ],
-                value=default_drop,
-                style={"width": "15%"},
-                disabled=disable_drop
-            ),
-            dbc.Input(
-                type="text", id=f"{comp_id}_text",
-                placeholder=input_placeholder,
-                style={"width": "75%"},
-                class_name="custom-placeholder",
-                disabled=disable_input,
-            ),
-            dbc.Button(
-                "Add", id=f"{comp_id}_button", color="info",
-                style={"width": "10%"},
-                disabled=disable_button
-            ) if with_button else None,
+def hover_card(target, notes):
+    return dmc.HoverCard(
+        children=[
+            dmc.HoverCardTarget(target),
+            dmc.HoverCardDropdown(
+                dmc.Text(notes, size="xs", color="black"),
+                # style={"background-color": "yellow", "border-color": "black"}
+            )
         ],
-            style={"width": f"{width}%"}
-        ),
-        className="row justify-content-center",
+        position="right",
+        shadow="xs",
+        width=400,
+        withArrow=True,
+        transition="pop"
     )
 
 
-def loading_comp(children):
-    """
-    The loading_comp function takes in a list of children and returns a
-    dbc.Spinner component with the given children and color set to
-    &quot;success&quot;. The size is set to &quot;sm&quot; by default.
-    Parameters
-    ----------
-    children
-        Pass the children of the component
-    Returns
-    -------
-    A spinner component
-    """
-    return dbc.Spinner(size="sm", children=children, color="success")
+def line_breaks(times=1):
+    br_list = [html.Br() for _ in range(times)]
+    return html.Div(children=br_list)
 
 
 def paragraph_comp(text, comp_id="dummy", indent=0, middle=False):
@@ -286,43 +259,8 @@ def popup_comp(comp_id, refresh_path, text):
     )
 
 
-def dmc_chip_comp(comp_id, option_list):
-    styles = {
-        "label": {
-            "&[data-checked]": {
-                "&, &:hover": {
-                    "backgroundColor": "#13bd40",
-                    "color": "black",
-                },
-            },
-        }
-    }
-    return html.Div(dmc.ChipGroup(
-        [
-            dmc.Chip(opt.capitalize(), value=opt, styles=styles) for opt in
-            option_list
-        ],
-        id=comp_id,
-    ))
-
-
-def text_input_comp(comp_id, placeholder, width=50, middle=True):
-    return html.Div(
-        dbc.Input(
-            id=comp_id,
-            disabled=False,
-            type="text",
-            placeholder=placeholder,
-            class_name="custom-placeholder",
-            style={"width": f"{width}rem"}
-        ),
-        className="row justify-content-center" if middle else "",
-    )
-
-
 def web_link(label, url):
-    return html.A(label, href=url, target="_blank",
-                  className="custom-link")
+    return html.A(label, href=url, target="_blank", className="custom-link")
 
 
 def web_link_check(text):

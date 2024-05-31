@@ -74,8 +74,9 @@ class RequestRepoAPI(BaseAPI):
         # Initialize variables
         total_jobs = 0
         finished_jobs = 0
-        results_path = "No result path"
+        results_path = "Result path is not found!"
         comments = []
+        comment_authors = []
         dates = []
         is_canceled = False
 
@@ -87,6 +88,8 @@ class RequestRepoAPI(BaseAPI):
             # Fetch human-readable date
             time_stamp = self.human_readable_date(note.created_at)
             dates.append(time_stamp)
+            comment_authors.append(
+                "bot" if "*" in note.author["name"] else note.author["name"])
 
             # Filter python error messages from comments
             if "```python" in note.body:
@@ -127,6 +130,7 @@ class RequestRepoAPI(BaseAPI):
             "finished_jobs": finished_jobs,
             "results_path": results_path,
             "comments": comments,
+            "comment_authors": comment_authors,
             "dates": dates,
             "is_canceled": is_canceled
         }
@@ -143,7 +147,7 @@ class RequestRepoAPI(BaseAPI):
         """Parse username and type of issue from description"""
         lower_text = issue_text.lower()
         data = {
-            "type": "simple" if "simple" in lower_text else "advanced",
+            "type": "advanced" if "advanced" in lower_text else "simple",
             "username": None
         }
 

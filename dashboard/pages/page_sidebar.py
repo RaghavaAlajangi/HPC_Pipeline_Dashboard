@@ -2,6 +2,7 @@ import os
 
 from dash import html
 import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from .common import line_breaks
@@ -9,10 +10,6 @@ from .common import line_breaks
 # GitLab repo URL
 PROJECT_REPO_URL = "https://gitlab.gwdg.de/blood_data_analysis/" \
                    "hpc_pipeline_dashboard"
-
-# GitLab logo image
-GITLAB_LOGO_URL = "https://about.gitlab.com/images/press" \
-                  "/logo/png/gitlab-icon-rgb.png"
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
@@ -33,7 +30,7 @@ def sidebar_layout():
     return html.Div(
         children=[
             # Title for the dashboard
-            dmc.Title("HPC Pipelines", order=1),
+            dmc.Title("HPC Pipelines", order=1, align="center"),
             line_breaks(times=1),
             # Alert for the users
             dbc.Alert(
@@ -43,7 +40,8 @@ def sidebar_layout():
                         children=[
                             html.I(
                                 children="Warning!",
-                                className="bi bi-exclamation-triangle-fill me-2"
+                                className="bi bi-exclamation-triangle-"
+                                          "fill me-2"
                             ),
                             # Warning text
                             "Running a pipeline is computationally expensive "
@@ -81,16 +79,17 @@ def sidebar_layout():
                 style={"color": "red"},
                 vertical=True
             ),
-            line_breaks(times=6),
+            line_breaks(times=10),
             # Show project link
-            html.A(
+            dmc.Anchor(
+                align="end",
+                color="green",
                 children=[
-                    html.Img(src=GITLAB_LOGO_URL, height=50),
+                    DashIconify(icon="lucide:gitlab", width=35, height=35,
+                                flip="horizontal"),
                     " Source Code"
                 ],
-                className="custom-link",
-                href=PROJECT_REPO_URL,
-                target="_blank"
+                href=PROJECT_REPO_URL
             )
         ],
         id="sidebar"

@@ -35,8 +35,9 @@ def welcome_tab_content():
                         # Warning icon
                         html.I(className="bi bi-info-circle-fill me-2"),
                         paragraph_comp(
-                            text="If you want to segment or/and classify your "
-                                 "data, use the Simple Request on the left.",
+                            text="If you want to segment or/and classify "
+                                 "your data, use the Simple Request on "
+                                 "the left.",
                             comp_id="dummy2"
                         ),
                     ],
@@ -131,7 +132,7 @@ def get_tab_content(tab_id, load_id):
                 )
             ),
             # Cache page number on the browser
-            dcc.Store(id="store_page_num", storage_type="memory", data=1)
+            dcc.Store(id="cache_page_num", storage_type="memory", data=1)
         ],
             horizontal=True,
             style={"justify-content": "center"}
@@ -188,10 +189,10 @@ def create_pipeline_accordion_item(pipeline, mode):
                         refresh_path=BASENAME_PREFIX,
                         text="Pipeline request has been canceled!"
                     ),
-                    # Store component to cache pipeline notes. It allows us to
-                    # use the same notes across multiple callbacks without
+                    # Store component to cache pipeline notes. It allows us
+                    # to use the same notes across multiple callbacks without
                     # computing twice.
-                    dcc.Store({"type": "store_pipeline_notes",
+                    dcc.Store({"type": "cache_pipeline_notes",
                                "index": pipeline["iid"]}, data={}),
                     html.Strong("Pipeline Details:"),
                     create_list_group(
@@ -387,11 +388,11 @@ def home_page_layout():
 
 
 @callback(
-    Output("store_page_num", "data"),
+    Output("cache_page_num", "data"),
     Output("prev_button", "disabled"),
     Input("prev_button", "n_clicks"),
     Input("next_button", "n_clicks"),
-    State("store_page_num", "data")
+    State("cache_page_num", "data")
 )
 def update_page(pclick, nclick, page_num):
     """Cache page number when user click on `Previous` and `Next` buttons"""
@@ -424,7 +425,7 @@ def show_pipeline_number(active_tab):
     Output("opened_loading", "parent_style"),
     Output("closed_loading", "parent_style"),
     Input("main_tabs", "value"),
-    Input("store_page_num", "data"),
+    Input("cache_page_num", "data"),
     Input("pipeline_filter", "value"),
 )
 def switch_tabs(active_tab, page_num, search_term):
@@ -436,10 +437,12 @@ def switch_tabs(active_tab, page_num, search_term):
         return [no_update] * 5
 
     if active_tab in ["opened", "closed"]:
-        pipeline_meta = request_gitlab.get_issues_meta(state=active_tab,
-                                                       page=page_num,
-                                                       per_page=issues_per_page,
-                                                       search_term=search_term)
+        pipeline_meta = request_gitlab.get_issues_meta(
+            state=active_tab,
+            page=page_num,
+            per_page=issues_per_page,
+            search_term=search_term
+        )
 
         is_disabled = len(pipeline_meta) != issues_per_page
         if len(pipeline_meta) == 0:
@@ -470,7 +473,7 @@ def switch_tabs(active_tab, page_num, search_term):
     Output({"type": "pipeline_progress_num", "index": MATCH}, "children"),
     Output({"type": "pipeline_progress_bar", "index": MATCH}, "value"),
     Output({"type": "pipeline_progress_bar", "index": MATCH}, "label"),
-    Output({"type": "store_pipeline_notes", "index": MATCH}, "data"),
+    Output({"type": "cache_pipeline_notes", "index": MATCH}, "data"),
     Input("pipeline_accordion", "value"),
     prevent_initial_call=True
 )
@@ -526,7 +529,7 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "pipeline_stop_click", "index": MATCH}, "disabled"),
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
-    Input({"type": "store_pipeline_notes", "index": MATCH}, "data"),
+    Input({"type": "cache_pipeline_notes", "index": MATCH}, "data"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
     Input({"type": "pipeline_stop_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_stop_popup", "index": MATCH}, "n_clicks"),

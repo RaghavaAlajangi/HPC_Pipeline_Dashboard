@@ -1,12 +1,14 @@
-import dash_bootstrap_components as dbc
+from dash import ALL, callback, dcc, html, Input, Output, State
 from dash import callback_context as cc
-from dash import callback, Input, Output, State, html, dcc, ALL
+import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
+import dash_mantine_components as dmc
 
-from .utils import update_advanced_template
+from .common import (button_comp, checklist_comp, divider_line_comp,
+                     form_group_dropdown, form_group_input, group_accordion,
+                     header_comp, hover_card, line_breaks, popup_comp)
 from .hsm_grid import create_hsm_grid, create_show_grid
-from .common import (header_comp, checklist_comp, group_accordion, popup_comp,
-                     button_comp, form_group_dropdown, form_group_input,
-                     line_breaks, divider_line_comp, dmc_chip_comp)
+from .utils import update_advanced_template
 from ..gitlab import request_gitlab, dvc_gitlab
 
 
@@ -20,9 +22,418 @@ def get_advanced_template():
     return request_gitlab.get_request_template(temp_type="advanced")
 
 
+def advanced_title_section():
+    return dbc.AccordionItem(
+        title="Title (required)",
+        children=[
+            html.Div(
+                dbc.InputGroup(
+                    [
+                        dbc.Select(
+                            placeholder="Select Username",
+                            id="advanced_title_drop",
+                            options=[
+                                {"label": member.name,
+                                 "value": member.username} for
+                                member in get_user_list()
+                            ],
+                            style={"width": "18%"},
+                        ),
+                        dbc.Input(
+                            type="text",
+                            id="advanced_title_text",
+                            placeholder="Enter the name of "
+                                        "the pipeline...",
+                            style={"width": "72%"},
+                            class_name="custom-placeholder",
+                        )
+                    ],
+                    style={"width": "90%"},
+                ),
+                className="row justify-content-center",
+            )
+        ]
+    )
+
+
+def advanced_segmentation_section():
+    return dbc.AccordionItem(
+        title="Segmentation Algorithm",
+        children=[
+            # MLUNet segmentor section
+            dmc.Group(
+                children=[
+                    # UNet checkbox (switch)
+                    dbc.Checklist(
+                        options=[
+                            {"label": "U-Net Segmentation",
+                             "value": "mlunet: UNET"},
+                        ],
+                        id="advanced_unet_id",
+                        switch=True,
+                        value=[],
+                        labelCheckedClassName="text-success",
+                        inputCheckedClassName="border-success bg-success",
+                    ),
+                    # UNet question mark icon and hover info
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=20),
+                        notes="A deep learning based image segmentation "
+                              "method.\n Warning: U-Net is trained on "
+                              "specific cell types. When you select correct "
+                              "option from below, appropriate model file "
+                              "will be used for segmentation."
+                    )
+                ],
+                spacing=5
+            ),
+            # UNet segmentation options
+            html.Ul(
+                id="advanced_unet_options",
+                children=[
+                    dmc.RadioGroup(
+                        id="advanced_measure_options",
+                        label="Select Measurement Type",
+                        description="Please make sure that you select the "
+                                    "right option. Otherwise, the pipeline "
+                                    "might fail.",
+                        orientation="vertical",
+                        withAsterisk=True,
+                        offset="md",
+                        mb=10,
+                        spacing=10
+                    )
+                ]
+            ),
+            divider_line_comp(),
+            # Legacy segmentor section
+            checklist_comp(
+                comp_id="legacy_id",
+                options={"legacy: Legacy thresholding"
+                         " with OpenCV": False}
+            ),
+            html.Ul(
+                id="legacy_options",
+                children=[
+                    form_group_input(
+                        comp_id={"type": "legacy_param",
+                                 "index": 1},
+                        label="Threshold Value",
+                        label_key="thresh",
+                        min=-10, max=10, step=1,
+                        default=-6
+                    ),
+                    form_group_input(
+                        comp_id={"type": "legacy_param",
+                                 "index": 2},
+                        label="blur",
+                        label_key="blur",
+                        min=0, max=20, step=1,
+                        default=0
+                    ),
+                    form_group_input(
+                        comp_id={"type": "legacy_param",
+                                 "index": 3},
+                        label="binaryops",
+                        label_key="binaryops",
+                        min=0, max=10, step=1,
+                        default=5
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "legacy_param",
+                                 "index": 4},
+                        label="diff_method",
+                        label_key="diff_method",
+                        options=[0, 1],
+                        default=1
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "legacy_param",
+                                 "index": 5},
+                        label="clear_border",
+                        label_key="clear_border",
+                        options=["True", "False"],
+                        default="True"
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "legacy_param",
+                                 "index": 6},
+                        label="fill_holes",
+                        label_key="fill_holes",
+                        options=["True", "False"],
+                        default="True"
+                    ),
+
+                    form_group_input(
+                        comp_id={"type": "legacy_param",
+                                 "index": 7},
+                        label="closing_disk",
+                        label_key="closing_disk",
+                        min=0, max=10, step=1,
+                        default=5
+                    ),
+                ]
+            ),
+            divider_line_comp(),
+            checklist_comp(
+                comp_id="watershed_id",
+                options={
+                    "watershed: Watershed algorithm": False,
+                }
+            ),
+            html.Ul(
+                id="watershed_options",
+                children=[
+                    form_group_dropdown(
+                        comp_id={"type": "watershed_param",
+                                 "index": 1},
+                        label="clear_border",
+                        label_key="clear_border",
+                        options=["True", "False"],
+                        default="True"
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "watershed_param",
+                                 "index": 2},
+                        label="fill_holes",
+                        label_key="fill_holes",
+                        options=["True", "False"],
+                        default="True"
+                    ),
+                    form_group_input(
+                        comp_id={"type": "watershed_param",
+                                 "index": 3},
+                        label="closing_disk",
+                        label_key="closing_disk",
+                        min=0, max=10, step=1,
+                        default=5
+                    ),
+                ]
+            ),
+            divider_line_comp(),
+            # STD segmentor section
+            checklist_comp(
+                comp_id="std_id",
+                options={
+                    "std: Standard-deviation-"
+                    "based thresholding": False,
+                }
+            ),
+            html.Ul(
+                id="std_options",
+                children=[
+                    form_group_dropdown(
+                        comp_id={"type": "std_param",
+                                 "index": 1},
+                        label="clear_border",
+                        label_key="clear_border",
+                        options=["True", "False"],
+                        default="True"
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "std_param",
+                                 "index": 2},
+                        label="fill_holes",
+                        label_key="fill_holes",
+                        options=["True", "False"],
+                        default="True"
+                    ),
+                    form_group_input(
+                        comp_id={"type": "std_param",
+                                 "index": 3},
+                        label="closing_disk",
+                        label_key="closing_disk",
+                        min=0, max=10, step=1,
+                        default=5
+                    )
+                ]
+            )
+        ]
+    )
+
+
+def background_correction_section():
+    return dbc.AccordionItem(
+        title="Background Correction / Subtraction Method",
+        children=[
+            checklist_comp(
+                comp_id="rollmed_id",
+                options={
+                    "rollmed: Rolling median "
+                    "RT-DC background image "
+                    "computation": False,
+                }
+            ),
+            html.Ul(
+                id="rollmed_options",
+                children=[
+                    form_group_input(
+                        comp_id={"type": "rollmed_param",
+                                 "index": 1},
+                        label="kernel_size",
+                        label_key="kernel_size",
+                        min=50, max=500, step=1,
+                        default=100
+                    ),
+                    form_group_input(
+                        comp_id={"type": "rollmed_param",
+                                 "index": 2},
+                        label="batch_size",
+                        label_key="batch_size",
+                        min=0, max=100000, step=1,
+                        default=10000
+                    )
+                ]
+            ),
+            divider_line_comp(),
+            checklist_comp(
+                comp_id="sparsemed_id",
+                options={
+                    "sparsemed: Sparse median "
+                    "background correction with "
+                    "cleansing": False,
+                },
+                defaults=["sparsemed: Sparse median "
+                          "background correction with "
+                          "cleansing"]
+            ),
+            html.Ul(
+                id="sparsemed_options",
+                children=[
+                    form_group_input(
+                        comp_id={"type": "sparsemed_param",
+                                 "index": 1},
+                        label="kernel_size",
+                        label_key="kernel_size",
+                        min=50, max=500, step=1,
+                        default=200
+                    ),
+                    form_group_input(
+                        comp_id={"type": "sparsemed_param",
+                                 "index": 2},
+                        label="split_time",
+                        label_key="split_time",
+                        min=1, max=30, step=1,
+                        default=1
+                    ),
+                    form_group_input(
+                        comp_id={"type": "sparsemed_param",
+                                 "index": 3},
+                        label="thresh_cleansing",
+                        label_key="thresh_cleansing",
+                        min=0, max=1, step=0.1,
+                        default=0
+                    ),
+                    form_group_input(
+                        comp_id={"type": "sparsemed_param",
+                                 "index": 4},
+                        label="frac_cleansing",
+                        label_key="frac_cleansing",
+                        min=0, max=1, step=0.1,
+                        default=0.8
+                    )
+                ]
+            )
+        ]
+    )
+
+
+def gating_options_section():
+    return dbc.AccordionItem(
+        title="Available gating options",
+        children=[
+            checklist_comp(
+                comp_id="norm_gate_id",
+                options={
+                    "norm gating": False,
+                },
+            ),
+            html.Ul(
+                id="norm_gate_options",
+                children=[
+                    form_group_dropdown(
+                        comp_id={"type": "norm_gate_param",
+                                 "index": 1},
+                        label="online_gates",
+                        label_key="online_gates",
+                        options=["True", "False"],
+                        default="False",
+                    ),
+                    form_group_input(
+                        comp_id={"type": "norm_gate_param",
+                                 "index": 2},
+                        label="size_thresh_mask",
+                        label_key="size_thresh_mask",
+                        min=0, max=10, step=1,
+                        default=0
+                    )
+                ]
+            )
+        ]
+    )
+
+
+def further_options_section():
+    return dbc.AccordionItem(
+        title="Further Options",
+        children=[
+            checklist_comp(
+                comp_id="reproduce_flag",
+                options={
+                    "--reproduce": False,
+                }
+            )
+        ]
+    )
+
+
+def advanced_prediction_section():
+    return dbc.AccordionItem(
+        title="Classification Model",
+        children=[
+            checklist_comp(
+                comp_id="classifier_name",
+                options={
+                    "bloody-bunny_g1_bacae: "
+                    "Bloody Bunny": False,
+                },
+                defaults=["bloody-bunny_g1_bacae: "
+                          "Bloody Bunny"]
+            )
+        ]
+    )
+
+
+def advanced_post_analysis_section():
+    return dbc.AccordionItem(
+        title="Post Analysis (Not Implemented)",
+        children=[
+            checklist_comp(
+                comp_id="advanced_post_analysis_flag",
+                options={
+                    "Benchmarking": True,
+                    "Scatter Plot": True,
+                }
+            )
+        ]
+    )
+
+
+def advanced_data_to_process_section():
+    return dbc.AccordionItem(
+        title="Data to Process",
+        item_id="hsm_accord",
+        children=[
+            create_hsm_grid(),
+            line_breaks(times=2),
+        ]
+    )
+
+
 def advanced_page_layout(refresh_path):
     """Creates advanced request page"""
-    model_meta_dict = dvc_gitlab.get_model_metadata()
     return dbc.Toast(
         id="advanced_request_toast",
         header="Advanced Pipeline Request",
@@ -45,382 +456,14 @@ def advanced_page_layout(refresh_path):
             line_breaks(times=2),
             group_accordion(
                 children=[
-                    # Title section
-                    dbc.AccordionItem(
-                        title="Title (required)",
-                        children=[
-                            html.Div(
-                                dbc.InputGroup(
-                                    [
-                                        dbc.Select(
-                                            placeholder="Select Username",
-                                            id="advanced_title_drop",
-                                            options=[
-                                                {"label": member.name,
-                                                 "value": member.username} for
-                                                member in get_user_list()
-                                            ],
-                                            # Set default user
-                                            # value="project_28692_bot1",
-                                            style={"width": "18%"},
-                                        ),
-                                        dbc.Input(
-                                            type="text",
-                                            id="advanced_title_text",
-                                            placeholder="Enter the name of "
-                                                        "the pipeline...",
-                                            style={"width": "72%"},
-                                            class_name="custom-placeholder",
-                                        )
-                                    ],
-                                    style={"width": "90%"},
-                                ),
-                                className="row justify-content-center",
-                            )
-                        ]
-                    ),
-                    # dcevent version section
-                    dbc.AccordionItem(
-                        title="dcevent version",
-                        children=[
-                            checklist_comp(
-                                comp_id="dcevent_ver_id",
-                                options={
-                                    "dcevent version=latest": False,
-                                },
-                                defaults=["dcevent version=latest"]
-                            )
-                        ]
-                    ),
-                    # Segmentation section
-                    dbc.AccordionItem(
-                        title="Segmentation Algorithm",
-                        children=[
-                            # MLUNet segmentor section
-                            checklist_comp(
-                                comp_id="advanced_unet_id",
-                                options={"mlunet: UNET": False},
-                                defaults=["mlunet: UNET"]
-                            ),
-                            html.Ul(
-                                id="advanced_unet_options",
-                                key="model_file",
-                                children=[
-                                    dbc.Row([
-                                        dbc.Col([
-                                            html.P(
-                                                "⦿ Select device:",
-                                                style={
-                                                    "margin": "0",
-                                                    "padding-bottom": "5px"
-                                                }
-                                            ),
-                                            dmc_chip_comp(
-                                                comp_id="advanced_unet_device",
-                                                option_list=model_meta_dict[0]
-                                            ),
-
-                                        ], width=2),
-                                        dbc.Col([
-                                            html.P(
-                                                "⦿ Select type:",
-                                                style={
-                                                    "margin": "0",
-                                                    "padding-bottom": "5px"
-                                                }
-                                            ),
-                                            dmc_chip_comp(
-                                                comp_id="advanced_unet_type",
-                                                option_list=model_meta_dict[1]
-                                            ),
-                                        ])
-                                    ])
-                                ]
-                            ),
-                            divider_line_comp(),
-                            # Legacy segmentor section
-                            checklist_comp(
-                                comp_id="legacy_id",
-                                options={"legacy: Legacy thresholding"
-                                         " with OpenCV": False}
-                            ),
-                            html.Ul(
-                                id="legacy_options",
-                                children=[
-                                    form_group_input(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 1},
-                                        label="thresh",
-                                        min=-10, max=10, step=1,
-                                        default=-6
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 2},
-                                        label="blur",
-                                        min=0, max=10, step=1,
-                                        default=0
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 3},
-                                        label="binaryops",
-                                        min=0, max=10, step=1,
-                                        default=5
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 4},
-                                        label="diff_method",
-                                        min=0, max=10, step=1,
-                                        default=1
-                                    ),
-                                    form_group_dropdown(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 5},
-                                        label="clear_border",
-                                        options=["True", "False"],
-                                        default="True"
-                                    ),
-                                    form_group_dropdown(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 6},
-                                        label="fill_holes",
-                                        options=["True", "False"],
-                                        default="True"
-                                    ),
-
-                                    form_group_input(
-                                        comp_id={"type": "legacy_param",
-                                                 "index": 7},
-                                        label="closing_disk",
-                                        min=0, max=10, step=1,
-                                        default=5
-                                    ),
-                                ]
-                            ),
-                            divider_line_comp(),
-                            checklist_comp(
-                                comp_id="watershed_id",
-                                options={
-                                    "watershed: Watershed algorithm": False,
-                                }
-                            ),
-                            html.Ul(
-                                id="watershed_options",
-                                children=[
-                                    form_group_dropdown(
-                                        comp_id={"type": "watershed_param",
-                                                 "index": 1},
-                                        label="clear_border",
-                                        options=["True", "False"],
-                                        default="True"
-                                    ),
-                                    form_group_dropdown(
-                                        comp_id={"type": "watershed_param",
-                                                 "index": 2},
-                                        label="fill_holes",
-                                        options=["True", "False"],
-                                        default="True"
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "watershed_param",
-                                                 "index": 3},
-                                        label="closing_disk",
-                                        min=0, max=10, step=1,
-                                        default=5
-                                    ),
-                                ]
-                            ),
-                            divider_line_comp(),
-                            # STD segmentor section
-                            checklist_comp(
-                                comp_id="std_id",
-                                options={
-                                    "std: Standard-deviation-"
-                                    "based thresholding": False,
-                                }
-                            ),
-                            html.Ul(
-                                id="std_options",
-                                children=[
-                                    form_group_dropdown(
-                                        comp_id={"type": "std_param",
-                                                 "index": 1},
-                                        label="clear_border",
-                                        options=["True", "False"],
-                                        default="True"
-                                    ),
-                                    form_group_dropdown(
-                                        comp_id={"type": "std_param",
-                                                 "index": 2},
-                                        label="fill_holes",
-                                        options=["True", "False"],
-                                        default="True"
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "std_param",
-                                                 "index": 3},
-                                        label="closing_disk",
-                                        min=0, max=10, step=1,
-                                        default=5
-                                    )
-                                ]
-                            ),
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Background Correction / Subtraction Method",
-                        children=[
-                            checklist_comp(
-                                comp_id="rollmed_id",
-                                options={
-                                    "rollmed: Rolling median "
-                                    "RT-DC background image "
-                                    "computation": False,
-                                }
-                            ),
-                            html.Ul(
-                                id="rollmed_options",
-                                children=[
-                                    form_group_input(
-                                        comp_id={"type": "rollmed_param",
-                                                 "index": 1},
-                                        label="kernel_size",
-                                        min=50, max=500, step=1,
-                                        default=100
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "rollmed_param",
-                                                 "index": 2},
-                                        label="batch_size",
-                                        min=0, max=100000, step=1,
-                                        default=10000
-                                    )
-                                ]
-                            ),
-                            divider_line_comp(),
-                            checklist_comp(
-                                comp_id="sparsemed_id",
-                                options={
-                                    "sparsemed: Sparse median "
-                                    "background correction with "
-                                    "cleansing": False,
-                                },
-                                defaults=["sparsemed: Sparse median "
-                                          "background correction with "
-                                          "cleansing"]
-                            ),
-                            html.Ul(
-                                id="sparsemed_options",
-                                children=[
-                                    form_group_input(
-                                        comp_id={"type": "sparsemed_param",
-                                                 "index": 1},
-                                        label="kernel_size",
-                                        min=50, max=500, step=1,
-                                        default=200
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "sparsemed_param",
-                                                 "index": 2},
-                                        label="split_time",
-                                        min=1, max=30, step=1,
-                                        default=1
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "sparsemed_param",
-                                                 "index": 3},
-                                        label="thresh_cleansing",
-                                        min=0, max=1, step=0.1,
-                                        default=0
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "sparsemed_param",
-                                                 "index": 4},
-                                        label="frac_cleansing",
-                                        min=0, max=1, step=0.1,
-                                        default=0.8
-                                    )
-                                ]
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Available gating options",
-                        children=[
-                            checklist_comp(
-                                comp_id="ngate_id",
-                                options={
-                                    "norm gating": False,
-                                },
-                            ),
-                            html.Ul(
-                                id="ngate_options",
-                                children=[
-                                    form_group_dropdown(
-                                        comp_id={"type": "ngate_param",
-                                                 "index": 1},
-                                        label="online_gates",
-                                        options=["True", "False"],
-                                        default="False",
-                                    ),
-                                    form_group_input(
-                                        comp_id={"type": "ngate_param",
-                                                 "index": 2},
-                                        label="size_thresh_mask",
-                                        min=0, max=10, step=1,
-                                        default=0
-                                    )
-                                ]
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Further Options",
-                        children=[
-                            checklist_comp(
-                                comp_id="repro_id",
-                                options={
-                                    "--reproduce": False,
-                                }
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Classification Model",
-                        children=[
-                            checklist_comp(
-                                comp_id="classifier_id",
-                                options={
-                                    "bloody-bunny_g1_bacae: "
-                                    "Bloody Bunny": False,
-                                },
-                                defaults=["bloody-bunny_g1_bacae: "
-                                          "Bloody Bunny"]
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Post Analysis (Not Implemented)",
-                        children=[
-                            checklist_comp(
-                                comp_id="adv_postana_id",
-                                options={
-                                    "Benchmarking": True,
-                                    "Scatter Plot": True,
-                                }
-                            )
-                        ]
-                    ),
-                    dbc.AccordionItem(
-                        title="Data to Process",
-                        item_id="hsm_accord",
-                        children=[
-                            create_hsm_grid(),
-                            line_breaks(times=2),
-                        ]
-                    )
+                    advanced_title_section(),
+                    advanced_segmentation_section(),
+                    background_correction_section(),
+                    gating_options_section(),
+                    further_options_section(),
+                    advanced_prediction_section(),
+                    advanced_post_analysis_section(),
+                    advanced_data_to_process_section()
                 ],
                 middle=True,
                 open_first=True,
@@ -442,33 +485,43 @@ def advanced_page_layout(refresh_path):
                           "margin": "auto",
                       }),
             line_breaks(times=5),
-            dcc.Store(id="store_advanced_template", storage_type="local"),
-            dcc.Store(id="store_advanced_unet_params", storage_type="local"),
-            dcc.Store(id="store_legacy_params", storage_type="local"),
-            dcc.Store(id="store_watershed_params", storage_type="local"),
-            dcc.Store(id="store_std_params", storage_type="local"),
-            dcc.Store(id="store_rollmed_params", storage_type="local"),
-            dcc.Store(id="store_sparsemed_params", storage_type="local"),
-            dcc.Store(id="store_ngate_params", storage_type="local"),
+            dcc.Store(id="cache_advanced_template", storage_type="local"),
+            dcc.Store(id="cache_advanced_unet_model_path",
+                      storage_type="local"),
+            dcc.Store(id="cache_legacy_params", storage_type="local"),
+            dcc.Store(id="cache_watershed_params", storage_type="local"),
+            dcc.Store(id="cache_std_params", storage_type="local"),
+            dcc.Store(id="cache_rollmed_params", storage_type="local"),
+            dcc.Store(id="cache_sparsemed_params", storage_type="local"),
+            dcc.Store(id="cache_norm_gate_params", storage_type="local"),
         ]
     )
 
 
 @callback(
-    Output("store_advanced_unet_params", "data"),
+    Output("advanced_measure_options", "children"),
+    Output("cache_advanced_unet_model_path", "data"),
     Input("advanced_unet_id", "value"),
-    Input("advanced_unet_device", "value"),
-    Input("advanced_unet_type", "value"),
-    Input("advanced_unet_options", "key")
+    Input("advanced_measure_options", "value")
 )
-def cache_unet_options(unet_click, device, ftype, mpath_key):
-    meta_dict = dvc_gitlab.get_model_metadata()[2]
-    if device and ftype and unet_click:
-        model_path = meta_dict[device][ftype]
-        unet_path = {mpath_key: model_path}
-        return {unet_click[0]: unet_path}
-    else:
-        return {}
+def show_and_cache_unet_model_meta(unet_click, measure_option):
+    """This circular callback fetches unet model metadata from the DVC repo
+    and shows it as dmc.RadioGroup options, enable the user to select the
+    appropriate options from the same dmc.RadioItem options."""
+
+    model_dict = dvc_gitlab.get_model_metadata()
+
+    check_boxes = [
+        dmc.Radio(
+            label=f"{meta['device'].capitalize()} device, "
+                  f"{meta['type'].capitalize()} cells",
+            value=model_ckp, color="green"
+        ) for model_ckp, meta in model_dict.items()]
+
+    segm_options = {}
+    if unet_click and measure_option:
+        segm_options[unet_click[0]] = {"model_file": measure_option}
+    return check_boxes, segm_options
 
 
 @callback(
@@ -484,15 +537,15 @@ def toggle_unet_options(unet_click):
 
 
 @callback(
-    Output("store_legacy_params", "data"),
+    Output("cache_legacy_params", "data"),
     Output("legacy_options", "style"),
     Input("legacy_id", "value"),
     Input({"type": "legacy_param", "index": ALL}, "key"),
     Input({"type": "legacy_param", "index": ALL}, "value"),
 )
 def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
-    """Toggle legacy segmentation options with legacy switch, selected options
-    will be cached"""
+    """Toggle legacy segmentation options with legacy switch, selected
+    options will be cached"""
     legacy_params = {k: v for k, v in zip(leg_keys, leg_values)}
 
     if len(legacy_opt) == 1:
@@ -502,15 +555,15 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
 
 
 @callback(
-    Output("store_watershed_params", "data"),
+    Output("cache_watershed_params", "data"),
     Output("watershed_options", "style"),
     Input("watershed_id", "value"),
     Input({"type": "watershed_param", "index": ALL}, "key"),
     Input({"type": "watershed_param", "index": ALL}, "value"),
 )
 def toggle_watershed_options(watershed_opt, water_keys, water_values):
-    """Toggle watershed segmentation options with watershed switch, selected
-    options will be cached"""
+    """Toggle watershed segmentation options with watershed switch,
+    selected options will be cached"""
     water_params = {k: v for k, v in zip(water_keys, water_values)}
     if len(watershed_opt) == 1:
         return {watershed_opt[0]: water_params}, {"display": "block"}
@@ -519,7 +572,7 @@ def toggle_watershed_options(watershed_opt, water_keys, water_values):
 
 
 @callback(
-    Output("store_std_params", "data"),
+    Output("cache_std_params", "data"),
     Output("std_options", "style"),
     Input("std_id", "value"),
     Input({"type": "std_param", "index": ALL}, "key"),
@@ -536,7 +589,7 @@ def toggle_std_options(std_opt, std_keys, std_values):
 
 
 @callback(
-    Output("store_rollmed_params", "data"),
+    Output("cache_rollmed_params", "data"),
     Output("rollmed_options", "style"),
     Input("rollmed_id", "value"),
     Input({"type": "rollmed_param", "index": ALL}, "key"),
@@ -553,7 +606,7 @@ def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
 
 
 @callback(
-    Output("store_sparsemed_params", "data"),
+    Output("cache_sparsemed_params", "data"),
     Output("sparsemed_options", "style"),
     Input("sparsemed_id", "value"),
     Input({"type": "sparsemed_param", "index": ALL}, "key"),
@@ -570,74 +623,91 @@ def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
 
 
 @callback(
-    Output("store_ngate_params", "data"),
-    Output("ngate_options", "style"),
-    Input("ngate_id", "value"),
-    Input({"type": "ngate_param", "index": ALL}, "key"),
-    Input({"type": "ngate_param", "index": ALL}, "value"),
+    Output("cache_norm_gate_params", "data"),
+    Output("norm_gate_options", "style"),
+    Input("norm_gate_id", "value"),
+    Input({"type": "norm_gate_param", "index": ALL}, "key"),
+    Input({"type": "norm_gate_param", "index": ALL}, "value"),
 )
-def toggle_ngate_options(ngate_opt, ngate_keys, ngate_values):
+def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     """Toggle norm gating options with norm gating switch, selected options
     will be cached"""
-    ngate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
+    norm_gate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
     if len(ngate_opt) == 1:
-        return {ngate_opt[0]: ngate_params}, {"display": "block"}
+        return {ngate_opt[0]: norm_gate_params}, {"display": "block"}
     else:
         return {}, {"display": "none"}
 
 
 @callback(
-    Output("store_advanced_template", "data"),
+    Output("cache_advanced_template", "data"),
     Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
     # Direct options
-    Input("dcevent_ver_id", "value"),
-    Input("repro_id", "value"),
-    Input("classifier_id", "value"),
-    Input("adv_postana_id", "value"),
+    Input("reproduce_flag", "value"),
+    Input("classifier_name", "value"),
+    Input("advanced_post_analysis_flag", "value"),
     # Cached options
-    Input("store_advanced_unet_params", "data"),
-    Input("store_legacy_params", "data"),
-    Input("store_watershed_params", "data"),
-    Input("store_std_params", "data"),
-    Input("store_rollmed_params", "data"),
-    Input("store_sparsemed_params", "data"),
-    Input("store_ngate_params", "data"),
+    Input("cache_advanced_unet_model_path", "data"),
+    Input("cache_legacy_params", "data"),
+    Input("cache_watershed_params", "data"),
+    Input("cache_std_params", "data"),
+    Input("cache_rollmed_params", "data"),
+    Input("cache_sparsemed_params", "data"),
+    Input("cache_norm_gate_params", "data"),
     # Data to process
     Input("show_grid", "selectedRows")
 )
-def collect_advanced_pipeline_params(*args):
-    """Collect all the user selected and cached parameters. Then, it updates
-    the advanced issue template. Updated template will be cached"""
-    # Get the title of the request
-    author_name, advanced_title = args[0:2]
-    # Get the params value list and convert it to a dictionary
-    params = [item for sublist in args[2:5] for item in sublist]
-    params_dict = {params: {} for params in params}
-    # Get the cached selections and update the dictionary
-    for d in args[6:-1]:
-        params_dict.update(d)
-    # Get the data files
-    selected_files = args[-1]
+def collect_advanced_pipeline_params(
+        author_name, advanced_title,
+        reproduce_flag, classifier_name, post_analysis_flag,
+        cached_unet_model_path, cached_legacy_params,
+        cache_watershed_params,
+        cache_std_params, cache_rollmed_params, cache_sparsemed_params,
+        cache_norm_gate_params,
+        selected_rows
+):
+    """
+    Collects all the user-selected and cached parameters to update
+    the advanced issue template. The updated template will be cached.
+    """
+    # Combine params from direct options
+    direct_params = [reproduce_flag, classifier_name, post_analysis_flag]
+    params_list = [item for sublist in direct_params if sublist for item in
+                   sublist]
+    params_dict = {param: {} for param in params_list}
 
-    # Update the template, only when author name, title, and data files
-    # to process are entered
-    if author_name and advanced_title and selected_files:
-        rtdc_files = [s["filepath"] for s in selected_files]
-        # Create a template dict with title
+    # Combine params from cached options
+    cached_params = [
+        cached_unet_model_path, cached_legacy_params,
+        cache_watershed_params,
+        cache_std_params, cache_rollmed_params, cache_sparsemed_params,
+        cache_norm_gate_params
+    ]
+    for param in cached_params:
+        if param:
+            params_dict.update(param)
+
+    # Extract file paths from selected rows
+    rtdc_files = [s["filepath"] for s in selected_rows] \
+        if selected_rows else []
+
+    # Update the template if required fields are provided
+    if author_name and advanced_title and rtdc_files:
         pipeline_template = {"title": advanced_title}
-        # Update the advanced template from request repo
-        description = update_advanced_template(params_dict, author_name,
-                                               rtdc_files,
-                                               get_advanced_template())
+        description = update_advanced_template(
+            params_dict, author_name, rtdc_files, get_advanced_template()
+        )
         pipeline_template["description"] = description
         return pipeline_template
+
+    return None
 
 
 @callback(
     Output("advanced_popup", "is_open"),
     Input("create_advanced_pipeline_button", "n_clicks"),
-    Input("store_advanced_template", "data"),
+    Input("cache_advanced_template", "data"),
     Input("advanced_popup_close", "n_clicks"),
     State("advanced_popup", "is_open")
 )
@@ -659,7 +729,7 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     Input("advanced_title_text", "value"),
     Input("show_grid", "selectedRows"),
     Input("advanced_unet_id", "value"),
-    Input("store_advanced_unet_params", "data")
+    Input("cache_advanced_unet_model_path", "data")
 )
 def toggle_advanced_create_pipeline_button(author_name, title, selected_files,
                                            unet_click, unet_mpath):
