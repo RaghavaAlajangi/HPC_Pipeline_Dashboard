@@ -432,9 +432,9 @@ def update_page(pclick, nclick, page_num):
     """Cache page number when user click on `Previous` and `Next` buttons"""
     triggered_id = ctx.triggered_id
 
-    if triggered_id == "next_button":
+    if triggered_id == "next_button" or nclick:
         page_num += 1
-    elif triggered_id == "prev_button":
+    elif triggered_id == "prev_button" or pclick:
         page_num -= 1
     is_disable = page_num < 2
     return page_num, is_disable
@@ -443,13 +443,15 @@ def update_page(pclick, nclick, page_num):
 @callback(
     Output("open_tab_badge", "children"),
     Output("close_tab_badge", "children"),
-    Input("main_tabs", "value"),
+    Input("url", "pathname"),
 )
-def show_pipeline_number(active_tab):
+def show_pipeline_number(pathname):
     """Display how many pipelines available in opened and closed tabs"""
-    open_num = request_gitlab.total_issues(state="opened")
-    close_num = request_gitlab.total_issues(state="closed")
-    return open_num, close_num
+    if pathname == BASENAME_PREFIX:
+        open_num = request_gitlab.total_issues(state="opened")
+        close_num = request_gitlab.total_issues(state="closed")
+        return open_num, close_num
+    return no_update
 
 
 @callback(
