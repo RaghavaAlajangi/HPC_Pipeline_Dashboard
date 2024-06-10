@@ -120,16 +120,23 @@ def get_tab_content(tab_id, load_id):
         # Previous and next buttons
         dbc.ListGroup([
             dbc.ListGroupItem(
-                dbc.Button(
-                    children="< Prev", color="info", disabled=True,
-                    id="prev_button", n_clicks=0
-                )
+                dmc.Button(
+                    "Prev",
+                    id="prev_button",
+                    disabled=True,
+                    leftIcon=DashIconify(
+                        icon="streamline:button-previous-solid"),
+                ),
             ),
             dbc.ListGroupItem(
-                dbc.Button(
-                    children="Next >", color="info", disabled=True,
-                    id="next_button", n_clicks=0
-                )
+                dmc.Button(
+                    "Next",
+                    id="next_button",
+                    color="#017b50",
+                    disabled=True,
+                    rightIcon=DashIconify(
+                        icon="streamline:button-next-solid"),
+                ),
             ),
             # Cache page number on the browser
             dcc.Store(id="cache_page_num", storage_type="memory", data=1)
