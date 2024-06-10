@@ -312,21 +312,23 @@ def toggle_legacy_options(legacy_click):
     Input("simple_post_analysis_switch", "value"),
     Input("show_grid", "selectedRows")
 )
-def collect_simple_pipeline_params(author_name, simple_title, segment_options,
+def collect_simple_pipeline_params(author_name, simple_title,
+                                   cached_seg_options,
                                    simple_classifier, simple_postana,
                                    selected_files):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    params = list(segment_options.keys()) + simple_classifier + simple_postana
+    params = list(
+        cached_seg_options.keys()) + simple_classifier + simple_postana
 
     # Update the template, only when author name, title, and data files
     # to process are entered
-    if author_name and simple_title and selected_files and segment_options:
+    if author_name and simple_title and selected_files and cached_seg_options:
         rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
-        description = update_simple_template(params, segment_options,
+        description = update_simple_template(params, cached_seg_options,
                                              author_name, rtdc_files,
                                              get_simple_template())
         pipeline_template["description"] = description
@@ -358,12 +360,12 @@ def toggle_simple_create_pipeline_button(author_name, title, selected_files,
     Input("simple_popup_close", "n_clicks"),
     State("simple_popup", "is_open")
 )
-def simple_request_submission_popup(_, cached_simp_temp, close_popup, popup):
+def simple_request_submission_popup(_, cached_template, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
     button_trigger = [p["prop_id"] for p in ctx.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
-        request_gitlab.run_pipeline(cached_simp_temp)
+        request_gitlab.run_pipeline(cached_template)
         return not popup
     if close_popup:
         return not popup
