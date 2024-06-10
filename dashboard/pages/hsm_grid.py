@@ -3,10 +3,10 @@ import pickle
 
 from dash import callback, dcc, html, Input, Output, State
 from dash import callback_context as cc
+from dash.exceptions import PreventUpdate
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
-from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
 from .common import hover_card, line_breaks
@@ -213,8 +213,7 @@ def load_hms_grid_data(pipeline_active_accord):
     """Show HSMFS grid only when user clicks on `Data to Process` accord"""
     if pipeline_active_accord == "hsm_accord":
         return load_hsm_data()
-    else:
-        return None
+    return None
 
 
 @callback(
@@ -251,8 +250,7 @@ def toggle_input_group_button(drop_value, filename):
     and DCOR identifier is entered"""
     if drop_value and filename:
         return False
-    else:
-        return True
+    return True
 
 
 @callback(
@@ -302,7 +300,7 @@ def cache_user_given_hsm_files(hsm_selection, cached_files):
     State("hsm_grid", "dashGridOptions"),
     prevent_initial_call=True
 )
-def update_filter(filter_value, gridOptions):
+def update_filter(filter_value, grid_options):
     """Filter grid rows based on filter value"""
-    gridOptions["quickFilterText"] = filter_value
-    return gridOptions
+    grid_options["quickFilterText"] = filter_value
+    return grid_options

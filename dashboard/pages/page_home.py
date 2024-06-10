@@ -436,35 +436,47 @@ def switch_tabs(active_tab, page_num, search_term):
     if active_tab in ["welcome", "workflow"]:
         return [no_update] * 5
 
-    if active_tab in ["opened", "closed"]:
-        pipeline_meta = request_gitlab.get_issues_meta(
-            state=active_tab,
-            page=page_num,
-            per_page=issues_per_page,
-            search_term=search_term
-        )
+    # if active_tab in ["opened", "closed"]:
+    pipeline_meta = request_gitlab.get_issues_meta(
+        state=active_tab,
+        page=page_num,
+        per_page=issues_per_page,
+        search_term=search_term
+    )
 
-        is_disabled = len(pipeline_meta) != issues_per_page
-        if len(pipeline_meta) == 0:
-            return (
-                html.Div([
-                    line_breaks(1),
-                    header_comp(f"⦿ No {active_tab} requests!", indent=40),
-                    line_breaks(5)
-                ]),
-                no_update,
-                True,
-                no_update,
-                no_update
-            )
-        else:
-            if active_tab == "opened":
-                return (create_pipelines_accordion(pipeline_meta, active_tab),
-                        no_update, is_disabled, load_style, no_update)
-            elif active_tab == "closed":
-                return no_update, create_pipelines_accordion(
-                    pipeline_meta,
-                    active_tab), is_disabled, no_update, load_style
+    is_disabled = len(pipeline_meta) != issues_per_page
+    if len(pipeline_meta) == 0:
+        return [
+            html.Div([
+                line_breaks(1),
+                header_comp("⦿ No active requests found!", indent=40),
+                line_breaks(5)
+            ]),
+            no_update,
+            no_update,
+            no_update,
+            no_update
+        ]
+    # else:
+    if active_tab == "opened":
+        return [
+            create_pipelines_accordion(pipeline_meta, active_tab),
+            no_update,
+            is_disabled,
+            load_style,
+            no_update
+        ]
+    if active_tab == "closed":
+        return [
+            no_update,
+            create_pipelines_accordion(pipeline_meta, active_tab),
+            is_disabled,
+            no_update,
+            load_style
+        ]
+
+    # Default return statement in case none of the conditions are met
+    return [no_update] * 5
 
 
 @callback(
