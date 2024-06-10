@@ -1,4 +1,4 @@
-from dash import callback, dcc, html, Input, Output, State
+from dash import callback, dcc, html, Input, no_update, Output, State
 from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
@@ -23,6 +23,7 @@ def get_simple_template():
 
 
 def simple_title_section():
+    """Creates a simple title section for the pipeline."""
     return dbc.AccordionItem(
         title="Title (required)",
         children=[
@@ -56,6 +57,7 @@ def simple_title_section():
 
 
 def simple_segmentation_section():
+    """Creates the segmentation section of the simple pipeline."""
     return dbc.AccordionItem(
         title="Segmentation",
         children=[
@@ -67,7 +69,7 @@ def simple_segmentation_section():
                         options=[
                             {"label": "U-Net Segmentation", "value": "mlunet"},
                         ],
-                        id="simple_unet_id",
+                        id="simple_unet_switch",
                         switch=True,
                         value=[],
                         labelCheckedClassName="text-success",
@@ -92,7 +94,7 @@ def simple_segmentation_section():
                 id="simple_unet_options",
                 children=[
                     dmc.RadioGroup(
-                        id="simple_measure_options",
+                        id="simple_measure_type",
                         label="Select Measurement Type",
                         description="Please make sure that you select the "
                                     "right option. Otherwise, the pipeline "
@@ -113,7 +115,7 @@ def simple_segmentation_section():
                             {"label": "Legacy Thresholding Segmentation",
                              "value": "legacy"},
                         ],
-                        id="simple_legacy_id",
+                        id="simple_legacy_switch",
                         switch=True,
                         value=[],
                         labelCheckedClassName="text-success",
@@ -136,7 +138,7 @@ def simple_segmentation_section():
                 id="simple_legacy_options",
                 children=[
                     form_group_input(
-                        comp_id="simple_legacy_thresh_id",
+                        comp_id="simple_legacy_thresh_value",
                         label="Threshold Value:",
                         label_key="thresh",
                         min=-10, max=10, step=1,
@@ -149,6 +151,7 @@ def simple_segmentation_section():
 
 
 def simple_prediction_section():
+    """Creates the prediction section of the simple pipeline."""
     return dbc.AccordionItem(
         title="Prediction",
         children=[
@@ -163,11 +166,12 @@ def simple_prediction_section():
 
 
 def simple_post_analysis_section():
+    """Creates the post analysis section of the simple pipeline."""
     return dbc.AccordionItem(
         title="Post Analysis (Not Implemented)",
         children=[
             checklist_comp(
-                comp_id="simple_post_analysis_flag",
+                comp_id="simple_post_analysis_switch",
                 options={
                     "Benchmarking": True,
                     "Scatter Plots": True
@@ -178,6 +182,7 @@ def simple_post_analysis_section():
 
 
 def simple_data_to_process_section():
+    """Creates the data to process section of the simple pipeline."""
     return dbc.AccordionItem(
         title="Data to Process",
         item_id="hsm_accord",
@@ -238,20 +243,20 @@ def simple_page_layout(refresh_path):
                       }),
             line_breaks(times=5),
             dcc.Store(id="cache_simple_template", storage_type="local"),
-            dcc.Store(id="cache_simple_segm_data", storage_type="local"),
+            dcc.Store(id="cache_simple_seg_options", storage_type="local"),
         ]
     )
 
 
 @callback(
-    Output("simple_measure_options", "children"),
-    Output("cache_simple_segm_data", "data"),
-    Input("simple_unet_id", "value"),
-    Input("simple_measure_options", "value"),
-    Input("simple_legacy_id", "value"),
-    Input("simple_legacy_thresh_id", "value")
+    Output("simple_measure_type", "children"),
+    Output("cache_simple_seg_options", "data"),
+    Input("simple_unet_switch", "value"),
+    Input("simple_measure_type", "value"),
+    Input("simple_legacy_switch", "value"),
+    Input("simple_legacy_thresh_value", "value")
 )
-def show_and_cache_segment_options(unet_click, measure_option, legacy_click,
+def show_and_cache_segment_options(unet_click, measurement_type, legacy_click,
                                    legacy_thresh):
     """This circular callback fetches unet model metadata from the DVC repo
     and shows it as dmc.RadioGroup options, enable the user to select the
@@ -267,8 +272,8 @@ def show_and_cache_segment_options(unet_click, measure_option, legacy_click,
         ) for model_ckp, meta in model_dict.items()]
 
     segm_options = {}
-    if unet_click and measure_option:
-        segm_options[unet_click[0]] = {"model_file": measure_option}
+    if unet_click and measurement_type:
+        segm_options[unet_click[0]] = {"model_file": measurement_type}
 
     if legacy_click and legacy_thresh:
         segm_options[legacy_click[0]] = {"thresh": legacy_thresh}
@@ -278,35 +283,33 @@ def show_and_cache_segment_options(unet_click, measure_option, legacy_click,
 
 @callback(
     Output("simple_unet_options", "style"),
-    Input("simple_unet_id", "value"),
+    Input("simple_unet_switch", "value"),
 )
 def toggle_unet_options(unet_click):
     """Toggle mlunet segmentation options with unet switch"""
     if unet_click:
         return {"display": "block"}
-    else:
-        return {"display": "none"}
+    return {"display": "none"}
 
 
 @callback(
     Output("simple_legacy_options", "style"),
-    Input("simple_legacy_id", "value"),
+    Input("simple_legacy_switch", "value"),
 )
 def toggle_legacy_options(legacy_click):
     """Toggle legacy segmentation options with legacy switch"""
     if legacy_click:
         return {"display": "block"}
-    else:
-        return {"display": "none"}
+    return {"display": "none"}
 
 
 @callback(
     Output("cache_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
-    Input("cache_simple_segm_data", "data"),
+    Input("cache_simple_seg_options", "data"),
     Input("simple_classifier_name", "value"),
-    Input("simple_post_analysis_flag", "value"),
+    Input("simple_post_analysis_switch", "value"),
     Input("show_grid", "selectedRows")
 )
 def collect_simple_pipeline_params(author_name, simple_title, segment_options,
@@ -328,6 +331,7 @@ def collect_simple_pipeline_params(author_name, simple_title, segment_options,
                                              get_simple_template())
         pipeline_template["description"] = description
         return pipeline_template
+    return no_update
 
 
 @callback(
@@ -335,24 +339,16 @@ def collect_simple_pipeline_params(author_name, simple_title, segment_options,
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
     Input("show_grid", "selectedRows"),
-    Input("simple_unet_id", "value"),
-    Input("cache_simple_segm_data", "data")
+    Input("cache_simple_seg_options", "data")
 )
 def toggle_simple_create_pipeline_button(author_name, title, selected_files,
-                                         unet_click, unet_mpath):
+                                         cached_seg_options):
     """Activates create pipeline button only when author name, title, and
     data files are entered"""
-    if author_name and title and title.strip() and selected_files:
-        if unet_click and unet_mpath:
-            return False
-        elif unet_click and not unet_click:
-            return True
-        elif not unet_click:
-            return False
-        else:
-            return True
-    else:
-        return True
+    if author_name and title and title.strip() and selected_files and \
+            cached_seg_options:
+        return False
+    return True
 
 
 @callback(
