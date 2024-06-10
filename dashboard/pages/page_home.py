@@ -149,10 +149,19 @@ def get_tab_content(tab_id, load_id):
 
 def create_pipeline_accordion_item(pipeline, mode):
     """Creates an accordion item for a given pipeline"""
+
     if mode == "opened":
         icon_flag = "fluent-mdl2:processing-run"
+        pipe_status_button = dmc.Col(
+            dmc.SegmentedControl(data=["Run pipeline", "Pause pipeline"],
+                                 radius="lg", size="xs", color="orange"
+                                 ),
+            span=2,
+            offset=6
+        )
     else:
         icon_flag = "fluent-mdl2:processing-cancel"
+        pipe_status_button = dmc.Col()
 
     pipeline_color = "success" if pipeline["type"] == "simple" else "danger"
 
@@ -160,28 +169,46 @@ def create_pipeline_accordion_item(pipeline, mode):
         children=[
             dmc.AccordionControl(
                 children=[
-                    # Pipeline title
-                    html.P(
-                        children=f"(#{pipeline['iid']}) {pipeline['title']}",
-                        style={"color": "white", "display": "inline"}
-                    ),
-                    html.Br(),
-                    # Badge for type of pipeline (simple/advanced)
-                    dbc.Badge(
-                        children=pipeline["type"].capitalize(),
-                        className="me-2", color=pipeline_color,
-                        text_color="black"
-                    ),
-                    # Badge for user
-                    dbc.Badge(
-                        children=pipeline["user"], className="me-2",
-                        color="success", text_color="black",
-                    ),
-                    # Badge for date
-                    dbc.Badge(
-                        children=pipeline["date"], color="info",
-                        className="me-2", text_color="black"
-                    ),
+                    dmc.Grid(
+                        children=[
+                            dmc.Col([
+                                # Pipeline title
+                                html.P(
+                                    children=f"(#{pipeline['iid']}) "
+                                             f"{pipeline['title']}",
+                                    style={"color": "white",
+                                           "display": "inline"}
+                                ),
+                                html.Br(),
+                                # Badge for type of pipeline (simple/advanced)
+                                dbc.Badge(
+                                    children=pipeline[
+                                        "type"].capitalize(),
+                                    className="me-2",
+                                    color=pipeline_color,
+                                    text_color="black"
+                                ),
+                                # Badge for user
+                                dbc.Badge(
+                                    children=pipeline["user"],
+                                    className="me-2",
+                                    color="success", text_color="black",
+                                ),
+                                # Badge for date
+                                dbc.Badge(
+                                    children=pipeline["date"],
+                                    color="info",
+                                    className="me-2", text_color="black"
+                                )
+                            ],
+                                span=4
+                            ),
+                            pipe_status_button
+                        ],
+                        justify="flex-start",
+                        align="center",
+                        gutter="xs"
+                    )
                 ],
                 # Pipeline icon
                 icon=DashIconify(
