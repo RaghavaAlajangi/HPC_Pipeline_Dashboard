@@ -1,2 +1,5 @@
-pytest
+coverage
+dash[testing]
 flake8
+pytest
+pytest-cov
