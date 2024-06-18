@@ -23,15 +23,16 @@ from dashboard.pages.page_simple import (collect_simple_pipeline_params,
 @pytest.fixture
 def mock_request_gitlab_instance(mocker):
     """Mock the request_gitlab instance"""
-    request_repo_mocker = mocker.patch(
+    run_pipeline_mocker = mocker.patch(
         "dashboard.gitlab.request_gitlab.run_pipeline")
 
     # Simulate the behavior of request_gitlab.run_pipeline when called
     # This will skip the actual execution of run_pipeline
-    mock_issue = MagicMock()
-    mock_issue.notes.create.return_value = {"body": "mocked_GO"}
-    request_repo_mocker.return_value = mock_issue.notes.create.return_value
-    return request_repo_mocker
+    run_pipeline_value = MagicMock()
+    run_pipeline_value.notes.create.return_value = {"body": "mocked_GO"}
+
+    run_pipeline_mocker.return_value = run_pipeline_value
+    return run_pipeline_mocker
 
 
 @pytest.fixture
