@@ -9,16 +9,18 @@ from .common import (button_comp, checklist_comp, divider_line_comp,
                      hover_card, line_breaks, paragraph_comp, popup_comp)
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
-from ..gitlab import request_gitlab, dvc_gitlab
+from ..gitlab import get_gitlab_instances
 
 
 def get_user_list():
     """Fetch the members list from request repo"""
+    request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_project_members()
 
 
 def get_simple_template():
     """Fetch the simple request template from request repo"""
+    request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_request_template(temp_type="simple")
 
 
@@ -262,6 +264,8 @@ def show_and_cache_segment_options(unet_click, measurement_type, legacy_click,
     and shows it as dmc.RadioGroup options, enable the user to select the
     appropriate options from the same dmc.RadioItem options."""
 
+    _, dvc_gitlab = get_gitlab_instances()
+
     model_dict = dvc_gitlab.get_model_metadata()
 
     check_boxes = [
@@ -345,8 +349,8 @@ def collect_simple_pipeline_params(author_name, simple_title,
 )
 def toggle_simple_create_pipeline_button(author_name, title, selected_files,
                                          cached_seg_options):
-    """Activates create pipeline button only when author name, title, and
-    data files are entered"""
+    """Activates create pipeline button only when author name, title,
+    data files, and segmentation method are entered"""
     if author_name and title and title.strip() and selected_files and \
             cached_seg_options:
         return False
@@ -363,6 +367,9 @@ def toggle_simple_create_pipeline_button(author_name, title, selected_files,
 def simple_request_submission_popup(_, cached_template, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
+
+    request_gitlab, _ = get_gitlab_instances()
+
     button_trigger = [p["prop_id"] for p in ctx.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
         request_gitlab.run_pipeline(cached_template)

@@ -9,7 +9,7 @@ import dash_mantine_components as dmc
 from .common import (button_comp, chat_box, create_list_group, header_comp,
                      line_breaks, paragraph_comp, progressbar_comp, popup_comp,
                      web_link)
-from ..gitlab import request_gitlab
+from ..gitlab import get_gitlab_instances
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
@@ -447,6 +447,8 @@ def update_page(pclick, nclick, page_num):
 )
 def show_pipeline_number(pathname):
     """Display how many pipelines available in opened and closed tabs"""
+    request_gitlab, _ = get_gitlab_instances()
+
     if pathname == BASENAME_PREFIX:
         open_num = request_gitlab.total_issues(state="opened")
         close_num = request_gitlab.total_issues(state="closed")
@@ -468,6 +470,7 @@ def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
     issues_per_page = 10
+    request_gitlab, _ = get_gitlab_instances()
 
     if active_tab in ["welcome", "workflow"]:
         return [no_update] * 5
@@ -527,6 +530,8 @@ def switch_tabs(active_tab, page_num, search_term):
 )
 def show_pipeline_data(pipeline_num):
     """Display pipeline data when the user clicks on pipeline accordion"""
+
+    request_gitlab, _ = get_gitlab_instances()
 
     progress_comments = [
         "STATE: setup",
@@ -590,6 +595,8 @@ def toggle_stop_pipeline_button(active_tab, pipeline_num, cached_notes,
     """Enable stop pipeline button only for opened tab and comments of that
     pipeline are loaded. Also, open a popup notification when the user stops
     the pipeline (close GitLab issue)."""
+
+    request_gitlab, _ = get_gitlab_instances()
 
     # Check for pipeline_num, opened tab, and pipeline content
     if not pipeline_num or active_tab != "opened" or \

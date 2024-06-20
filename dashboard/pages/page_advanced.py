@@ -9,16 +9,18 @@ from .common import (button_comp, checklist_comp, divider_line_comp,
                      header_comp, hover_card, line_breaks, popup_comp)
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_advanced_template
-from ..gitlab import request_gitlab, dvc_gitlab
+from ..gitlab import get_gitlab_instances
 
 
 def get_user_list():
     """Fetch the members list from request repo"""
+    request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_project_members()
 
 
 def get_advanced_template():
     """Fetch the advanced request template from request repo"""
+    request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_request_template(temp_type="advanced")
 
 
@@ -509,6 +511,8 @@ def show_and_cache_unet_model_meta(unet_click, measure_option):
     and shows it as dmc.RadioGroup options, enable the user to select the
     appropriate options from the same dmc.RadioItem options."""
 
+    _, dvc_gitlab = get_gitlab_instances()
+
     model_dict = dvc_gitlab.get_model_metadata()
 
     check_boxes = [
@@ -714,6 +718,8 @@ def collect_advanced_pipeline_params(
 def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
+    request_gitlab, _ = get_gitlab_instances()
+
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_advanced_pipeline_button" in button_trigger and cached_adv_temp:
         request_gitlab.run_pipeline(cached_adv_temp)
