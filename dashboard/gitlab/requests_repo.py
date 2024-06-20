@@ -5,9 +5,7 @@ from .base import BaseAPI
 
 
 class RequestRepoAPI(BaseAPI):
-    def __init__(self, gitlab_url, access_token, project_num):
-        super().__init__(gitlab_url, access_token, project_num)
-
+    """HPC Pipeline Request repository API inherited from BaseAPI"""
     @staticmethod
     def human_readable_date(date):
         # Define the GMT+0200 timezone offset

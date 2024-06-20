@@ -5,8 +5,7 @@ from .base import BaseAPI
 
 
 class DVCRepoAPI(BaseAPI):
-    def __init__(self, gitlab_url, access_token, project_num):
-        super().__init__(gitlab_url, access_token, project_num)
+    """HPC Pipeline Data repository API inherited from BaseAPI"""
 
     def get_model_metadata(self):
         """Read model checkpoint files from repo and fetch metadata"""
