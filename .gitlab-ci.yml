@@ -25,6 +25,9 @@ pytest:
   stage: Test
   allow_failure: false
   script:
+    # Install dashboard requirements
+    - pip install -r requirements.txt
+    # Install tests requirements
     - pip install -r tests/requirements.txt
     - pip freeze
     - coverage run -m pytest
