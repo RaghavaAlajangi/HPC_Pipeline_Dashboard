@@ -9,16 +9,18 @@ from .common import (button_comp, checklist_comp, divider_line_comp,
                      header_comp, hover_card, line_breaks, popup_comp)
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_advanced_template
-from ..gitlab import request_gitlab, dvc_gitlab
+from ..gitlab import get_gitlab_instances
 
 
 def get_user_list():
     """Fetch the members list from request repo"""
+    request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_project_members()
 
 
 def get_advanced_template():
     """Fetch the advanced request template from request repo"""
+    request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_request_template(temp_type="advanced")
 
 
@@ -509,6 +511,8 @@ def show_and_cache_unet_model_meta(unet_click, measure_option):
     and shows it as dmc.RadioGroup options, enable the user to select the
     appropriate options from the same dmc.RadioItem options."""
 
+    _, dvc_gitlab = get_gitlab_instances()
+
     model_dict = dvc_gitlab.get_model_metadata()
 
     check_boxes = [
@@ -532,8 +536,7 @@ def toggle_unet_options(unet_click):
     """Toggle mlunet segmentation options with unet switch"""
     if unet_click:
         return {"display": "block"}
-    else:
-        return {"display": "none"}
+    return {"display": "none"}
 
 
 @callback(
@@ -548,10 +551,9 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
     options will be cached"""
     legacy_params = {k: v for k, v in zip(leg_keys, leg_values)}
 
-    if len(legacy_opt) == 1:
+    if legacy_opt:
         return {legacy_opt[0]: legacy_params}, {"display": "block"}
-    else:
-        return {}, {"display": "none"}
+    return None, {"display": "none"}
 
 
 @callback(
@@ -565,10 +567,9 @@ def toggle_watershed_options(watershed_opt, water_keys, water_values):
     """Toggle watershed segmentation options with watershed switch,
     selected options will be cached"""
     water_params = {k: v for k, v in zip(water_keys, water_values)}
-    if len(watershed_opt) == 1:
+    if watershed_opt:
         return {watershed_opt[0]: water_params}, {"display": "block"}
-    else:
-        return {}, {"display": "none"}
+    return None, {"display": "none"}
 
 
 @callback(
@@ -582,10 +583,9 @@ def toggle_std_options(std_opt, std_keys, std_values):
     """Toggle std segmentation options with std switch, selected options
     will be cached"""
     std_params = {k: v for k, v in zip(std_keys, std_values)}
-    if len(std_opt) == 1:
+    if std_opt:
         return {std_opt[0]: std_params}, {"display": "block"}
-    else:
-        return {}, {"display": "none"}
+    return None, {"display": "none"}
 
 
 @callback(
@@ -599,10 +599,9 @@ def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
     """Toggle rolling median background correction options with rolling
     median switch, selected options will be cached"""
     rollmed_params = {k: v for k, v in zip(rollmed_keys, rollmed_values)}
-    if len(rollmed_opt) == 1:
+    if rollmed_opt:
         return {rollmed_opt[0]: rollmed_params}, {"display": "block"}
-    else:
-        return {}, {"display": "none"}
+    return None, {"display": "none"}
 
 
 @callback(
@@ -616,10 +615,9 @@ def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
     """Toggle sparse median background correction options with sparse
     median switch, selected options will be cached"""
     sparsemed_params = {k: v for k, v in zip(sparsemed_keys, sparsemed_values)}
-    if len(sparsemed_opt) == 1:
+    if sparsemed_opt:
         return {sparsemed_opt[0]: sparsemed_params}, {"display": "block"}
-    else:
-        return {}, {"display": "none"}
+    return None, {"display": "none"}
 
 
 @callback(
@@ -633,10 +631,9 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     """Toggle norm gating options with norm gating switch, selected options
     will be cached"""
     norm_gate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
-    if len(ngate_opt) == 1:
+    if ngate_opt:
         return {ngate_opt[0]: norm_gate_params}, {"display": "block"}
-    else:
-        return {}, {"display": "none"}
+    return None, {"display": "none"}
 
 
 @callback(
@@ -714,6 +711,7 @@ def collect_advanced_pipeline_params(
 def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
+    request_gitlab, _ = get_gitlab_instances()
     button_trigger = [p["prop_id"] for p in cc.triggered][0]
     if "create_advanced_pipeline_button" in button_trigger and cached_adv_temp:
         request_gitlab.run_pipeline(cached_adv_temp)
@@ -728,21 +726,20 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
     Input("show_grid", "selectedRows"),
-    Input("advanced_unet_id", "value"),
-    Input("cache_advanced_unet_model_path", "data")
+    Input("cache_advanced_unet_model_path", "data"),
+    Input("cache_legacy_params", "data"),
+    Input("cache_watershed_params", "data"),
+    Input("cache_std_params", "data"),
 )
 def toggle_advanced_create_pipeline_button(author_name, title, selected_files,
-                                           unet_click, unet_mpath):
-    """Activates create pipeline button only when author name, title, and
-    data files are entered"""
+                                           cached_unet_model_path,
+                                           cached_legacy_params,
+                                           cache_watershed_params,
+                                           cache_std_params):
+    """Activates create pipeline button only when author name, title,
+    data files, and segmentation method are entered"""
     if author_name and title and title.strip() and selected_files:
-        if unet_click and unet_mpath:
+        if cached_unet_model_path or cached_legacy_params or \
+                cache_watershed_params or cache_std_params:
             return False
-        elif unet_click and not unet_click:
-            return True
-        elif not unet_click:
-            return False
-        else:
-            return True
-    else:
-        return True
+    return True

@@ -1,0 +1,11 @@
+outs:
+- md5: 40c43c68449a9bebab1726a2d4bb77ea
+  size: 247567
+  hash: md5
+  path: model_checkpoint_mock1.ckp
+
+# This data is useful for the model deployment on the dashboard
+meta:
+  archive: True
+  device: accelerator
+  type: blood

@@ -9,7 +9,7 @@ import dash_mantine_components as dmc
 from .common import (button_comp, chat_box, create_list_group, header_comp,
                      line_breaks, paragraph_comp, progressbar_comp, popup_comp,
                      web_link)
-from ..gitlab import request_gitlab
+from ..gitlab import get_gitlab_instances
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
@@ -120,16 +120,23 @@ def get_tab_content(tab_id, load_id):
         # Previous and next buttons
         dbc.ListGroup([
             dbc.ListGroupItem(
-                dbc.Button(
-                    children="< Prev", color="info", disabled=True,
-                    id="prev_button", n_clicks=0
-                )
+                dmc.Button(
+                    "Prev",
+                    id="prev_button",
+                    disabled=True,
+                    leftIcon=DashIconify(
+                        icon="streamline:button-previous-solid"),
+                ),
             ),
             dbc.ListGroupItem(
-                dbc.Button(
-                    children="Next >", color="info", disabled=True,
-                    id="next_button", n_clicks=0
-                )
+                dmc.Button(
+                    "Next",
+                    id="next_button",
+                    color="#017b50",
+                    disabled=True,
+                    rightIcon=DashIconify(
+                        icon="streamline:button-next-solid"),
+                ),
             ),
             # Cache page number on the browser
             dcc.Store(id="cache_page_num", storage_type="memory", data=1)
@@ -142,10 +149,19 @@ def get_tab_content(tab_id, load_id):
 
 def create_pipeline_accordion_item(pipeline, mode):
     """Creates an accordion item for a given pipeline"""
+
     if mode == "opened":
         icon_flag = "fluent-mdl2:processing-run"
+        pipe_status_button = dmc.Col(
+            dmc.SegmentedControl(data=["Run pipeline", "Pause pipeline"],
+                                 radius="lg", size="xs", color="orange"
+                                 ),
+            span=2,
+            offset=6
+        )
     else:
         icon_flag = "fluent-mdl2:processing-cancel"
+        pipe_status_button = dmc.Col()
 
     pipeline_color = "success" if pipeline["type"] == "simple" else "danger"
 
@@ -153,28 +169,46 @@ def create_pipeline_accordion_item(pipeline, mode):
         children=[
             dmc.AccordionControl(
                 children=[
-                    # Pipeline title
-                    html.P(
-                        children=f"(#{pipeline['iid']}) {pipeline['title']}",
-                        style={"color": "white", "display": "inline"}
-                    ),
-                    html.Br(),
-                    # Badge for type of pipeline (simple/advanced)
-                    dbc.Badge(
-                        children=pipeline["type"].capitalize(),
-                        className="me-2", color=pipeline_color,
-                        text_color="black"
-                    ),
-                    # Badge for user
-                    dbc.Badge(
-                        children=pipeline["user"], className="me-2",
-                        color="success", text_color="black",
-                    ),
-                    # Badge for date
-                    dbc.Badge(
-                        children=pipeline["date"], color="info",
-                        className="me-2", text_color="black"
-                    ),
+                    dmc.Grid(
+                        children=[
+                            dmc.Col([
+                                # Pipeline title
+                                html.P(
+                                    children=f"(#{pipeline['iid']}) "
+                                             f"{pipeline['title']}",
+                                    style={"color": "white",
+                                           "display": "inline"}
+                                ),
+                                html.Br(),
+                                # Badge for type of pipeline (simple/advanced)
+                                dbc.Badge(
+                                    children=pipeline[
+                                        "type"].capitalize(),
+                                    className="me-2",
+                                    color=pipeline_color,
+                                    text_color="black"
+                                ),
+                                # Badge for user
+                                dbc.Badge(
+                                    children=pipeline["user"],
+                                    className="me-2",
+                                    color="success", text_color="black",
+                                ),
+                                # Badge for date
+                                dbc.Badge(
+                                    children=pipeline["date"],
+                                    color="info",
+                                    className="me-2", text_color="black"
+                                )
+                            ],
+                                span=4
+                            ),
+                            pipe_status_button
+                        ],
+                        justify="flex-start",
+                        align="center",
+                        gutter="xs"
+                    )
                 ],
                 # Pipeline icon
                 icon=DashIconify(
@@ -398,9 +432,9 @@ def update_page(pclick, nclick, page_num):
     """Cache page number when user click on `Previous` and `Next` buttons"""
     triggered_id = ctx.triggered_id
 
-    if triggered_id == "next_button":
+    if triggered_id == "next_button" or nclick:
         page_num += 1
-    elif triggered_id == "prev_button":
+    elif triggered_id == "prev_button" or pclick:
         page_num -= 1
     is_disable = page_num < 2
     return page_num, is_disable
@@ -409,13 +443,17 @@ def update_page(pclick, nclick, page_num):
 @callback(
     Output("open_tab_badge", "children"),
     Output("close_tab_badge", "children"),
-    Input("main_tabs", "value"),
+    Input("url", "pathname"),
 )
-def show_pipeline_number(active_tab):
+def show_pipeline_number(pathname):
     """Display how many pipelines available in opened and closed tabs"""
-    open_num = request_gitlab.total_issues(state="opened")
-    close_num = request_gitlab.total_issues(state="closed")
-    return open_num, close_num
+    request_gitlab, _ = get_gitlab_instances()
+
+    if pathname == BASENAME_PREFIX:
+        open_num = request_gitlab.total_issues(state="opened")
+        close_num = request_gitlab.total_issues(state="closed")
+        return open_num, close_num
+    return no_update
 
 
 @callback(
@@ -432,39 +470,52 @@ def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
     issues_per_page = 10
+    request_gitlab, _ = get_gitlab_instances()
 
     if active_tab in ["welcome", "workflow"]:
         return [no_update] * 5
 
-    if active_tab in ["opened", "closed"]:
-        pipeline_meta = request_gitlab.get_issues_meta(
-            state=active_tab,
-            page=page_num,
-            per_page=issues_per_page,
-            search_term=search_term
-        )
+    # if active_tab in ["opened", "closed"]:
+    pipeline_meta = request_gitlab.get_issues_meta(
+        state=active_tab,
+        page=page_num,
+        per_page=issues_per_page,
+        search_term=search_term
+    )
 
-        is_disabled = len(pipeline_meta) != issues_per_page
-        if len(pipeline_meta) == 0:
-            return (
-                html.Div([
-                    line_breaks(1),
-                    header_comp(f"⦿ No {active_tab} requests!", indent=40),
-                    line_breaks(5)
-                ]),
-                no_update,
-                True,
-                no_update,
-                no_update
-            )
-        else:
-            if active_tab == "opened":
-                return (create_pipelines_accordion(pipeline_meta, active_tab),
-                        no_update, is_disabled, load_style, no_update)
-            elif active_tab == "closed":
-                return no_update, create_pipelines_accordion(
-                    pipeline_meta,
-                    active_tab), is_disabled, no_update, load_style
+    is_disabled = len(pipeline_meta) != issues_per_page
+    if len(pipeline_meta) == 0:
+        return [
+            html.Div([
+                line_breaks(1),
+                header_comp("⦿ No active requests found!", indent=40),
+                line_breaks(5)
+            ]),
+            no_update,
+            no_update,
+            no_update,
+            no_update
+        ]
+    # else:
+    if active_tab == "opened":
+        return [
+            create_pipelines_accordion(pipeline_meta, active_tab),
+            no_update,
+            is_disabled,
+            load_style,
+            no_update
+        ]
+    if active_tab == "closed":
+        return [
+            no_update,
+            create_pipelines_accordion(pipeline_meta, active_tab),
+            is_disabled,
+            no_update,
+            load_style
+        ]
+
+    # Default return statement in case none of the conditions are met
+    return [no_update] * 5
 
 
 @callback(
@@ -479,6 +530,8 @@ def switch_tabs(active_tab, page_num, search_term):
 )
 def show_pipeline_data(pipeline_num):
     """Display pipeline data when the user clicks on pipeline accordion"""
+
+    request_gitlab, _ = get_gitlab_instances()
 
     progress_comments = [
         "STATE: setup",
@@ -542,6 +595,8 @@ def toggle_stop_pipeline_button(active_tab, pipeline_num, cached_notes,
     """Enable stop pipeline button only for opened tab and comments of that
     pipeline are loaded. Also, open a popup notification when the user stops
     the pipeline (close GitLab issue)."""
+
+    request_gitlab, _ = get_gitlab_instances()
 
     # Check for pipeline_num, opened tab, and pipeline content
     if not pipeline_num or active_tab != "opened" or \

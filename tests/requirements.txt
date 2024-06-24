@@ -1,0 +1,5 @@
+coverage
+dash[testing]
+pytest
+pytest-cov
+pytest-mock
