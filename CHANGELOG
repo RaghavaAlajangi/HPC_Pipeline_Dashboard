@@ -1,3 +1,6 @@
+0.0.6
+ - enh: Add CICD pipeline
+ - test: Add gitlab mock apis to test app callbacks
 0.0.5
  - enh: remove dcevent option from advanced pipeline
  - enh: update component id naming conventions
