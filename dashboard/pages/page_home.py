@@ -132,7 +132,6 @@ def get_tab_content(tab_id, load_id):
                 dmc.Button(
                     "Next",
                     id="next_button",
-                    color="#017b50",
                     disabled=True,
                     rightIcon=DashIconify(
                         icon="streamline:button-next-solid"),
@@ -432,9 +431,9 @@ def update_page(pclick, nclick, page_num):
     """Cache page number when user click on `Previous` and `Next` buttons"""
     triggered_id = ctx.triggered_id
 
-    if triggered_id == "next_button" or nclick:
+    if triggered_id == "next_button":
         page_num += 1
-    elif triggered_id == "prev_button" or pclick:
+    elif triggered_id == "prev_button":
         page_num -= 1
     is_disable = page_num < 2
     return page_num, is_disable
