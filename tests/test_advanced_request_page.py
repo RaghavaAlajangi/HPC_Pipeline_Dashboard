@@ -3,29 +3,29 @@ from contextvars import copy_context
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 import dash_bootstrap_components as dbc
-import pytest
 
-from dashboard.pages.page_advanced import (advanced_page_layout,
-                                           toggle_legacy_options,
-                                           advanced_title_section,
-                                           advanced_segmentation_section,
-                                           background_correction_section,
-                                           gating_options_section,
-                                           further_options_section,
-                                           advanced_prediction_section,
-                                           advanced_post_analysis_section,
-                                           advanced_data_to_process_section,
-                                           show_and_cache_unet_model_meta,
-                                           toggle_unet_options,
-                                           toggle_norm_gate_options,
-                                           toggle_std_options,
-                                           toggle_sparsemed_options,
-                                           toggle_watershed_options,
-                                           toggle_rollmed_options,
-                                           toggle_advanced_create_pipeline_button,
-                                           advanced_request_submission_popup,
-                                           collect_advanced_pipeline_params,
-                                           toggle_advanced_create_pipeline_button)
+from dashboard.pages.page_advanced import (
+    advanced_data_to_process_section,
+    advanced_page_layout,
+    advanced_post_analysis_section,
+    advanced_prediction_section,
+    advanced_request_submission_popup,
+    advanced_title_section,
+    advanced_segmentation_section,
+    background_correction_section,
+    collect_advanced_pipeline_params,
+    further_options_section,
+    gating_options_section,
+    show_and_cache_unet_model_meta,
+    toggle_advanced_create_pipeline_button,
+    toggle_legacy_options,
+    toggle_norm_gate_options,
+    toggle_rollmed_options,
+    toggle_sparsemed_options,
+    toggle_std_options,
+    toggle_watershed_options,
+    toggle_unet_options,
+)
 
 
 def test_advanced_title_section():
@@ -121,10 +121,11 @@ def test_toggle_unet_options_callback_deactivation():
 
 def test_toggle_legacy_options_callback_activation():
     """Test legacy options expansion when a user clicks on legacy switch"""
+    threshold_key = "legacy: Legacy thresholding with OpenCV"
 
     def run_callback():
         return toggle_legacy_options(
-            legacy_opt=["legacy: Legacy thresholding with OpenCV"],
+            legacy_opt=[threshold_key],
             leg_keys=["thresh", "diff_method", "clear_border"],
             leg_values=["-6", "1", True])
 
@@ -133,8 +134,8 @@ def test_toggle_legacy_options_callback_activation():
     legacy_response, toggle_response = ctx.run(run_callback)
     assert isinstance(legacy_response, dict)
     assert isinstance(toggle_response, dict)
-    assert "legacy: Legacy thresholding with OpenCV" in legacy_response.keys()
-    legacy_params = legacy_response["legacy: Legacy thresholding with OpenCV"]
+    assert threshold_key in legacy_response.keys()
+    legacy_params = legacy_response[threshold_key]
     assert "thresh" in legacy_params.keys()
     assert "diff_method" in legacy_params.keys()
     assert "fill_holes" not in legacy_params.keys()
@@ -161,10 +162,11 @@ def test_toggle_legacy_options_callback_deactivation():
 def test_toggle_watershed_options_callback_activation():
     """Test watershed options expansion when a user clicks on watershed
     switch"""
+    watershed_key = "watershed: Watershed algorithm"
 
     def run_callback():
         return toggle_watershed_options(
-            watershed_opt=["watershed: Watershed algorithm"],
+            watershed_opt=[watershed_key],
             water_keys=["clear_border", "closing_disk"],
             water_values=[True, "5"])
 
@@ -173,8 +175,8 @@ def test_toggle_watershed_options_callback_activation():
     watershed_response, toggle_response = ctx.run(run_callback)
     assert isinstance(watershed_response, dict)
     assert isinstance(toggle_response, dict)
-    assert "watershed: Watershed algorithm" in watershed_response.keys()
-    legacy_params = watershed_response["watershed: Watershed algorithm"]
+    assert watershed_key in watershed_response.keys()
+    legacy_params = watershed_response[watershed_key]
     assert "clear_border" in legacy_params.keys()
     assert "closing_disk" in legacy_params.keys()
     assert "fill_holes" not in legacy_params.keys()
@@ -202,9 +204,11 @@ def test_toggle_watershed_options_callback_deactivation():
 def test_toggle_std_options_callback_activation():
     """Test std options expansion when a user clicks on std switch"""
 
+    std_key = "std: Standard-deviation-based thresholding"
+
     def run_callback():
         return toggle_std_options(
-            std_opt=["std: Standard-deviation-based thresholding"],
+            std_opt=[std_key],
             std_keys=["clear_border", "closing_disk"],
             std_values=[True, "5"])
 
@@ -213,8 +217,8 @@ def test_toggle_std_options_callback_activation():
     std_response, toggle_response = ctx.run(run_callback)
     assert isinstance(std_response, dict)
     assert isinstance(toggle_response, dict)
-    assert "std: Standard-deviation-based thresholding" in std_response.keys()
-    std_params = std_response["std: Standard-deviation-based thresholding"]
+    assert std_key in std_response.keys()
+    std_params = std_response[std_key]
     assert "clear_border" in std_params.keys()
     assert "closing_disk" in std_params.keys()
     assert "fill_holes" not in std_params.keys()
@@ -241,11 +245,11 @@ def test_toggle_std_options_callback_deactivation():
 def test_toggle_rollmed_options_callback_activation():
     """Test rolling medium options expansion when a user clicks on rollmed
     switch"""
+    rollmed_key = "rollmed: Rolling median RT-DC background image computation"
 
     def run_callback():
         return toggle_rollmed_options(
-            rollmed_opt=[
-                "rollmed: Rolling median RT-DC background image computation"],
+            rollmed_opt=[rollmed_key],
             rollmed_keys=["kernel_size"],
             rollmed_values=[200])
 
@@ -254,10 +258,8 @@ def test_toggle_rollmed_options_callback_activation():
     rollmed_response, toggle_response = ctx.run(run_callback)
     assert isinstance(rollmed_response, dict)
     assert isinstance(toggle_response, dict)
-    assert "rollmed: Rolling median RT-DC background image computation" in \
-           rollmed_response.keys()
-    rollmed_params = rollmed_response[
-        "rollmed: Rolling median RT-DC background image computation"]
+    assert rollmed_key in rollmed_response.keys()
+    rollmed_params = rollmed_response[rollmed_key]
     assert "kernel_size" in rollmed_params.keys()
     assert "fill_holes" not in rollmed_params.keys()
     assert toggle_response["display"] == "block"
@@ -277,6 +279,89 @@ def test_toggle_rollmed_options_callback_deactivation():
     ctx = copy_context()
     rollmed_response, toggle_response = ctx.run(run_callback)
     assert not rollmed_response
+    assert isinstance(toggle_response, dict)
+    assert toggle_response["display"] == "none"
+
+
+def test_toggle_sparsemed_options_callback_activation():
+    """Test sparse medium options expansion when a user clicks on sparsemed
+    switch"""
+    sparemed_key = "sparsemed: Sparse median background correction " \
+                   "with cleansing"
+
+    def run_callback():
+        return toggle_sparsemed_options(
+            sparsemed_opt=[sparemed_key],
+            sparsemed_keys=["kernel_size"],
+            sparsemed_values=[8])
+
+    # Run the callback within the appropriate context
+    ctx = copy_context()
+    sparsemed_response, toggle_response = ctx.run(run_callback)
+    assert isinstance(sparsemed_response, dict)
+    assert isinstance(toggle_response, dict)
+    assert sparemed_key in sparsemed_response.keys()
+    sparsemed_response = sparsemed_response[sparemed_key]
+    assert "kernel_size" in sparsemed_response.keys()
+    assert "fill_holes" not in sparsemed_response.keys()
+    assert toggle_response["display"] == "block"
+
+
+def test_toggle_sparsemed_options_callback_deactivation():
+    """Test sparse medium options contraction when a user clicks on sparsemed
+    switch"""
+
+    def run_callback():
+        return toggle_sparsemed_options(
+            sparsemed_opt=[],
+            sparsemed_keys=["clear_border", "closing_disk"],
+            sparsemed_values=[True, "5"])
+
+    # Run the callback within the appropriate context
+    ctx = copy_context()
+    sparsemed_response, toggle_response = ctx.run(run_callback)
+    assert not sparsemed_response
+    assert isinstance(toggle_response, dict)
+    assert toggle_response["display"] == "none"
+
+
+def test_toggle_norm_gate_options_callback_activation():
+    """Test sparse medium options expansion when a user clicks on sparsemed
+    switch"""
+    norm_gate_key = "norm gating"
+
+    def run_callback():
+        return toggle_norm_gate_options(
+            ngate_opt=[norm_gate_key],
+            ngate_keys=["online_gates"],
+            ngate_values=[False])
+
+    # Run the callback within the appropriate context
+    ctx = copy_context()
+    norm_gate_response, toggle_response = ctx.run(run_callback)
+    assert isinstance(norm_gate_response, dict)
+    assert isinstance(toggle_response, dict)
+    assert norm_gate_key in norm_gate_response.keys()
+    norm_gate_response = norm_gate_response[norm_gate_key]
+    assert "online_gates" in norm_gate_response.keys()
+    assert "fill_holes" not in norm_gate_response.keys()
+    assert toggle_response["display"] == "block"
+
+
+def test_toggle_norm_gate_options_callback_deactivation():
+    """Test sparse medium options contraction when a user clicks on sparsemed
+    switch"""
+
+    def run_callback():
+        return toggle_norm_gate_options(
+            ngate_opt=[],
+            ngate_keys=["clear_border", "closing_disk"],
+            ngate_values=[True, "5"])
+
+    # Run the callback within the appropriate context
+    ctx = copy_context()
+    sparsemed_response, toggle_response = ctx.run(run_callback)
+    assert not sparsemed_response
     assert isinstance(toggle_response, dict)
     assert toggle_response["display"] == "none"
 
