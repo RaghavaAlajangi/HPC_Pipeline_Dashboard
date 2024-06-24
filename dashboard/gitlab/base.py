@@ -6,10 +6,11 @@ from gitlab.exceptions import GitlabAuthenticationError
 
 
 class AuthenticationError(Exception):
-    pass
+    """Authentication Exception"""
 
 
 class BaseAPI:
+    """Gitlab API"""
     def __init__(self, gitlab_url, access_token, project_num):
         self.gitlab_url = gitlab_url
         self.access_token = access_token
@@ -20,15 +21,16 @@ class BaseAPI:
                                        private_token=access_token)
             gitlab_obj.auth()
             self.project = gitlab_obj.projects.get(project_num)
-        except GitlabAuthenticationError:
+        except GitlabAuthenticationError as exc:
             raise AuthenticationError(
                 "Authentication error. Your access token may be expired or "
                 "incorrect. Please update your access token in your GitLab "
                 "settings."
-            )
+            ) from exc
 
     @staticmethod
     def human_readable_date(date):
+        """Convert gitlab date into human-readable format"""
         # Define the GMT+0200 timezone offset
         gmt_offset = timedelta(hours=2)
         time_stamp = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")

@@ -3,13 +3,13 @@ import os
 
 from dotenv import load_dotenv
 
-from .base import AuthenticationError, BaseAPI
 from .dvc_repo import DVCRepoAPI
 from .requests_repo import RequestRepoAPI
 
 
 @functools.lru_cache()
 def get_gitlab_instances():
+    """Creates request and dvc gitlab instances"""
     # Load environment variables from .env file
     load_dotenv()
     request_gitlab = RequestRepoAPI(
