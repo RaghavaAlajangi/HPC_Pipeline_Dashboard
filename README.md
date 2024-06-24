@@ -4,6 +4,11 @@ A web interface to create a data processing pipelines (issues) on
 HPC_Pipeline_requests repo
 
 
+## Main
+
+[![pipeline status](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/badges/main/pipeline.svg)](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/-/commits/main)
+[![coverage report](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/badges/main/coverage.svg)](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/-/commits/main)
+
 ## Dashboard Link:
 
 https://guck-tools.intranet.mpl.mpg.de/hpc-pipeline-dashboard/
