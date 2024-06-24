@@ -1,11 +1,9 @@
 from contextvars import copy_context
-from unittest.mock import MagicMock
 
 from dash import no_update
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 import dash_bootstrap_components as dbc
-import pytest
 
 from dashboard.pages.page_simple import (collect_simple_pipeline_params,
                                          show_and_cache_segment_options,
@@ -18,38 +16,6 @@ from dashboard.pages.page_simple import (collect_simple_pipeline_params,
                                          toggle_legacy_options,
                                          toggle_simple_create_pipeline_button,
                                          toggle_unet_options)
-
-
-@pytest.fixture
-def mock_request_gitlab_instance(mocker):
-    """Mock the request_gitlab instance"""
-    run_pipeline_mocker = mocker.patch(
-        "dashboard.gitlab.request_gitlab.run_pipeline")
-
-    # Simulate the behavior of request_gitlab.run_pipeline when called
-    # This will skip the actual execution of run_pipeline
-    run_pipeline_value = MagicMock()
-    run_pipeline_value.notes.create.return_value = {"body": "mocked_GO"}
-
-    run_pipeline_mocker.return_value = run_pipeline_value
-    return run_pipeline_mocker
-
-
-@pytest.fixture
-def mock_dvc_gitlab_instance(mocker):
-    """Mock the dvc_gitlab instance"""
-    dvc_repo_mocker = mocker.patch(
-        "dashboard.gitlab.dvc_gitlab.get_model_metadata")
-
-    mocked_model_metadata = {
-        "test_checkpoint_1": {"device": "accelerator", "type": "blood"},
-        "test_checkpoint_2": {"device": "naiad", "type": "blood and beads"}
-    }
-
-    # Attach model metadata return value to the mocker
-    dvc_repo_mocker.return_value = mocked_model_metadata
-
-    return dvc_repo_mocker
 
 
 def test_simple_title_section():
@@ -77,7 +43,7 @@ def test_simple_data_to_process_section():
     assert isinstance(simple_data_to_process_section(), dbc.AccordionItem)
 
 
-def test_show_and_cache_segment_options_callback(mock_dvc_gitlab_instance):
+def test_show_and_cache_segment_options_callback():
     """Test segmentation method selection"""
 
     def run_callback():
@@ -93,8 +59,8 @@ def test_show_and_cache_segment_options_callback(mock_dvc_gitlab_instance):
     check_boxes, segm_opt = ctx.run(run_callback)
 
     assert len(check_boxes) == 2
-    assert check_boxes[0].value == "test_checkpoint_1"
-    assert check_boxes[1].value == "test_checkpoint_2"
+    assert check_boxes[0].value == "model_checkpoint_mock2.ckp"
+    assert check_boxes[1].value == "model_checkpoint_mock3.ckp"
     assert isinstance(segm_opt, dict)
     assert "mlunet" in segm_opt.keys()
 
@@ -152,8 +118,7 @@ def test_toggle_legacy_options_callback_deactivation():
 
 
 def test_collect_simple_pipeline_params_callback_activation():
-    """Test callback activation, user selection of parameters and update
-    simple pipeline template"""
+    """Test collection of user input and update simple pipeline template"""
 
     def run_callback():
         return collect_simple_pipeline_params(
@@ -234,8 +199,7 @@ def test_toggle_simple_create_pipeline_button_callback_deactivation():
     assert response
 
 
-def test_simple_request_submission_popup_callback_activation(
-        mock_request_gitlab_instance):
+def test_simple_request_submission_popup_callback_activation():
     """Test pipeline submission and activate notification popup"""
 
     test_template = {

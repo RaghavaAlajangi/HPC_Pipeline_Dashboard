@@ -1,0 +1,13 @@
+outs:
+- md5: 6383e789a0fee60c36b66149f6e41877
+  size: 245214
+  hash: md5
+  path: model_checkpoint_mock2.ckp
+
+# This data is useful for the deployment on the dashboard
+# This model is an updated version of "unet-228-accel_g2_b428b.ckp" integrated
+# with the sigmoid layer and metadata required for preprocessing.
+meta:
+  archive: False
+  device: accelerator
+  type: blood
