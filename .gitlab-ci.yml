@@ -1,0 +1,34 @@
+image: "python:3.10"
+
+stages:
+  - Lint
+  - Test
+
+before_script:
+  - python --version
+  - python -m venv venv
+  - source venv/bin/activate
+  - python -m pip install --upgrade pip wheel
+
+
+flake8:
+  stage: Lint
+  allow_failure: false
+  script:
+    - pip install flake8
+    - pip freeze
+    - flake8 dashboard
+    - flake8 tests
+
+
+pytest:
+  stage: Test
+  allow_failure: false
+  script:
+    - pip install -r tests/requirements.txt
+    - pip freeze
+    - coverage run -m pytest
+    - coverage report
+    - coverage xml
+    - coverage html
+  coverage: '/TOTAL.*\s([.\d]+)%/'
