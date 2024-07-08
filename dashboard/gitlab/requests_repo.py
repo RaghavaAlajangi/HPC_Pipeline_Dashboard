@@ -6,6 +6,7 @@ from .base import BaseAPI
 
 class RequestRepoAPI(BaseAPI):
     """HPC Pipeline Request repository API inherited from BaseAPI"""
+
     @staticmethod
     def human_readable_date(date):
         # Define the GMT+0200 timezone offset
@@ -86,8 +87,8 @@ class RequestRepoAPI(BaseAPI):
             # Fetch human-readable date
             time_stamp = self.human_readable_date(note.created_at)
             dates.append(time_stamp)
-            comment_authors.append(
-                "bot" if "*" in note.author["name"] else note.author["name"])
+            auth_name = note.author["name"]
+            comment_authors.append("bot" if "*" in auth_name else auth_name)
 
             # Filter python error messages from comments
             if "```python" in note.body:
@@ -99,11 +100,10 @@ class RequestRepoAPI(BaseAPI):
                     flags=re.DOTALL
                 )
                 comments.append(note_without_code)
-            elif note.body.lower() == "cancel":
-                is_canceled = True
-
             else:
                 comments.append(note.body)
+                if note.body.lower() == "cancel":
+                    is_canceled = True
 
             # Parse comments for specific information
             # Check for total number of pipelines
