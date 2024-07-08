@@ -2,13 +2,13 @@ import os
 
 from dash import callback, dcc, html, Input, MATCH, no_update, Output, State
 from dash import callback_context as ctx
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
-from .common import (button_comp, chat_box, create_list_group, header_comp,
-                     line_breaks, paragraph_comp, progressbar_comp, popup_comp,
-                     web_link)
+from .common import (chat_box, create_list_group, header_comp, line_breaks,
+                     paragraph_comp, progressbar_comp, popup_comp, web_link)
 from ..gitlab import get_gitlab_instances
 
 # Get the BASENAME_PREFIX from environment variables if not default
@@ -95,13 +95,13 @@ def get_tab_content(tab_id, load_id):
         dbc.ListGroup([
             # Pipeline search bar
             dbc.ListGroupItem(
-                children=dbc.Input(
-                    class_name="custom-placeholder",
+                children=dmc.TextInput(
                     id="pipeline_filter",
+                    style={"width": "100%", "color": "white"},
                     placeholder="Filter pipelines with username or "
                                 "title or keywords...",
-                    style={"width": "100%", "color": "black"},
-                    type="text",
+                    icon=DashIconify(icon="tabler:search", width=22),
+                    size="md"
                 ),
                 style={"width": "80%"}
             ),
@@ -133,8 +133,7 @@ def get_tab_content(tab_id, load_id):
                     "Next",
                     id="next_button",
                     disabled=True,
-                    rightIcon=DashIconify(
-                        icon="streamline:button-next-solid"),
+                    rightIcon=DashIconify(icon="streamline:button-next-solid"),
                 ),
             ),
             # Cache page number on the browser
@@ -151,16 +150,8 @@ def create_pipeline_accordion_item(pipeline, mode):
 
     if mode == "opened":
         icon_flag = "fluent-mdl2:processing-run"
-        pipe_status_button = dmc.Col(
-            dmc.SegmentedControl(data=["Run pipeline", "Pause pipeline"],
-                                 radius="lg", size="xs", color="orange"
-                                 ),
-            span=2,
-            offset=6
-        )
     else:
         icon_flag = "fluent-mdl2:processing-cancel"
-        pipe_status_button = dmc.Col()
 
     pipeline_color = "success" if pipeline["type"] == "simple" else "danger"
 
@@ -173,13 +164,18 @@ def create_pipeline_accordion_item(pipeline, mode):
                             dmc.Col([
                                 # Pipeline title
                                 html.P(
-                                    children=f"(#{pipeline['iid']}) "
-                                             f"{pipeline['title']}",
+                                    children=f"{pipeline['title']}",
                                     style={"color": "white",
                                            "display": "inline"}
                                 ),
                                 html.Br(),
                                 # Badge for type of pipeline (simple/advanced)
+                                dbc.Badge(
+                                    children=f"#{pipeline['iid']}",
+                                    className="me-2",
+                                    color="pink",
+                                    text_color="black"
+                                ),
                                 dbc.Badge(
                                     children=pipeline[
                                         "type"].capitalize(),
@@ -201,8 +197,7 @@ def create_pipeline_accordion_item(pipeline, mode):
                                 )
                             ],
                                 span=4
-                            ),
-                            pipe_status_button
+                            )
                         ],
                         justify="flex-start",
                         align="center",
@@ -211,7 +206,7 @@ def create_pipeline_accordion_item(pipeline, mode):
                 ],
                 # Pipeline icon
                 icon=DashIconify(
-                    color="white", icon=icon_flag, height=30, width=30
+                    color="red", icon=icon_flag, height=30, width=30
                 )
             ),
             dmc.AccordionPanel(
@@ -241,11 +236,14 @@ def create_pipeline_accordion_item(pipeline, mode):
                                 label="Download RTDC csv (Not Implemented)",
                                 url="https://google.com"
                             ),
-                            button_comp(
-                                comp_id={"type": "pipeline_stop_click",
-                                         "index": pipeline["iid"]},
-                                disabled=True, label="Stop Pipeline",
-                                type="danger",
+                            dmc.Button(
+                                "Stop Pipeline",
+                                id={"type": "pipeline_stop_click",
+                                    "index": pipeline["iid"]},
+                                disabled=True, color="red",
+                                rightIcon=DashIconify(
+                                    icon="mdi:stop-alert-outline", height=30,
+                                    width=30),
                             )
                         ]),
                     line_breaks(1),
@@ -433,10 +431,10 @@ def update_page(pclick, nclick, page_num):
 
     if triggered_id == "next_button":
         page_num += 1
-    elif triggered_id == "prev_button":
+    if triggered_id == "prev_button":
         page_num -= 1
-    is_disable = page_num < 2
-    return page_num, is_disable
+    is_disabled = page_num < 2
+    return page_num, is_disabled
 
 
 @callback(
@@ -463,7 +461,7 @@ def show_pipeline_number(pathname):
     Output("closed_loading", "parent_style"),
     Input("main_tabs", "value"),
     Input("cache_page_num", "data"),
-    Input("pipeline_filter", "value"),
+    Input("pipeline_filter", "value")
 )
 def switch_tabs(active_tab, page_num, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
@@ -472,7 +470,7 @@ def switch_tabs(active_tab, page_num, search_term):
     request_gitlab, _ = get_gitlab_instances()
 
     if active_tab in ["welcome", "workflow"]:
-        return [no_update] * 5
+        raise PreventUpdate
 
     # if active_tab in ["opened", "closed"]:
     pipeline_meta = request_gitlab.get_issues_meta(
@@ -491,7 +489,7 @@ def switch_tabs(active_tab, page_num, search_term):
                 line_breaks(5)
             ]),
             no_update,
-            no_update,
+            True,
             no_update,
             no_update
         ]
@@ -514,7 +512,7 @@ def switch_tabs(active_tab, page_num, search_term):
         ]
 
     # Default return statement in case none of the conditions are met
-    return [no_update] * 5
+    raise PreventUpdate
 
 
 @callback(
