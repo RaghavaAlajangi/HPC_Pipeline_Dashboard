@@ -86,7 +86,7 @@ def workflow_tab_content():
     )
 
 
-def get_tab_content(tab_id, load_id):
+def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
     """Placeholder for opened and closed tab content. This function has
     search bar to find specific pipeline and `Previous` and `Next` buttons
     for the pagination.
@@ -122,7 +122,7 @@ def get_tab_content(tab_id, load_id):
             dbc.ListGroupItem(
                 dmc.Button(
                     "Prev",
-                    id="prev_button",
+                    id=prev_button_id,
                     disabled=True,
                     leftIcon=DashIconify(
                         icon="streamline:button-previous-solid"),
@@ -131,13 +131,14 @@ def get_tab_content(tab_id, load_id):
             dbc.ListGroupItem(
                 dmc.Button(
                     "Next",
-                    id="next_button",
+                    id=next_button_id,
                     disabled=True,
                     rightIcon=DashIconify(icon="streamline:button-next-solid"),
                 ),
             ),
             # Cache page number on the browser
-            dcc.Store(id="cache_page_num", storage_type="memory", data=1)
+            dcc.Store(id="cache_page_num", storage_type="memory",
+                      data={"opened": 1, "closed": 1})
         ],
             horizontal=True,
             style={"justify-content": "center"}
@@ -173,7 +174,7 @@ def create_pipeline_accordion_item(pipeline, mode):
                                 dbc.Badge(
                                     children=f"#{pipeline['iid']}",
                                     className="me-2",
-                                    color="pink",
+                                    color="skyblue",
                                     text_color="black"
                                 ),
                                 dbc.Badge(
@@ -195,9 +196,7 @@ def create_pipeline_accordion_item(pipeline, mode):
                                     color="info",
                                     className="me-2", text_color="black"
                                 )
-                            ],
-                                span=4
-                            )
+                            ])
                         ],
                         justify="flex-start",
                         align="center",
@@ -395,13 +394,21 @@ def home_page_layout():
                     value="welcome"
                 ),
                 dmc.TabsPanel(
-                    children=get_tab_content(tab_id="opened_content",
-                                             load_id="opened_loading"),
+                    children=get_tab_content(
+                        tab_id="opened_content",
+                        load_id="opened_loading",
+                        prev_button_id="opened_prev_button",
+                        next_button_id="opened_next_button"
+                    ),
                     value="opened"
                 ),
                 dmc.TabsPanel(
-                    children=get_tab_content(tab_id="closed_content",
-                                             load_id="closed_loading"),
+                    children=get_tab_content(
+                        tab_id="closed_content",
+                        load_id="closed_loading",
+                        prev_button_id="closed_prev_button",
+                        next_button_id="closed_next_button"
+                    ),
                     value="closed"
                 ),
                 dmc.TabsPanel(
@@ -420,27 +427,32 @@ def home_page_layout():
 
 @callback(
     Output("cache_page_num", "data"),
-    Output("prev_button", "disabled"),
-    Input("prev_button", "n_clicks"),
-    Input("next_button", "n_clicks"),
+    Output("opened_prev_button", "disabled"),
+    Output("closed_prev_button", "disabled"),
+    Input("opened_prev_button", "n_clicks"),
+    Input("opened_next_button", "n_clicks"),
+    Input("closed_prev_button", "n_clicks"),
+    Input("closed_next_button", "n_clicks"),
+    Input("main_tabs", "value"),
     State("cache_page_num", "data")
 )
-def update_page(pclick, nclick, page_num):
-    """Cache page number when user click on `Previous` and `Next` buttons"""
+def change_page(opclick, onclick, cpclick, cnclick, active_tab, cache_page):
+    """Cache page number when user clicks on `Previous` and `Next` buttons"""
     triggered_id = ctx.triggered_id
 
-    if triggered_id == "next_button":
-        page_num += 1
-    if triggered_id == "prev_button":
-        page_num -= 1
-    is_disabled = page_num < 2
-    return page_num, is_disabled
+    if triggered_id == f"{active_tab}_next_button":
+        cache_page[active_tab] += 1
+    if triggered_id == f"{active_tab}_prev_button":
+        cache_page[active_tab] -= 1
+    opened_prev_disabled = cache_page["opened"] < 2
+    closed_prev_disabled = cache_page["opened"] < 2
+    return cache_page, opened_prev_disabled, closed_prev_disabled
 
 
 @callback(
     Output("open_tab_badge", "children"),
     Output("close_tab_badge", "children"),
-    Input("url", "pathname"),
+    Input("url", "pathname")
 )
 def show_pipeline_number(pathname):
     """Display how many pipelines available in opened and closed tabs"""
@@ -456,14 +468,15 @@ def show_pipeline_number(pathname):
 @callback(
     Output("opened_content", "children"),
     Output("closed_content", "children"),
-    Output("next_button", "disabled"),
+    Output("opened_next_button", "disabled"),
+    Output("closed_next_button", "disabled"),
     Output("opened_loading", "parent_style"),
     Output("closed_loading", "parent_style"),
     Input("main_tabs", "value"),
     Input("cache_page_num", "data"),
     Input("pipeline_filter", "value")
 )
-def switch_tabs(active_tab, page_num, search_term):
+def switch_tabs(active_tab, cache_page, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
     issues_per_page = 10
@@ -475,7 +488,7 @@ def switch_tabs(active_tab, page_num, search_term):
     # if active_tab in ["opened", "closed"]:
     pipeline_meta = request_gitlab.get_issues_meta(
         state=active_tab,
-        page=page_num,
+        page=cache_page[active_tab],
         per_page=issues_per_page,
         search_term=search_term
     )
@@ -491,6 +504,7 @@ def switch_tabs(active_tab, page_num, search_term):
             no_update,
             True,
             no_update,
+            no_update,
             no_update
         ]
     # else:
@@ -499,6 +513,7 @@ def switch_tabs(active_tab, page_num, search_term):
             create_pipelines_accordion(pipeline_meta, active_tab),
             no_update,
             is_disabled,
+            no_update,
             load_style,
             no_update
         ]
@@ -506,6 +521,7 @@ def switch_tabs(active_tab, page_num, search_term):
         return [
             no_update,
             create_pipelines_accordion(pipeline_meta, active_tab),
+            no_update,
             is_disabled,
             no_update,
             load_style
