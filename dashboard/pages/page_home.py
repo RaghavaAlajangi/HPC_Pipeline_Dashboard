@@ -676,10 +676,7 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
     pipe_state = issue_notes["pipe_state"]
 
-    print("outside", pipe_state)
-
     if "run_pause_click" in triggered_id:
-        print(pipe_state)
         popup_open = True
         if pipe_state == "pause":
             request_gitlab.change_pipeline_status(pipeline_num, "run")
