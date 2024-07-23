@@ -1,5 +1,6 @@
 0.1.0
  - feat: add pipeline status (run/pause) feature (#12)
+ - test: ensure pipeline status (run/pause) works as expected
 0.0.6
  - enh: Add CICD pipeline
  - test: Add gitlab mock apis to test app callbacks

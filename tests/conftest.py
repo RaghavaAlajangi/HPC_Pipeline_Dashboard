@@ -11,7 +11,15 @@ from dashboard.gitlab import DVCRepoAPI, RequestRepoAPI
 issue_template_dir = Path(__file__).parents[0] / "data"
 
 
-def mock_gitlab_issue(iid, description):
+def mock_comment(comment_text):
+    """Creates a mock issue comment"""
+    return MagicMock(
+        body=comment_text,
+        created_at=datetime.utcnow().isoformat() + "Z"
+    )
+
+
+def mock_gitlab_issue(iid, description, comment_list):
     """Creates a mock gitlab issue"""
     mock_issue = MagicMock(
         id=f"123{iid}",
@@ -21,13 +29,9 @@ def mock_gitlab_issue(iid, description):
         web_url=f"https://mock_issue_url{iid}",
         description=description,
         created_at=datetime.now(timezone.utc),
-        test_list=["mock1", "mock2"]
     )
-    mock_note = MagicMock(
-        body="mock comment",
-        created_at=datetime.utcnow().isoformat() + "Z"
-    )
-    mock_issue.notes.list.return_value = [mock_note, mock_note]
+    mock_issue.notes.list.return_value = [mock_comment(msg) for msg in
+                                          comment_list]
     return mock_issue
 
 
@@ -57,7 +61,7 @@ def read_mock_model_ckp_files():
         with open(dvc_file, "r", encoding="utf-8") as file:
             dvc_content = file.read()
             mock_ckp_list.append(
-                {"name": dvc_file.name, "path": ckp_path+f"/{dvc_file.name}",
+                {"name": dvc_file.name, "path": ckp_path + f"/{dvc_file.name}",
                  "content": dvc_content})
     return mock_ckp_list
 
@@ -66,6 +70,8 @@ def mock_gitlab_project():
     """Gitlab project mocker"""
     mock_templates = read_mock_issue_templates()
 
+    (adv_key, sim_key), (adv_txt, sim_txt) = mock_templates.items()
+
     mock_project = MagicMock()
 
     # Store mock issues by iid in a dict
@@ -73,22 +79,40 @@ def mock_gitlab_project():
     mock_project_files = {}
 
     mock_user_list = []
-    for iid, (mpath, text) in enumerate(mock_templates.items(), start=100):
-        # Create a mock issue dict
-        mock_issue = mock_gitlab_issue(iid, text)
-        mock_issues_by_iid[iid] = mock_issue
 
-        # Create  a mock template dict for simple & advanced
+    # Simple mock issue
+    mk_iid1 = 100
+    mock_issues_by_iid[mk_iid1] = mock_gitlab_issue(
+        mk_iid1, sim_txt, ["mock comment1", "mock comment2"])
+    mock_user_list.append(MagicMock(name=f"username{mk_iid1}"))
+
+    # Advanced mock issue
+    mk_iid2 = 101
+    mock_issues_by_iid[mk_iid2] = mock_gitlab_issue(
+        mk_iid2, adv_txt, ["mock comment1", "mock comment2"])
+    mock_user_list.append(MagicMock(name=f"username{mk_iid2}"))
+
+    # This mock issue helps to test pausing pipeline
+    mk_iid3 = 102
+    mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
+        mk_iid3, adv_txt, ["STATE: invalid", "test", "Go"])
+    mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
+
+    # This mock issue helps to test resume pipeline
+    mk_iid3 = 103
+    mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
+        mk_iid3, adv_txt, ["test", "Go"])
+    mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
+
+    # Define a side effect that allow us to fetch an issue based on iid
+    def issue_side_effect(iid):
+        return mock_issues_by_iid.get(iid)
+
+    # Add mock templates simple & advanced as project files
+    for mpath, text in mock_templates.items():
         mock_file = MagicMock()
         mock_file.decode.return_value = text.encode("utf-8")
         mock_project_files[mpath] = mock_file
-
-        # Create a mock user list
-        mock_user_list.append(MagicMock(name=f"username{iid}"))
-
-    # Define a side effect function
-    def issue_side_effect(iid):
-        return mock_issues_by_iid.get(iid)
 
     # Add repo_tree content to mock_project_files
     for mock_file in read_mock_model_ckp_files():
