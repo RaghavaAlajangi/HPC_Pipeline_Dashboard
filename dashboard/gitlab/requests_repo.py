@@ -77,7 +77,7 @@ class RequestRepoAPI(BaseAPI):
         comments = []
         comment_authors = []
         dates = []
-        is_canceled = False
+        pipe_state = "run"
 
         issue_object = self.get_issue_object(issue_iid)
         # Fetch comments of the issue
@@ -89,6 +89,11 @@ class RequestRepoAPI(BaseAPI):
             dates.append(time_stamp)
             auth_name = note.author["name"]
             comment_authors.append("bot" if "*" in auth_name else auth_name)
+
+            if "cancel" in note.body.lower():
+                pipe_state = "stop"
+            if "state: invalid" in note.body.lower():
+                pipe_state = "pause"
 
             # Filter python error messages from comments
             if "```python" in note.body:
@@ -102,8 +107,6 @@ class RequestRepoAPI(BaseAPI):
                 comments.append(note_without_code)
             else:
                 comments.append(note.body)
-                if note.body.lower() == "cancel":
-                    is_canceled = True
 
             # Parse comments for specific information
             # Check for total number of pipelines
@@ -130,7 +133,7 @@ class RequestRepoAPI(BaseAPI):
             "comments": comments,
             "comment_authors": comment_authors,
             "dates": dates,
-            "is_canceled": is_canceled
+            "pipe_state": pipe_state
         }
 
     def get_request_template(self, temp_type):
@@ -173,8 +176,22 @@ class RequestRepoAPI(BaseAPI):
         new_pipeline = self.project.issues.create(pipeline_request)
         return new_pipeline.notes.create({"body": "Go"})
 
-    def stop_pipeline(self, issue_iid):
-        """Stop pipeline by creating `Cancel` comment in an issue"""
+    def change_pipeline_status(self, issue_iid, action):
+        """Stops or pause the given pipeline by writing `cancel` and `invalid`
+        comments"""
         issue_obj = self.get_issue_object(issue_iid)
-        issue_obj.notes.create({"body": "Cancel"})
-        issue_obj.save()
+
+        comments = issue_obj.notes.list(get_all=True)
+        if action == "pause":
+            if not any("state: invalid" in c.body.lower() for c in comments):
+                issue_obj.notes.create({"body": "STATE: invalid"})
+        elif action == "run":
+            # Remove any existing "pause" comment
+            for comment in comments:
+                if "state: invalid" in comment.body.lower():
+                    comment.delete()
+        elif action == "stop":
+            if not any("cancel" in c.body.lower() for c in comments):
+                issue_obj.notes.create({"body": "Cancel"})
+        else:
+            print("unknown action!")

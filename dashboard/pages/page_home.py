@@ -8,7 +8,7 @@ from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from .common import (chat_box, create_list_group, header_comp, line_breaks,
-                     paragraph_comp, progressbar_comp, popup_comp, web_link)
+                     paragraph_comp, progressbar_comp, web_link, hover_card)
 from ..gitlab import get_gitlab_instances
 
 # Get the BASENAME_PREFIX from environment variables if not default
@@ -210,12 +210,31 @@ def create_pipeline_accordion_item(pipeline, mode):
             ),
             dmc.AccordionPanel(
                 children=[
-                    popup_comp(
-                        comp_id={"type": "pipeline_stop_popup",
-                                 "index": pipeline["iid"]},
-                        refresh_path=BASENAME_PREFIX,
-                        text="Pipeline request has been canceled!"
+                    dbc.Modal([
+                        dbc.ModalHeader(
+                            dbc.ModalTitle("Pipeline Status"),
+                            close_button=False
+                        ),
+                        dbc.ModalBody(id={"type": "pipeline_popup_msg",
+                                          "index": pipeline["iid"]}),
+                        dbc.ModalFooter(
+                            html.A(
+                                dmc.Button("Close",
+                                           id={"type": "pipeline_popup_click",
+                                               "index": pipeline["iid"]},
+                                           variant="red"),
+                                href=BASENAME_PREFIX
+                            )
+                        ),
+                    ],
+                        id={"type": "pipeline_popup", "index": pipeline["iid"]},
+                        centered=True,
+                        is_open=False,
+                        keyboard=True,
+                        backdrop="static",
+                        style={"color": "white"}
                     ),
+
                     # Store component to cache pipeline notes. It allows us
                     # to use the same notes across multiple callbacks without
                     # computing twice.
@@ -235,15 +254,37 @@ def create_pipeline_accordion_item(pipeline, mode):
                                 label="Download RTDC csv (Not Implemented)",
                                 url="https://google.com"
                             ),
-                            dmc.Button(
-                                "Stop Pipeline",
-                                id={"type": "pipeline_stop_click",
-                                    "index": pipeline["iid"]},
-                                disabled=True, color="red",
-                                rightIcon=DashIconify(
-                                    icon="mdi:stop-alert-outline", height=30,
-                                    width=30),
-                            )
+                            dmc.Group([
+                                hover_card(
+                                    target=dmc.Button(
+                                        "Run / Pause Pipeline",
+                                        id={"type": "run_pause_click",
+                                            "index": pipeline["iid"]},
+                                        disabled=True,
+                                        rightIcon=DashIconify(
+                                            icon="lets-icons:stop-and-play"
+                                                 "-fill",
+                                            height=30, width=30),
+                                        variant="gradient"
+                                    ),
+                                    notes="You can set the priority "
+                                          "(Run/Pause) of the pipeline. Run "
+                                          "the pipeline that has high "
+                                          "priority and pause the rest until "
+                                          "it is done."
+                                ),
+
+                                dmc.Button(
+                                    "Stop Pipeline",
+                                    id={"type": "stop_pipe_click",
+                                        "index": pipeline["iid"]},
+                                    disabled=True,
+                                    color="red",
+                                    rightIcon=DashIconify(
+                                        icon="mdi:stop-alert",
+                                        height=25, width=25)
+                                )
+                            ]),
                         ]),
                     line_breaks(1),
                     html.Strong("Pipeline Progress:"),
@@ -591,39 +632,71 @@ def show_pipeline_data(pipeline_num):
 
 
 @callback(
-    Output({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
-    Output({"type": "pipeline_stop_click", "index": MATCH}, "disabled"),
+    Output({"type": "pipeline_popup", "index": MATCH}, "is_open"),
+    Output({"type": "pipeline_popup_msg", "index": MATCH}, "children"),
+    Output({"type": "run_pause_click", "index": MATCH}, "disabled"),
+    Output({"type": "stop_pipe_click", "index": MATCH}, "disabled"),
+
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
-    Input({"type": "cache_pipeline_notes", "index": MATCH}, "data"),
+    Input({"type": "run_pause_click", "index": MATCH}, "n_clicks"),
+    Input({"type": "stop_pipe_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
-    Input({"type": "pipeline_stop_click", "index": MATCH}, "n_clicks"),
-    Input({"type": "pipeline_stop_popup", "index": MATCH}, "n_clicks"),
-    State({"type": "pipeline_stop_popup", "index": MATCH}, "is_open"),
     prevent_initial_call=True
 )
-def toggle_stop_pipeline_button(active_tab, pipeline_num, cached_notes,
-                                pipeline_content, stop_pipeline, popup_click,
-                                close_popup):
-    """Enable stop pipeline button only for opened tab and comments of that
-    pipeline are loaded. Also, open a popup notification when the user stops
-    the pipeline (close GitLab issue)."""
+def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
+                           stop_pipe_click, pipeline_comments):
+    """Toggle the pipeline control buttons and display popup messages based
+    on user interaction.
 
-    request_gitlab, _ = get_gitlab_instances()
+    Notes
+    -----
+    The function triggers based on the provided inputs and checks the state
+    of the pipeline to determine the appropriate actions. If the run/pause
+    button is clicked, the pipeline state toggles between "run" and "pause".
+    If the stop button is clicked, the pipeline is stopped, and both buttons
+    are disabled. The function uses the `get_gitlab_instances` method to
+    interact with GitLab and retrieve the current pipeline status.
+    """
 
     # Check for pipeline_num, opened tab, and pipeline content
     if not pipeline_num or active_tab != "opened" or \
-            not isinstance(pipeline_content, dict):
-        return no_update, no_update
+            not isinstance(pipeline_comments, dict):
+        return no_update, no_update, no_update, no_update
 
-    # Perform actions based on button clicks
-    if stop_pipeline:
-        request_gitlab.stop_pipeline(pipeline_num)
+    popup_open = False
+    popup_message = None
+    run_pause_disabled = False
+    stop_disabled = False
 
-    # Determine the state of the popup
-    is_open = not close_popup if stop_pipeline or popup_click else close_popup
+    triggered_id = ctx.triggered[0]["prop_id"]
 
-    # Determine the state of the stop pipeline button
-    is_disabled = cached_notes["is_canceled"]
+    request_gitlab, _ = get_gitlab_instances()
 
-    return is_open, is_disabled
+    issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
+    pipe_state = issue_notes["pipe_state"]
+
+    print("outside", pipe_state)
+
+    if "run_pause_click" in triggered_id:
+        print(pipe_state)
+        popup_open = True
+        if pipe_state == "pause":
+            request_gitlab.change_pipeline_status(pipeline_num, "run")
+            popup_message = "The issue has been resumed."
+        elif pipe_state == "run":
+            request_gitlab.change_pipeline_status(pipeline_num, "pause")
+            popup_message = "The issue has been paused."
+
+    elif "stop_pipe_click" in triggered_id:
+        request_gitlab.change_pipeline_status(pipeline_num, "stop")
+        popup_message = "The issue has been stopped."
+        run_pause_disabled = True
+        stop_disabled = True
+        popup_open = True
+    elif pipe_state == "stop":
+        # In "stop" state, both buttons are disabled
+        run_pause_disabled = True
+        stop_disabled = True
+
+    return popup_open, popup_message, run_pause_disabled, stop_disabled
