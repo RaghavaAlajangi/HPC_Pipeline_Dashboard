@@ -7,15 +7,6 @@ from .base import BaseAPI
 class RequestRepoAPI(BaseAPI):
     """HPC Pipeline Request repository API inherited from BaseAPI"""
 
-    @staticmethod
-    def human_readable_date(date):
-        # Define the GMT+0200 timezone offset
-        gmt_offset = timedelta(hours=2)
-        time_stamp = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
-        # Add the GMT offset to the timestamp
-        new_time_stamp = time_stamp + gmt_offset
-        return new_time_stamp.strftime("%I:%M%p, %d-%b-%Y")
-
     def get_issues_meta(self, state, page, per_page=10, search_term=None):
         """Filter issues based on the state and search term if it exists and
         returns a list of dictionaries containing information about each issue.
