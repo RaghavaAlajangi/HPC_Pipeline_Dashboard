@@ -105,6 +105,11 @@ def checklist_comp(comp_id, options, defaults=None):
     )
 
 
+def create_badge(content, color):
+    return dbc.Badge(children=content, className="me-2", color=color,
+                     text_color="black")
+
+
 def divider_line_comp(variant="dashed", pad=10):
     return html.Div(
         dmc.Divider(variant=variant),

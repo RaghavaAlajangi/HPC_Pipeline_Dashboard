@@ -7,8 +7,9 @@ import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
-from .common import (chat_box, create_list_group, header_comp, line_breaks,
-                     paragraph_comp, progressbar_comp, web_link, hover_card)
+from .common import (chat_box, create_badge, create_list_group, header_comp,
+                     line_breaks, paragraph_comp, progressbar_comp, web_link,
+                     hover_card)
 from ..gitlab import get_gitlab_instances
 
 # Get the BASENAME_PREFIX from environment variables if not default
@@ -101,7 +102,7 @@ def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
                     placeholder="Filter pipelines with username or "
                                 "title or keywords...",
                     icon=DashIconify(icon="tabler:search", width=22),
-                    size="md"
+                    size="sm"
                 ),
                 style={"width": "80%"}
             ),
@@ -146,13 +147,19 @@ def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
     ])
 
 
-def create_pipeline_accordion_item(pipeline, mode):
+def create_pipeline_accordion_item(pipeline):
     """Creates an accordion item for a given pipeline"""
 
-    if mode == "opened":
-        icon_flag = "fluent-mdl2:processing-run"
-    else:
-        icon_flag = "fluent-mdl2:processing-cancel"
+    state_icon_dict = {
+        "run": {"color": "cyan", "icon": "fluent:play-circle-hint-24-filled"},
+        "pause": {"color": "orange",
+                  "icon": "material-symbols:motion-photos-paused"},
+        "stop": {"color": "red", "icon": "flat-color-icons:cancel"},
+        "finish": {"color": "yellow",
+                   "icon": "ion:checkmark-done-circle-outline"}
+    }
+
+    icon_dict = state_icon_dict[pipeline["pipe_state"]]
 
     pipeline_color = "success" if pipeline["type"] == "simple" else "danger"
 
@@ -170,42 +177,36 @@ def create_pipeline_accordion_item(pipeline, mode):
                                            "display": "inline"}
                                 ),
                                 html.Br(),
+                                # Badge for pipeline number (issue iid)
+                                create_badge(f"#{pipeline['iid']}", "skyblue"),
                                 # Badge for type of pipeline (simple/advanced)
-                                dbc.Badge(
-                                    children=f"#{pipeline['iid']}",
-                                    className="me-2",
-                                    color="skyblue",
-                                    text_color="black"
+                                create_badge(pipeline["type"].capitalize(),
+                                             pipeline_color),
+                                # Badge for username
+                                create_badge(pipeline["user"], "success"),
+                                # Badge for date of submission
+                                create_badge(pipeline["date"], "info"),
+                            ],
+                                span=8
+                            ),
+                            dmc.Col(
+                                DashIconify(
+                                    color=icon_dict["color"],
+                                    icon=icon_dict["icon"],
+                                    height=40,
+                                    width=40
                                 ),
-                                dbc.Badge(
-                                    children=pipeline[
-                                        "type"].capitalize(),
-                                    className="me-2",
-                                    color=pipeline_color,
-                                    text_color="black"
-                                ),
-                                # Badge for user
-                                dbc.Badge(
-                                    children=pipeline["user"],
-                                    className="me-2",
-                                    color="success", text_color="black",
-                                ),
-                                # Badge for date
-                                dbc.Badge(
-                                    children=pipeline["date"],
-                                    color="info",
-                                    className="me-2", text_color="black"
-                                )
-                            ])
+                                span=1
+                            )
                         ],
-                        justify="flex-start",
+                        justify="space-between",
                         align="center",
                         gutter="xs"
                     )
                 ],
                 # Pipeline icon
                 icon=DashIconify(
-                    color="red", icon=icon_flag, height=30, width=30
+                    color="red", icon="carbon:subflow", height=30, width=30
                 )
             ),
             dmc.AccordionPanel(
@@ -358,9 +359,9 @@ def create_pipeline_accordion_item(pipeline, mode):
     )
 
 
-def create_pipelines_accordion(pipelines_meta, mode):
+def create_pipelines_accordion(pipelines_meta):
     """Creates an accordion of GitLab issues"""
-    children_items = [create_pipeline_accordion_item(pipeline, mode) for
+    children_items = [create_pipeline_accordion_item(pipeline) for
                       pipeline in pipelines_meta]
     return dmc.Accordion(
         children=children_items,
@@ -551,7 +552,7 @@ def switch_tabs(active_tab, cache_page, search_term):
     # else:
     if active_tab == "opened":
         return [
-            create_pipelines_accordion(pipeline_meta, active_tab),
+            create_pipelines_accordion(pipeline_meta),
             no_update,
             is_disabled,
             no_update,
@@ -561,7 +562,7 @@ def switch_tabs(active_tab, cache_page, search_term):
     if active_tab == "closed":
         return [
             no_update,
-            create_pipelines_accordion(pipeline_meta, active_tab),
+            create_pipelines_accordion(pipeline_meta),
             no_update,
             is_disabled,
             no_update,
