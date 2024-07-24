@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from concurrent.futures import as_completed, ThreadPoolExecutor
 import re
 
 from .base import BaseAPI
@@ -36,20 +36,39 @@ class RequestRepoAPI(BaseAPI):
         issues = self.project.issues.list(**filter_params)
 
         issues_meta = []
-        for issue in issues:
-            parsed_description = self.parse_description(issue.description)
-            issue_meta = {
-                "title": issue.title,
-                "id": issue.id,
-                "iid": issue.iid,
-                "author": issue.author["name"],
-                "user": parsed_description["username"] or issue.author["name"],
-                "web_url": issue.web_url,
-                "date": self.human_readable_date(issue.created_at),
-                "type": parsed_description["type"]
-            }
-            issues_meta.append(issue_meta)
+        with ThreadPoolExecutor() as executor:
+            future_to_issue = {
+                executor.submit(self.process_issue, ii): ii for ii in issues}
+            for future in as_completed(future_to_issue):
+                try:
+                    result = future.result()
+                    issues_meta.append(result)
+                except Exception as exc:
+                    issue = future_to_issue[future]
+                    print(f"Issue {issue.iid} generated an exception: {exc}")
+
+        issues_meta = sorted(issues_meta, key=lambda x: x["id"])
         return issues_meta
+
+    def process_issue(self, issue):
+        parsed_description = self.parse_description(issue.description)
+        if issue.state == "opened":
+            comments = self.get_processed_issue_notes(issue.iid)
+            pipe_state = comments["pipe_state"]
+        else:
+            # Define state for all closed pipelines
+            pipe_state = "finish"
+        return {
+            "title": issue.title,
+            "id": issue.id,
+            "iid": issue.iid,
+            "author": issue.author["name"],
+            "user": parsed_description["username"] or issue.author["name"],
+            "web_url": issue.web_url,
+            "date": self.human_readable_date(issue.created_at),
+            "type": parsed_description["type"],
+            "pipe_state": pipe_state
+        }
 
     def get_processed_issue_notes(self, issue_iid):
         """Fetch comments with dates of an issue and parse issue comments
