@@ -13,7 +13,7 @@ def get_gitlab_instances():
     # Load environment variables from .env file
     load_dotenv()
     request_gitlab = RequestRepoAPI(
-        os.getenv("MY_REPO_URL"),
+        os.getenv("REPO_URL"),
         os.getenv("REPO_TOKEN"),
         os.getenv("PROJECT_NUM")
     )

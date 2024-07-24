@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from concurrent.futures import as_completed, ThreadPoolExecutor
 import re
 
 from .base import BaseAPI
@@ -6,14 +6,6 @@ from .base import BaseAPI
 
 class RequestRepoAPI(BaseAPI):
     """HPC Pipeline Request repository API inherited from BaseAPI"""
-    @staticmethod
-    def human_readable_date(date):
-        # Define the GMT+0200 timezone offset
-        gmt_offset = timedelta(hours=2)
-        time_stamp = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
-        # Add the GMT offset to the timestamp
-        new_time_stamp = time_stamp + gmt_offset
-        return new_time_stamp.strftime("%I:%M%p, %d-%b-%Y")
 
     def get_issues_meta(self, state, page, per_page=10, search_term=None):
         """Filter issues based on the state and search term if it exists and
@@ -44,20 +36,39 @@ class RequestRepoAPI(BaseAPI):
         issues = self.project.issues.list(**filter_params)
 
         issues_meta = []
-        for issue in issues:
-            parsed_description = self.parse_description(issue.description)
-            issue_meta = {
-                "title": issue.title,
-                "id": issue.id,
-                "iid": issue.iid,
-                "author": issue.author["name"],
-                "user": parsed_description["username"] or issue.author["name"],
-                "web_url": issue.web_url,
-                "date": self.human_readable_date(issue.created_at),
-                "type": parsed_description["type"]
-            }
-            issues_meta.append(issue_meta)
+        with ThreadPoolExecutor() as executor:
+            future_to_issue = {
+                executor.submit(self.process_issue, ii): ii for ii in issues}
+            for future in as_completed(future_to_issue):
+                try:
+                    result = future.result()
+                    issues_meta.append(result)
+                except Exception as exc:
+                    issue = future_to_issue[future]
+                    print(f"Issue {issue.iid} generated an exception: {exc}")
+
+        issues_meta = sorted(issues_meta, key=lambda x: x["id"])
         return issues_meta
+
+    def process_issue(self, issue):
+        parsed_description = self.parse_description(issue.description)
+        if issue.state == "opened":
+            comments = self.get_processed_issue_notes(issue.iid)
+            pipe_state = comments["pipe_state"]
+        else:
+            # Define state for all closed pipelines
+            pipe_state = "finish"
+        return {
+            "title": issue.title,
+            "id": issue.id,
+            "iid": issue.iid,
+            "author": issue.author["name"],
+            "user": parsed_description["username"] or issue.author["name"],
+            "web_url": issue.web_url,
+            "date": self.human_readable_date(issue.created_at),
+            "type": parsed_description["type"],
+            "pipe_state": pipe_state
+        }
 
     def get_processed_issue_notes(self, issue_iid):
         """Fetch comments with dates of an issue and parse issue comments
@@ -76,7 +87,7 @@ class RequestRepoAPI(BaseAPI):
         comments = []
         comment_authors = []
         dates = []
-        is_canceled = False
+        pipe_state = "run"
 
         issue_object = self.get_issue_object(issue_iid)
         # Fetch comments of the issue
@@ -86,8 +97,13 @@ class RequestRepoAPI(BaseAPI):
             # Fetch human-readable date
             time_stamp = self.human_readable_date(note.created_at)
             dates.append(time_stamp)
-            comment_authors.append(
-                "bot" if "*" in note.author["name"] else note.author["name"])
+            auth_name = note.author["name"]
+            comment_authors.append("bot" if "*" in auth_name else auth_name)
+
+            if "cancel" in note.body.lower():
+                pipe_state = "stop"
+            if "state: invalid" in note.body.lower():
+                pipe_state = "pause"
 
             # Filter python error messages from comments
             if "```python" in note.body:
@@ -99,9 +115,6 @@ class RequestRepoAPI(BaseAPI):
                     flags=re.DOTALL
                 )
                 comments.append(note_without_code)
-            elif note.body.lower() == "cancel":
-                is_canceled = True
-
             else:
                 comments.append(note.body)
 
@@ -130,7 +143,7 @@ class RequestRepoAPI(BaseAPI):
             "comments": comments,
             "comment_authors": comment_authors,
             "dates": dates,
-            "is_canceled": is_canceled
+            "pipe_state": pipe_state
         }
 
     def get_request_template(self, temp_type):
@@ -173,8 +186,22 @@ class RequestRepoAPI(BaseAPI):
         new_pipeline = self.project.issues.create(pipeline_request)
         return new_pipeline.notes.create({"body": "Go"})
 
-    def stop_pipeline(self, issue_iid):
-        """Stop pipeline by creating `Cancel` comment in an issue"""
+    def change_pipeline_status(self, issue_iid, action):
+        """Stops or pause the given pipeline by writing `cancel` and `invalid`
+        comments"""
         issue_obj = self.get_issue_object(issue_iid)
-        issue_obj.notes.create({"body": "Cancel"})
-        issue_obj.save()
+
+        comments = issue_obj.notes.list(get_all=True)
+        if action == "pause":
+            if not any("state: invalid" in c.body.lower() for c in comments):
+                issue_obj.notes.create({"body": "STATE: invalid"})
+        elif action == "run":
+            # Remove any existing "pause" comment
+            for comment in comments:
+                if "state: invalid" in comment.body.lower():
+                    comment.delete()
+        elif action == "stop":
+            if not any("cancel" in c.body.lower() for c in comments):
+                issue_obj.notes.create({"body": "Cancel"})
+        else:
+            print("unknown action!")

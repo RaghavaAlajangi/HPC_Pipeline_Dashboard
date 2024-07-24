@@ -24,6 +24,9 @@ app = Dash(
 
 server = app.server
 
+app.title = "HPC Pipelines"
+app._favicon = "dashboard/assets/favicon.ico"
+
 # Build the main layout of the app
 app.layout = html.Div([
     sidebar_layout(),
