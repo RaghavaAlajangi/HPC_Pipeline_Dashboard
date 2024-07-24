@@ -228,7 +228,8 @@ def create_pipeline_accordion_item(pipeline):
                             )
                         ),
                     ],
-                        id={"type": "pipeline_popup", "index": pipeline["iid"]},
+                        id={"type": "pipeline_popup",
+                            "index": pipeline["iid"]},
                         centered=True,
                         is_open=False,
                         keyboard=True,

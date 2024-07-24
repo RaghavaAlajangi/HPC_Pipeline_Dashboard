@@ -70,7 +70,7 @@ def mock_gitlab_project():
     """Gitlab project mocker"""
     mock_templates = read_mock_issue_templates()
 
-    (adv_key, sim_key), (adv_txt, sim_txt) = mock_templates.items()
+    adv_txt, sim_txt = mock_templates.values()
 
     mock_project = MagicMock()
 
