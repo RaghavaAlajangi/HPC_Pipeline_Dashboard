@@ -47,7 +47,7 @@ class RequestRepoAPI(BaseAPI):
                     issue = future_to_issue[future]
                     print(f"Issue {issue.iid} generated an exception: {exc}")
 
-        issues_meta = sorted(issues_meta, key=lambda x: x["id"])
+        issues_meta = sorted(issues_meta, key=lambda x: x["id"], reverse=True)
         return issues_meta
 
     def process_issue(self, issue):
