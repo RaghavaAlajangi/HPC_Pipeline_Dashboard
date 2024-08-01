@@ -84,7 +84,7 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
     "cache_page, expected_cache_page, expected_opened_prev_disabled, "
     "expected_closed_prev_disabled",
     [
-        # Test case 1: enable functionality of previous button in opened tab
+        # Test case 1: enable previous button in opened tab
         (
                 [{"prop_id": "opened_next_button.n_clicks"}],
                 0, 1, 0, 0, "opened",
@@ -92,7 +92,7 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
                 {"opened": 3, "closed": 1},
                 False, True
         ),
-        # Test case 2: disable functionality of previous button in opened tab
+        # Test case 2: disable previous button in opened tab
         (
                 [{"prop_id": "opened_next_button.n_clicks"}],
                 0, 1, 0, 0, "opened",
@@ -100,7 +100,7 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
                 {"opened": 1, "closed": 1},
                 True, True
         ),
-        # Test case 3: enable functionality of previous button in closed tab
+        # Test case 3: enable previous button in closed tab
         (
                 [{"prop_id": "closed_next_button.n_clicks"}],
                 0, 0, 0, 1, "closed",
@@ -108,7 +108,7 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
                 {"opened": 1, "closed": 3},
                 True, False
         ),
-        # Test case 4: disable functionality of previous button in closed tab
+        # Test case 4: disable previous button in closed tab
         (
                 [{"prop_id": "closed_next_button.n_clicks"}],
                 0, 0, 0, 1, "closed",
