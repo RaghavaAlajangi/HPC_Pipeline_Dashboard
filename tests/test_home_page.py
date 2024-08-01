@@ -3,8 +3,9 @@ from contextvars import copy_context
 from dash import no_update
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
+import pytest
 
-from dashboard.pages.page_home import manage_pipeline_status
+from dashboard.pages.page_home import change_page, manage_pipeline_status
 
 
 def test_manage_pipeline_status_callback_deactivation():
@@ -149,3 +150,69 @@ def test_manage_pipeline_status_callback_stop_pipeline():
     assert popup_message == "The issue has been stopped."
     assert run_pause_disabled
     assert stop_disabled
+
+
+@pytest.mark.parametrize(
+    "triggered_inputs, opclick, onclick, cpclick, cnclick, active_tab, "
+    "cache_page, expected_cache_page, expected_opened_prev_disabled, "
+    "expected_closed_prev_disabled",
+    [
+        # Test case 1: enable functionality of previous button in opened tab
+        (
+                [{"prop_id": "opened_next_button.n_clicks"}],
+                0, 1, 0, 0, "opened",
+                {"opened": 2, "closed": 1},
+                {"opened": 3, "closed": 1},
+                False, True
+        ),
+        # Test case 2: disable functionality of previous button in opened tab
+        (
+                [{"prop_id": "opened_next_button.n_clicks"}],
+                0, 1, 0, 0, "opened",
+                {"opened": 0, "closed": 1},
+                {"opened": 1, "closed": 1},
+                True, True
+        ),
+        # Test case 3: enable functionality of previous button in closed tab
+        (
+                [{"prop_id": "closed_next_button.n_clicks"}],
+                0, 0, 0, 1, "closed",
+                {"opened": 1, "closed": 2},
+                {"opened": 1, "closed": 3},
+                True, False
+        ),
+        # Test case 4: disable functionality of previous button in closed tab
+        (
+                [{"prop_id": "closed_next_button.n_clicks"}],
+                0, 0, 0, 1, "closed",
+                {"opened": 1, "closed": 0},
+                {"opened": 1, "closed": 1},
+                True, True
+        ),
+    ]
+)
+def test_change_page_callback(triggered_inputs, opclick, onclick, cpclick,
+                              cnclick, active_tab, cache_page,
+                              expected_cache_page,
+                              expected_opened_prev_disabled,
+                              expected_closed_prev_disabled):
+    """Test functionality of previous buttons in opened and closed tabs"""
+
+    def run_callback():
+        context_value.set(
+            AttributeDict(**{
+                "triggered_inputs": triggered_inputs
+            })
+        )
+        return change_page(opclick=opclick, onclick=onclick, cpclick=cpclick,
+                           cnclick=cnclick,
+                           active_tab=active_tab,
+                           cache_page=cache_page)
+
+    ctx = copy_context()
+    response = ctx.run(run_callback)
+    cache_page, opened_prev_disabled, closed_prev_disabled = response
+
+    assert cache_page == expected_cache_page
+    assert opened_prev_disabled == expected_opened_prev_disabled
+    assert closed_prev_disabled == expected_closed_prev_disabled
