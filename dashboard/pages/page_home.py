@@ -488,7 +488,7 @@ def change_page(opclick, onclick, cpclick, cnclick, active_tab, cache_page):
     if triggered_id == f"{active_tab}_prev_button":
         cache_page[active_tab] -= 1
     opened_prev_disabled = cache_page["opened"] < 2
-    closed_prev_disabled = cache_page["opened"] < 2
+    closed_prev_disabled = cache_page["closed"] < 2
     return cache_page, opened_prev_disabled, closed_prev_disabled
 
 
