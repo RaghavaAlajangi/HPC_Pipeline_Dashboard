@@ -3,7 +3,7 @@ import os
 from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 
-from .pages import (advanced_page_layout, home_page_layout, sidebar_layout,
+from .pages import (home_page_layout, sidebar_layout,
                     simple_page_layout, wrong_page)
 
 # Dash Bootstrap CSS URL
@@ -24,7 +24,7 @@ app = Dash(
 
 server = app.server
 
-app.title = "HPC Pipelines"
+app.title = "AR HPC Pipelines"
 app._favicon = "dashboard/assets/favicon.ico"
 
 # Build the main layout of the app
@@ -42,16 +42,13 @@ app.layout = html.Div([
     Output("page-content", "children"),
     Output("home_page_link", "active"),
     Output("simple_page_link", "active"),
-    Output("advanced_page_link", "active"),
     Input("url", "pathname"),
 )
 def render_page_content(pathname):
     """Renders the page content when the user clicks on the page link"""
     if pathname == BASENAME_PREFIX:
-        return home_page_layout(), True, False, False
+        return home_page_layout(), True, False
     elif pathname == f"{BASENAME_PREFIX}simple_request":
-        return simple_page_layout(pathname), False, True, False
-    elif pathname == f"{BASENAME_PREFIX}advanced_request":
-        return advanced_page_layout(pathname), False, False, True
+        return simple_page_layout(pathname), False, True
     # Return a 404 message, if user tries to reach undefined page
-    return wrong_page(pathname), False, False, False
+    return wrong_page(pathname), False, False

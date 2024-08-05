@@ -65,14 +65,9 @@ def sidebar_layout():
                         id="home_page_link"
                     ),
                     dbc.NavLink(
-                        children="Simple Request",
+                        children="Pipeline Request",
                         href=f"{BASENAME_PREFIX}simple_request",
                         id="simple_page_link"
-                    ),
-                    dbc.NavLink(
-                        children="Advanced Request",
-                        href=f"{BASENAME_PREFIX}advanced_request",
-                        id="advanced_page_link"
                     )
                 ],
                 pills=True,
