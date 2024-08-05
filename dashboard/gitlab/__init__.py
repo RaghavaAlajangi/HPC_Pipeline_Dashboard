@@ -17,9 +17,4 @@ def get_gitlab_instances():
         os.getenv("REPO_TOKEN"),
         os.getenv("PROJECT_NUM")
     )
-    dvc_gitlab = DVCRepoAPI(
-        os.getenv("REPO_URL"),
-        os.getenv("DVC_REPO_TOKEN"),
-        os.getenv("DVC_REPO_PROJECT_NUM")
-    )
-    return request_gitlab, dvc_gitlab
+    return request_gitlab

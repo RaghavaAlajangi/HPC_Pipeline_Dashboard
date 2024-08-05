@@ -499,7 +499,7 @@ def change_page(opclick, onclick, cpclick, cnclick, active_tab, cache_page):
 )
 def show_pipeline_number(pathname):
     """Display how many pipelines available in opened and closed tabs"""
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
 
     if pathname == BASENAME_PREFIX:
         open_num = request_gitlab.total_issues(state="opened")
@@ -523,7 +523,7 @@ def switch_tabs(active_tab, cache_page, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
     issues_per_page = 10
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
 
     if active_tab in ["welcome", "workflow"]:
         raise PreventUpdate
@@ -587,7 +587,7 @@ def switch_tabs(active_tab, cache_page, search_term):
 def show_pipeline_data(pipeline_num):
     """Display pipeline data when the user clicks on pipeline accordion"""
 
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
 
     progress_comments = [
         "STATE: setup",
@@ -673,7 +673,7 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
 
     triggered_id = ctx.triggered[0]["prop_id"]
 
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
 
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
     pipe_state = issue_notes["pipe_state"]

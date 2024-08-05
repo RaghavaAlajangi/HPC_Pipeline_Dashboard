@@ -14,13 +14,13 @@ from ..gitlab import get_gitlab_instances
 
 def get_user_list():
     """Fetch the members list from request repo"""
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
     return request_gitlab.get_project_members()
 
 
 def get_simple_template():
     """Fetch the simple request template from request repo"""
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
     return request_gitlab.get_request_template(temp_type="simple")
 
 
@@ -250,39 +250,39 @@ def simple_page_layout(refresh_path):
     )
 
 
-@callback(
-    Output("simple_measure_type", "children"),
-    Output("cache_simple_seg_options", "data"),
-    Input("simple_unet_switch", "value"),
-    Input("simple_measure_type", "value"),
-    Input("simple_legacy_switch", "value"),
-    Input("simple_legacy_thresh_value", "value")
-)
-def show_and_cache_segment_options(unet_click, measurement_type, legacy_click,
-                                   legacy_thresh):
-    """This circular callback fetches unet model metadata from the DVC repo
-    and shows it as dmc.RadioGroup options, enable the user to select the
-    appropriate options from the same dmc.RadioItem options."""
-
-    _, dvc_gitlab = get_gitlab_instances()
-
-    model_dict = dvc_gitlab.get_model_metadata()
-
-    check_boxes = [
-        dmc.Radio(
-            label=f"{meta['device'].capitalize()} device, "
-                  f"{meta['type'].capitalize()} cells",
-            value=model_ckp, color="green"
-        ) for model_ckp, meta in model_dict.items()]
-
-    segm_options = {}
-    if unet_click and measurement_type:
-        segm_options[unet_click[0]] = {"model_file": measurement_type}
-
-    if legacy_click and legacy_thresh:
-        segm_options[legacy_click[0]] = {"thresh": legacy_thresh}
-
-    return check_boxes, segm_options
+# @callback(
+#     Output("simple_measure_type", "children"),
+#     Output("cache_simple_seg_options", "data"),
+#     Input("simple_unet_switch", "value"),
+#     Input("simple_measure_type", "value"),
+#     Input("simple_legacy_switch", "value"),
+#     Input("simple_legacy_thresh_value", "value")
+# )
+# def show_and_cache_segment_options(unet_click, measurement_type, legacy_click,
+#                                    legacy_thresh):
+#     """This circular callback fetches unet model metadata from the DVC repo
+#     and shows it as dmc.RadioGroup options, enable the user to select the
+#     appropriate options from the same dmc.RadioItem options."""
+#
+#     _, dvc_gitlab = get_gitlab_instances()
+#
+#     model_dict = dvc_gitlab.get_model_metadata()
+#
+#     check_boxes = [
+#         dmc.Radio(
+#             label=f"{meta['device'].capitalize()} device, "
+#                   f"{meta['type'].capitalize()} cells",
+#             value=model_ckp, color="green"
+#         ) for model_ckp, meta in model_dict.items()]
+#
+#     segm_options = {}
+#     if unet_click and measurement_type:
+#         segm_options[unet_click[0]] = {"model_file": measurement_type}
+#
+#     if legacy_click and legacy_thresh:
+#         segm_options[legacy_click[0]] = {"thresh": legacy_thresh}
+#
+#     return check_boxes, segm_options
 
 
 @callback(
@@ -368,7 +368,7 @@ def simple_request_submission_popup(_, cached_template, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user
     is asked to close the popup. When user closes page will be refreshed"""
 
-    request_gitlab, _ = get_gitlab_instances()
+    request_gitlab = get_gitlab_instances()
 
     button_trigger = [p["prop_id"] for p in ctx.triggered][0]
     if "create_simple_pipeline_button" in button_trigger:
