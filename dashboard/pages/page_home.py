@@ -76,8 +76,8 @@ def workflow_tab_content():
                 line_breaks(2),
                 html.Div(
                     children=html.Img(
-                        src="assets/hpc_workflow.jpg",
-                        style={"width": "1000px", "height": "900px"}
+                        src="assets/zpe_workflow.jpg",
+                        style={"width": "700px", "height": "700px"}
                     ),
                     className="row justify-content-center"
                 ),
