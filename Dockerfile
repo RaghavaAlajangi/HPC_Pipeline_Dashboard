@@ -5,7 +5,7 @@ COPY cache_handler.py /app/cache_handler.py
 ENTRYPOINT ["yacron"]
 CMD ["-c", "/tmp/crontab.yaml"]
 
-FROM python:alpine as hpc_pipeline_dashboard
+FROM python:alpine as auto_rapid_dashboard
 RUN apk --no-cache add --virtual .builddeps g++
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
@@ -22,10 +22,6 @@ ENV REPO_URL=None
 # HPC_pipeline_requests repo credentials
 ENV REPO_TOKEN=None
 ENV PROJECT_NUM=None
-
-# HPC_pipeline_data repo credentials
-ENV DVC_REPO_TOKEN=None
-ENV DVC_REPO_PROJECT_NUM=None
 
 ENTRYPOINT ["python3"]
 CMD ["-m", "dashboard"]
