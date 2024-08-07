@@ -5,7 +5,7 @@ import yaml
 
 from .common import (button_comp, form_group_dropdown, form_group_input,
                      group_accordion, header_comp, line_breaks, popup_comp)
-from .hsm_grid import create_gd2_grid, create_show_grid
+from .gd2_grid import create_gd2_grid, create_show_grid
 from ..gitlab import get_gitlab_instances
 
 

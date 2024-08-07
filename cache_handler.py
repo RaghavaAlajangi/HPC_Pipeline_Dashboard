@@ -4,12 +4,12 @@ import pickle
 import os
 import time
 
-# Restrict the dashboard to scan only `Data` directory from mounted HSMFS
-HSM_PATH = Path(__file__).parents[1] / "HSMFS" / "Data"
+# Restrict the dashboard to scan only `Data` directory from mounted GD2
+GD2_PATH = Path(__file__).parents[1] / "guck_division2" / "Data"
 RESOURCE_PATH = Path(__file__).parents[0] / "resources"
 
 
-class HSMDataProcessor:
+class GD2DataProcessor:
     def __init__(self, drive_path, resource_path):
         self.drive_path = drive_path
         self.resource_path = resource_path
@@ -17,7 +17,8 @@ class HSMDataProcessor:
             resource_path.mkdir(parents=True, exist_ok=True)
 
     def clear_resource_dir(self):
-        """Erase previously created HSMFS drive pickle from resources dir."""
+        """Erase previously created GuckDivision2 drive pickle from 
+        resources dir."""
         for item in self.resource_path.iterdir():
             if item.is_file():
                 item.unlink()
@@ -33,20 +34,20 @@ class HSMDataProcessor:
         else:
             return f"{file_size_bytes / (1024 ** 3):.1f} GB"
 
-    def save_hsm_data(self, hsm_data):
-        """Save extracted rtdc paths from HSMFS as a pickle file in
+    def save_gd2_data(self, gd2_data):
+        """Save extracted rtdc paths from GuckDivision2 as a pickle file in
         resources dir."""
-        with open(self.resource_path / "hsm_drive.pkl", "wb") as f:
-            pickle.dump(hsm_data, f)
+        with open(self.resource_path / "gd2_drive.pkl", "wb") as f:
+            pickle.dump(gd2_data, f)
 
     def process_drive(self):
         t1 = time.time()
 
         self.clear_resource_dir()
-        hsm_data = []
+        gd2_data = []
 
         for dirpath, dirnames, filenames in os.walk(self.drive_path):
-            filenames = [f for f in filenames if f.endswith(".rtdc")]
+            filenames = [f for f in filenames if f.endswith(".hdf5")]
             for fname in filenames:
                 fpath = os.path.join(dirpath, fname)
                 file_size = self.get_file_size(fpath)
@@ -57,24 +58,26 @@ class HSMDataProcessor:
                     modified_time = os.path.getmtime(fpath)
                     modified_time = dt.fromtimestamp(
                         modified_time).strftime("%d-%b-%Y %I.%M %p")
-                    # Get the path without HSMFS drive name
-                    fpath_wo_hsm = fpath.split("HSMFS/")[1]
-                    # Split path into string list, add HSMFS: drive identifier
-                    file_path_list = ["HSMFS:"] + list(fpath_wo_hsm.split("/"))
+                    print(fpath)
+                    # Get the path starting from `Data/`
+                    fpath_wo_hsm = fpath.split("Data/")[1]
+                    # Split path into string list, add Data/
+                    file_path_list = ["Data"] + list(fpath_wo_hsm.split("/"))
+                    print(file_path_list)
                     entry = {
                         "filepath": file_path_list,
                         "dateModified": modified_time,
                         "size": file_size
                     }
-                    hsm_data.append(entry)
+                    gd2_data.append(entry)
 
         # Pickle the hsm data
-        self.save_hsm_data(hsm_data)
+        self.save_gd2_data(gd2_data)
 
         disc_time = str(timedelta(seconds=time.time() - t1)).split(".")[0]
         print(f"Disc scanning time: {disc_time}")
 
 
 if __name__ == "__main__":
-    processor = HSMDataProcessor(HSM_PATH, RESOURCE_PATH)
+    processor = GD2DataProcessor(GD2_PATH, RESOURCE_PATH)
     processor.process_drive()
