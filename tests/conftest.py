@@ -40,7 +40,7 @@ def read_mock_issue_templates():
 
     issue_templates_gen = issue_template_dir.rglob("*.md")
 
-    simple_temp_path = ".gitlab/issue_templates/pipeline_request_simple.md"
+    simple_temp_path = ".gitlab/issue_templates/simple_template.md"
     advanced_tem_path = ".gitlab/issue_templates/pipeline_request_advanced.md"
 
     issue_templates = {}
