@@ -2,7 +2,6 @@ from pathlib import Path
 import pickle
 
 from dash import callback, dcc, html, Input, Output, State
-from dash import callback_context as cc
 from dash.exceptions import PreventUpdate
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
@@ -163,8 +162,8 @@ def create_show_grid(comp_id):
     Input("pipeline_accord", "active_item"),
 )
 def load_gd2_grid_data(pipeline_active_accord):
-    """Show GuckDivision2 grid only when user clicks on `Data to Process` 
-    accord"""
+    """Show GuckDivision2 grid only when user clicks on `Data to Process`
+    accord."""
     if pipeline_active_accord == "guck_accord":
         return load_drive_data()
     return None

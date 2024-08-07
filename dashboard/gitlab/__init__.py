@@ -3,7 +3,6 @@ import os
 
 from dotenv import load_dotenv
 
-from .dvc_repo import DVCRepoAPI
 from .requests_repo import RequestRepoAPI
 
 
