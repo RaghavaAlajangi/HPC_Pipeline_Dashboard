@@ -11,84 +11,36 @@ import dash_mantine_components as dmc
 
 from .common import hover_card, line_breaks
 
-HSM_DATA_DIR = Path(__file__).parents[2] / "resources"
+hsm_cached_dir = Path(__file__).parents[2] / "resources" / "gd2_drive.pkl"
 
 
-def load_hsm_data():
-    """Load rtdc file paths from pickled HSMFS drive"""
-    if (HSM_DATA_DIR / "hsm_drive.pkl").exists():
-        with open(HSM_DATA_DIR / "hsm_drive.pkl", "rb") as file:
+def load_drive_data():
+    """Load pickled drive saved in resources dir"""
+    if hsm_cached_dir.exists():
+        with open(hsm_cached_dir, "rb") as file:
             return pickle.load(file)
     else:
         return None
 
 
-def create_hsm_grid():
-    """Creates the HSMFS file explorer grid"""
+def create_gd2_grid():
+    """Creates the GuckDivision2 file explorer grid"""
     return html.Div(
         [
-            dcc.Store(id="cache_dcor_files", data=[]),
-            dcc.Store(id="cache_hsm_files", data=[]),
+            dcc.Store(id="cache_gd2_files", data=[]),
 
             dmc.Group(
                 children=[
-                    dmc.Text("Select DCOR-Colab file:", size="md"),
-                    hover_card(
-                        target=DashIconify(
-                            icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=22),
-                        notes="Copy and paste dataset ID / Circle name / "
-                              "Collection name from DCOR-Colab and click "
-                              "'add button' to add it to the pipeline "
-                    )
-                ],
-                spacing=5
-            ),
-            dmc.Text("NOTE: HPC Pipeline does not work with DCOR data.",
-                     size="sm", color="red"),
-
-            line_breaks(times=1),
-
-            dbc.InputGroup([
-                dbc.Select(
-                    placeholder="Source",
-                    id="input_group_drop",
-                    options=[
-                        {"label": "DCOR-Colab", "value": "DCOR"},
-                    ],
-                    value="DCOR",
-                    style={"width": "20%"},
-                    disabled=False
-                ),
-                dbc.Input(
-                    type="text", id="input_group_text",
-                    placeholder="Enter DVC path or DCOR-colab Id, "
-                                "Circle, or Dataset etc...",
-                    style={"width": "70%"},
-                    class_name="custom-placeholder",
-                    disabled=False,
-                ),
-                dbc.Button(
-                    "Add", id="input_group_button", color="info",
-                    style={"width": "10%"},
-                    disabled=False
-                ),
-            ],
-                style={"width": "80%"}
-            ),
-
-            line_breaks(times=2),
-            dmc.Group(
-                children=[
-                    dmc.Text("Select HSMFS file/s:", size="md"),
+                    dmc.Text("Select GuckDivision2 file/s:", size="md"),
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
                             color="yellow", width=22
                         ),
-                        notes="NOTE: The HSMFS drive gets updated every one "
-                              "hour. If you do not find your dataset in the "
-                              "below grid, please comeback after one hour."
+                        notes="NOTE: The GuckDivision2 drive gets updated "
+                              "every one hour. If you do not find your "
+                              "dataset in the below grid, please comeback "
+                              "after one hour."
                     )
                 ],
                 spacing=5
@@ -102,7 +54,7 @@ def create_hsm_grid():
                 size="md"
             ),
             dag.AgGrid(
-                id="hsm_grid",
+                id="guck_grid",
                 className="ag-theme-alpine-dark",
                 columnDefs=[
                     {"field": "size", "width": 50, "maxWidth": 200},
@@ -116,7 +68,7 @@ def create_hsm_grid():
                 },
                 dashGridOptions={
                     "autoGroupColumnDef": {
-                        "headerName": "HSMFS Drive",
+                        "headerName": "GuckDivision2 Drive",
                         "cellRendererParams": {
                             "suppressCount": True,
                             "checkbox": True,
@@ -127,7 +79,8 @@ def create_hsm_grid():
                     "ensureDomOrder": True,
                     "loadingOverlayComponent": "CustomLoadingOverlayForHSM",
                     "loadingOverlayComponentParams": {
-                        "loadingMessage": "HSM drive is being updated...",
+                        "loadingMessage": "GuckDivision2 drive is being "
+                                          "updated...",
                         "color": "yellow",
                     },
                     "groupDefaultExpanded": 3,
@@ -206,27 +159,27 @@ def create_show_grid(comp_id):
 
 
 @callback(
-    Output("hsm_grid", "rowData"),
+    Output("guck_grid", "rowData"),
     Input("pipeline_accord", "active_item"),
 )
-def load_hms_grid_data(pipeline_active_accord):
-    """Show HSMFS grid only when user clicks on `Data to Process` accord"""
-    if pipeline_active_accord == "hsm_accord":
-        return load_hsm_data()
+def load_gd2_grid_data(pipeline_active_accord):
+    """Show GuckDivision2 grid only when user clicks on `Data to Process` 
+    accord"""
+    if pipeline_active_accord == "guck_accord":
+        return load_drive_data()
     return None
 
 
 @callback(
     Output("show_grid", "rowData"),
     Output("show_grid", "selectedRows"),
-    Input("cache_dcor_files", "data"),
-    Input("cache_hsm_files", "data"),
+    Input("cache_gd2_files", "data"),
     prevent_initial_call=True
 )
-def update_show_grid_data(dcor_files, hsm_files):
+def update_show_grid_data(gd2_files):
     """Collect the user-selected data files and send them to `show_grid`"""
     # Convert list of strings into ag grid rowdata
-    rowdata = [{"filepath": i} for i in (dcor_files + hsm_files)]
+    rowdata = [{"filepath": i} for i in gd2_files]
     return rowdata, rowdata
 
 
@@ -254,40 +207,17 @@ def toggle_input_group_button(drop_value, filename):
 
 
 @callback(
-    Output("cache_dcor_files", "data"),
-    Output("input_group_drop", "value"),
-    Output("input_group_text", "value"),
-    Input("input_group_button", "n_clicks"),
-    Input("input_group_drop", "value"),
-    Input("input_group_text", "value"),
-    State("cache_dcor_files", "data"),
+    Output("cache_gd2_files", "data"),
+    Input("guck_grid", "selectedRows"),
+    State("cache_gd2_files", "data"),
     prevent_initial_call=True
 )
-def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
-    """Collects the user selected dcor files and cache them"""
-    button_triggered = cc.triggered[0]["prop_id"].split(".")[0]
-
-    if button_triggered == "input_group_button":
-        if text_input and drop_input:
-            input_path = f"{drop_input}: {text_input}"
-            if input_path not in cached_files:
-                cached_files.append(input_path)
-            return cached_files, drop_input, None
-    raise PreventUpdate
-
-
-@callback(
-    Output("cache_hsm_files", "data"),
-    Input("hsm_grid", "selectedRows"),
-    State("cache_hsm_files", "data"),
-    prevent_initial_call=True
-)
-def cache_user_given_hsm_files(hsm_selection, cached_files):
+def cache_user_given_gd2_files(gd2_selection, cached_files):
     """Collects the user selected hsm files and cache them"""
-    if hsm_selection:
-        hsm_files = ["/".join(s["filepath"]) for s in hsm_selection]
+    if gd2_selection:
+        gd2_files = ["/".join(s["filepath"]) for s in gd2_selection]
         # Convert list of strings into ag grid rowdata
-        for hfile in hsm_files:
+        for hfile in gd2_files:
             if hfile not in cached_files:
                 cached_files.append(hfile)
         return cached_files
@@ -295,9 +225,9 @@ def cache_user_given_hsm_files(hsm_selection, cached_files):
 
 
 @callback(
-    Output("hsm_grid", "dashGridOptions"),
+    Output("guck_grid", "dashGridOptions"),
     Input("grid_filter", "value"),
-    State("hsm_grid", "dashGridOptions"),
+    State("guck_grid", "dashGridOptions"),
     prevent_initial_call=True
 )
 def update_filter(filter_value, grid_options):
