@@ -1,3 +1,5 @@
+0.1.1
+ - fix: enable or disable previous button in closed tab appropriately
 0.1.0
  - feat: add pipeline status (run/pause) feature (#12)
  - test: ensure pipeline status (run/pause) works as expected
