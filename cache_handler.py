@@ -17,7 +17,7 @@ class GD2DataProcessor:
             resource_path.mkdir(parents=True, exist_ok=True)
 
     def clear_resource_dir(self):
-        """Erase previously created GuckDivision2 drive pickle from 
+        """Erase previously created GuckDivision2 drive pickle from
         resources dir."""
         for item in self.resource_path.iterdir():
             if item.is_file():

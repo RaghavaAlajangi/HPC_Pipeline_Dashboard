@@ -157,5 +157,5 @@ def mock_gitlab_instances(mocker):
         os.getenv("REPO_TOKEN"),
         os.getenv("PROJECT_NUM")
     )
-   
+
     return mock_request_repo_instance
