@@ -210,16 +210,13 @@ def collect_pipeline_params(author_name, simple_title, dprocess_key,
 
     if author_name and simple_title and selected_files:
         hdf5_files = [s["filepath"] for s in selected_files]
-        # Create yaml codeblock
-        codeblock = {"params": dprocess_params,
-                     "data":
-                         {"GUCKDIV": hdf5_files}
-                     }
-        # Convert yaml codeblock into string
-        yaml_string = yaml.dump(codeblock, sort_keys=False)
+        # Create yaml dict
+        yaml_dict = {"params": dprocess_params, "data": hdf5_files}
+        # Convert yaml dict into string
+        yaml_str = yaml.dump(yaml_dict, sort_keys=False)
 
         # Put the yaml string in a python codeblock
-        code_yaml_str = f"```python\n{yaml_string}```"
+        codeblock_str = f"```python\n{yaml_str}```"
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Get the pipeline template
@@ -228,7 +225,7 @@ def collect_pipeline_params(author_name, simple_title, dprocess_key,
         template_wo_codeblock = pipe_template.split("```python")[0]
         username_str = f"\n - [x] username={author_name}"
         # Add yaml string to template part
-        description = template_wo_codeblock + code_yaml_str + username_str
+        description = template_wo_codeblock + codeblock_str + username_str
         # Update pipeline description
         pipeline_template["description"] = description
         return pipeline_template
