@@ -39,11 +39,9 @@ params:
 
 
 data: 
-  GUCKDIV: [
-     Data\AutoRAPID\AutoRAPID\2024-06-06_SGR_blood and KC167 cells test\11-00-39\ar_data_0004.hdf5, 
-     Data/Auto-RAPID/file2.hdf5, 
-     Data/Auto-RAPID/file3.hdf5
-  ]
+  - GUCKDIV:\Data\AutoRAPID\AutoRAPID\2024-06-06_SGR_blood and KC167 cells test\11-00-39\ar_data_0004.hdf5, 
+  - GUCKDIV:/Data/Auto-RAPID/file2.hdf5, 
+  - GUCKDIV:/Data/Auto-RAPID/file3.hdf5
 ```
 
 ```bash
