@@ -1,17 +1,13 @@
-<!-- pred_simple -->
+# Auto-Rapid HPC Pipeline Request
 
-# Pipeline Request
-
-Pipeline for segmentation and/or classification (prediction) and analysis of data.
+Pipeline for analysis of Auto-rapid data.
 
 
 ### How to use this template:
 
-Tick the Steps in "Your Pipeline Details" you wish to execute.
-See this video link [] for how to use this template.
+Specify a parameter or a list of parameters that you want to execute as a pipeline/s in the below yaml file.
 
-Choosing multiple Segmentation or Prediction algorithms will create a matrix of
-jobs (multiple jobs).
+Choosing multiple files will create a matrix of jobs (multiple jobs).
 
 
 - To start the job type the following in a comment:
@@ -27,35 +23,27 @@ For example, when the job(s) is finished, a comment with "Finished" will appear.
 
 ## Your Pipeline Details
 
-- **Segmentation**
-   - Segmentation Algorithm
-      - [x] mlunet: UNET
-        - [x] model_file=unet-228-accel_g2_b428b.ckp
-      <!-- option end -->
-      - [ ] legacy: Legacy thresholding with OpenCV
-      <!-- option end -->
-      - [ ] watershed: Watershed algorithm
-      <!-- option end -->
-      - [ ] std: Standard-deviation-based thresholding
-      <!-- option end -->
-  - Further Options:
-    - [ ] --reproduce
-    <!-- option end -->
+```python
+params:
+  mode_mp: 'mp'  # 'seq' or 'mp'
+  mp_batch_size: 1000
+  mp_core_count: 16
+  # integer (lower means less strict) or 'auto' calculates it
+  efp_thresh: 'auto'
+  exclude_empty_frames: True
+  # "all" or an integer. You may end up with more than this number, as images may have multiple events
+  event_images_to_detect: "all"
+  ## MATLAB_PHA_THRESH_VAL=0.5 from Kyoo's MATLAB script. Lower to include more info
+  phase_thresh: 0.5
+  refocus: True
 
-- **Prediction**
-   - Classification Model
-      - [ ] mnet: MNet
-      - [ ] bloody-bunny_g1_bacae: Bloody Bunny
-   <!-- option end -->
 
-- **Post Analysis**
-   - [ ] Benchmarking
-   - [ ] Scatter Plots
-   <!-- option end -->
+data: 
+  - GUCKDIV:\Data\AutoRAPID\AutoRAPID\2024-06-06_SGR_blood and KC167 cells test\11-00-39\ar_data_0004.hdf5, 
+  - GUCKDIV:/Data/Auto-RAPID/file2.hdf5, 
+  - GUCKDIV:/Data/Auto-RAPID/file3.hdf5
+```
 
-- **Data to Process**
-   - [x] DCOR: 89bf2177-ffeb-9893-83cc-b619fc2f6663
+```bash
 
-    <!-- option end -->
-- __Author__
-   - [x] username=raghava.alajangi
+```

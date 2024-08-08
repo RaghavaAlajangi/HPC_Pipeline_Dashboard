@@ -149,8 +149,7 @@ class RequestRepoAPI(BaseAPI):
     def get_request_template(self, temp_type):
         """Return either simple or advanced request"""
         templates = {
-            "simple": ".gitlab/issue_templates/pipeline_request_simple.md",
-            "advanced": ".gitlab/issue_templates/pipeline_request_advanced.md"
+            "simple": ".gitlab/issue_templates/simple_template.md",
         }
         return self.read_repo_file(templates[temp_type])
 

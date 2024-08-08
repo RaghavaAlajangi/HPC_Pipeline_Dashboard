@@ -3,7 +3,6 @@ import os
 
 from dotenv import load_dotenv
 
-from .dvc_repo import DVCRepoAPI
 from .requests_repo import RequestRepoAPI
 
 
@@ -17,9 +16,4 @@ def get_gitlab_instances():
         os.getenv("REPO_TOKEN"),
         os.getenv("PROJECT_NUM")
     )
-    dvc_gitlab = DVCRepoAPI(
-        os.getenv("REPO_URL"),
-        os.getenv("DVC_REPO_TOKEN"),
-        os.getenv("DVC_REPO_PROJECT_NUM")
-    )
-    return request_gitlab, dvc_gitlab
+    return request_gitlab

@@ -30,7 +30,7 @@ def sidebar_layout():
     return html.Div(
         children=[
             # Title for the dashboard
-            dmc.Title("HPC Pipelines", order=1, align="center"),
+            dmc.Title("AR HPC Pipelines", order=1, align="center"),
             line_breaks(times=1),
             # Alert for the users
             dbc.Alert(
@@ -65,14 +65,9 @@ def sidebar_layout():
                         id="home_page_link"
                     ),
                     dbc.NavLink(
-                        children="Simple Request",
+                        children="Pipeline Request",
                         href=f"{BASENAME_PREFIX}simple_request",
                         id="simple_page_link"
-                    ),
-                    dbc.NavLink(
-                        children="Advanced Request",
-                        href=f"{BASENAME_PREFIX}advanced_request",
-                        id="advanced_page_link"
                     )
                 ],
                 pills=True,
