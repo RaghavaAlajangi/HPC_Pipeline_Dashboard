@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from dotenv import load_dotenv
 
-from dashboard.gitlab import DVCRepoAPI, RequestRepoAPI
+from dashboard.gitlab import RequestRepoAPI
 
 issue_template_dir = Path(__file__).parents[0] / "data"
 
@@ -157,10 +157,5 @@ def mock_gitlab_instances(mocker):
         os.getenv("REPO_TOKEN"),
         os.getenv("PROJECT_NUM")
     )
-    mock_dvc_repo_instance = DVCRepoAPI(
-        os.getenv("DVC_REPO_URL"),
-        os.getenv("DVC_REPO_TOKEN"),
-        os.getenv("DVC_PROJECT_NUM")
-    )
-
-    return mock_request_repo_instance, mock_dvc_repo_instance
+   
+    return mock_request_repo_instance
