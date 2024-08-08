@@ -4,27 +4,19 @@ import pickle
 import os
 import time
 
-# Restrict the dashboard to scan only `Data` directory from mounted HSMFS
-HSM_PATH = Path(__file__).parents[1] / "HSMFS" / "Data"
-RESOURCE_PATH = Path(__file__).parents[0] / "resources"
 
-
-class HSMDataProcessor:
-    def __init__(self, drive_path, resource_path):
+class DriveFileScanner:
+    def __init__(self, drive_path, result_path, file_suffix, identifier):
         self.drive_path = drive_path
-        self.resource_path = resource_path
-        if not resource_path.is_dir():
-            resource_path.mkdir(parents=True, exist_ok=True)
-
-    def clear_resource_dir(self):
-        """Erase previously created HSMFS drive pickle from resources dir."""
-        for item in self.resource_path.iterdir():
-            if item.is_file():
-                item.unlink()
+        self.result_path = result_path
+        self.file_suffix = file_suffix
+        self.identifier = identifier
+        if not result_path.parent.is_dir():
+            result_path.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def get_file_size(file_path):
-        """Compute size the file"""
+        """Compute size of the file."""
         file_size_bytes = os.path.getsize(file_path)
         if file_size_bytes < 1024 ** 2:  # Less than 1 MB
             return None
@@ -33,48 +25,63 @@ class HSMDataProcessor:
         else:
             return f"{file_size_bytes / (1024 ** 3):.1f} GB"
 
-    def save_hsm_data(self, hsm_data):
-        """Save extracted rtdc paths from HSMFS as a pickle file in
-        resources dir."""
-        with open(self.resource_path / "hsm_drive.pkl", "wb") as f:
-            pickle.dump(hsm_data, f)
+    def save_data(self, data):
+        """Save extracted paths as a pickle file in resources dir."""
+        with open(self.result_path, "wb") as f:
+            pickle.dump(data, f)
 
     def process_drive(self):
         t1 = time.time()
 
-        self.clear_resource_dir()
-        hsm_data = []
+        data = []
 
         for dirpath, dirnames, filenames in os.walk(self.drive_path):
-            filenames = [f for f in filenames if f.endswith(".rtdc")]
+            filenames = [f for f in filenames if f.endswith(self.file_suffix)]
             for fname in filenames:
                 fpath = os.path.join(dirpath, fname)
                 file_size = self.get_file_size(fpath)
                 if file_size:
-                    # Standardize the RTDC file path
+                    # Standardize the file path
                     fpath = fpath.replace("\\", "/").replace("//", "/")
-                    # Get the modified date of the RTDC file
+                    # Get the modified date of the file
                     modified_time = os.path.getmtime(fpath)
-                    modified_time = dt.fromtimestamp(
-                        modified_time).strftime("%d-%b-%Y %I.%M %p")
-                    # Get the path without HSMFS drive name
-                    fpath_wo_hsm = fpath.split("HSMFS/")[1]
-                    # Split path into string list, add HSMFS: drive identifier
-                    file_path_list = ["HSMFS:"] + list(fpath_wo_hsm.split("/"))
+                    modified_time = dt.fromtimestamp(modified_time).strftime(
+                        "%d-%b-%Y %I.%M %p")
+
+                    # Save files in "HSMFS:/Data/path/to/the/rtdc/file"
+                    fpath = str(fpath).strip()
+                    # Get the path starts from 'Data' (eg: Data/path/to/file)
+                    data_dir_idx = fpath.index("Data/")
+                    fpath = fpath[data_dir_idx:]
+                    # Split the path into a list (eg: [Data, path, to, file])
+                    fpath_split_list = list(fpath.split("/"))
+                    # Add identifier to splited list
+                    # (eg: [HSMFS:, Data, path, to, file])
+                    fpath_list = [f"{self.identifier}:"] + fpath_split_list
+
                     entry = {
-                        "filepath": file_path_list,
+                        "filepath": fpath_list,
                         "dateModified": modified_time,
                         "size": file_size
                     }
-                    hsm_data.append(entry)
+                    data.append(entry)
 
-        # Pickle the hsm data
-        self.save_hsm_data(hsm_data)
+        # Save the processed data to a pickle file
+        self.save_data(data)
 
         disc_time = str(timedelta(seconds=time.time() - t1)).split(".")[0]
         print(f"Disc scanning time: {disc_time}")
 
 
 if __name__ == "__main__":
-    processor = HSMDataProcessor(HSM_PATH, RESOURCE_PATH)
-    processor.process_drive()
+    HSM_PATH = Path(__file__).parents[1] / "HSMFS" / "Data"
+    GD2_PATH = Path(__file__).parents[1] / "guck_division2" / "Data"
+    result_path = Path(__file__).parents[0] / "resources"
+
+    hsm_processor = DriveFileScanner(HSM_PATH, result_path / "hsm_drive.pkl",
+                                     ".rtdc", "HSMFS")
+    hsm_processor.process_drive()
+
+    gd2_processor = DriveFileScanner(GD2_PATH, result_path / "gd2_drive.pkl",
+                                     ".hdf5", "GUCKDIV")
+    gd2_processor.process_drive()
