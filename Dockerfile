@@ -1,3 +1,10 @@
+FROM python:alpine as cron
+RUN pip install yacron
+COPY crontab.yaml /tmp/crontab.yaml
+COPY cache_handler.py /app/cache_handler.py
+ENTRYPOINT ["yacron"]
+CMD ["-c", "/tmp/crontab.yaml"]
+
 FROM python:alpine as auto-rapid-dashboard
 RUN apk --no-cache add --virtual .builddeps g++
 WORKDIR /app

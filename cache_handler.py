@@ -74,13 +74,8 @@ class DriveFileScanner:
 
 
 if __name__ == "__main__":
-    HSM_PATH = Path(__file__).parents[1] / "HSMFS" / "Data"
     GD2_PATH = Path(__file__).parents[1] / "guck_division2" / "Data"
     result_path = Path(__file__).parents[0] / "resources"
-
-    hsm_processor = DriveFileScanner(HSM_PATH, result_path / "hsm_drive.pkl",
-                                     ".rtdc", "HSMFS")
-    hsm_processor.process_drive()
 
     gd2_processor = DriveFileScanner(GD2_PATH, result_path / "gd2_drive.pkl",
                                      ".hdf5", "GUCKDIV")
