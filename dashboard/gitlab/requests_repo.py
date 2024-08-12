@@ -77,7 +77,7 @@ class RequestRepoAPI(BaseAPI):
         job_comments = [
             re.compile(r"^Completed job"),
             re.compile(r"^We have (\d+) pipeline"),
-            re.compile(r"Access all your experiments at:\s*(https?://\S+)")
+            re.compile(r"`([^`]*)`")
         ]
 
         # Initialize variables
@@ -131,7 +131,7 @@ class RequestRepoAPI(BaseAPI):
             # Check for results path
             results_match = job_comments[2].search(note.body)
             if results_match:
-                results_path = f"P:/{results_match.group(1).split('main/')[1]}"
+                results_path = results_match.group(1)
 
         if total_jobs == 0:
             pass
