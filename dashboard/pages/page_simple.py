@@ -3,8 +3,8 @@ from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
 import yaml
 
-from .common import (button_comp, form_group_dropdown, form_group_input,
-                     group_accordion, header_comp, line_breaks, popup_comp)
+from .common import (button_comp, input_with_label, group_accordion,
+                     header_comp, line_breaks, popup_comp)
 from .gd2_grid import create_gd2_grid, create_show_grid
 from ..gitlab import get_gitlab_instances
 
@@ -60,76 +60,76 @@ def pipeline_parameters_section():
     return dbc.AccordionItem(
         title="dprocess params",
         children=[
-            form_group_dropdown(
+            input_with_label(
                 comp_id={"type": "dprocess_param", "index": 1},
                 label="mode_mp",
                 label_key="mode_mp",
-                options=[
-                    {"label": "multiprocessing", "value": "mp"},
-                    {"label": "sequential", "value": "seq"}
-                ],
-                default="mp",
-                box_width=11
-            ),
+                hover_notes="Use either 'multiprocessing' or 'sequential' "
+                            "operation when you run the processing job.",
+                input_type="text",
+                input_width=11,
+                select=True,
+                select_options=[{"label": "multiprocessing", "value": "mp"},
+                                {"label": "sequential", "value": "seq"}],
+                select_value="mp"),
 
-            form_group_input(
+            input_with_label(
                 comp_id={"type": "dprocess_param", "index": 2},
                 label="mp_batch_size",
                 label_key="mp_batch_size",
-                min=0, max=1000000, step=100,
-                default=10000
-            ),
+                hover_notes="Determines the batch size for 'multiprocessing'. "
+                            "Bigger batch size improves the processing speed. "
+                            "Make sure, you have enough RAM to tackle the "
+                            "batch size.",
+                input_type="number",
+                input_min=0, input_max=1000000, input_step=100,
+                input_value=10000),
 
-            dbc.Form(
-                dbc.Row(
-                    [
-                        dbc.Label("efp_thresh", width=2),
-                        dbc.Col(dbc.Input(
-                            id={"type": "dprocess_param", "index": 3},
-                            disabled=False,
-                            value="auto",
-                            type="text",
-                            key="efp_thresh",
-                            placeholder="Enter a number...",
-                            style={"width": "6rem"}
-                        ))
-                    ]
-                )
-            ),
-            dbc.Form(
-                dbc.Row(
-                    [
-                        dbc.Label("event_images_to_detect", width=2),
-                        dbc.Col(dbc.Input(
-                            id={"type": "dprocess_param", "index": 4},
-                            disabled=False,
-                            value="all",
-                            type="text",
-                            key="event_images_to_detect",
-                            placeholder="Enter a number...",
-                            style={"width": "6rem"}
-                        ))
-                    ]
-                )
-            ),
-            form_group_input(
+            input_with_label(
+                comp_id={"type": "dprocess_param", "index": 3},
+                label="efp_thresh",
+                label_key="efp_thresh",
+                hover_notes="Brightness threshold for event detection (after "
+                            "background subtraction). Available options: "
+                            "'Auto' or an integer (lower means less strict). "
+                            "Any events with brightness above this value will "
+                            "be considered an event.",
+                input_type="text",
+                input_placeholder="'auto' or an 'integer'",
+                input_value="auto"),
+
+            input_with_label(
+                comp_id={"type": "dprocess_param", "index": 4},
+                label="event_images_to_detect",
+                label_key="event_images_to_detect",
+                hover_notes="'all' or an 'integer'. You may end up with more "
+                            "than this number, as images may have multiple "
+                            "events.",
+                input_type="text",
+                input_placeholder="'all' or an 'integer'",
+                input_value="all"),
+
+            input_with_label(
                 comp_id={"type": "dprocess_param", "index": 5},
                 label="phase_thresh",
                 label_key="phase_thresh",
-                min=0, max=1, step=0.1,
-                default=0.5
-            ),
-            form_group_dropdown(
+                hover_notes="MATLAB_PHA_THRESH_VAL=0.5 from Kyoo's MATLAB "
+                            "script. Lower to include more info.",
+                input_type="number",
+                input_min=0, input_max=1, input_step=0.1,
+                input_value=0.5),
+
+            input_with_label(
                 comp_id={"type": "dprocess_param", "index": 6},
                 label="refocus",
                 label_key="refocus",
-                options=[
-                    {"label": "True", "value": "True"},
-                    {"label": "False", "value": "False"}
-                ],
-                default="True",
-                box_width=6
-            )
+                hover_notes="Refocusing each event during the analysis. This "
+                            "will improve the consistency of the scalar "
+                            "features e.g. deform",
+                select=True,
+                select_options=[{"label": "True", "value": "True"},
+                                {"label": "False", "value": "False"}],
+                select_value="True")
         ]
     )
 

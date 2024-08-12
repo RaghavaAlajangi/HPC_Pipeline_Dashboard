@@ -3,6 +3,7 @@ import re
 from dash import html
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 
 
 def button_comp(label, comp_id, type="primary", disabled=False):
@@ -114,6 +115,83 @@ def divider_line_comp(variant="dashed", pad=10):
     return html.Div(
         dmc.Divider(variant=variant),
         style={"padding-top": f"{pad}px", "padding-bottom": f"{pad}px"}
+    )
+
+
+def input_with_label(
+        comp_id,
+        label,
+        label_key,
+        hover_notes="",
+        input_type="text",
+        input_value=None,
+        input_min=None,
+        input_max=None,
+        input_step=None,
+        input_width=6,
+        input_placeholder=None,
+        label_gap=2,
+        select=False,
+        select_options=None,
+        select_value=None,
+        disabled=False,
+        icon="mage:message-question-mark-round-fill",
+        icon_color="yellow"
+):
+    if hover_notes.strip():
+        children = [
+            dmc.Col(
+                hover_card(
+                    target=dmc.Text(
+                        [label,
+                         DashIconify(icon=icon, color=icon_color, width=20)]
+                    ),
+                    notes=hover_notes
+                ), span=label_gap
+            )
+        ]
+    else:
+        children = [
+            dmc.Col(dmc.Text(label), span=label_gap)
+        ]
+
+    if select:
+        children.append(
+            dmc.Col(
+                dbc.Select(
+                    id=comp_id,
+                    disabled=disabled,
+                    options=select_options,
+                    value=select_value,
+                    placeholder=input_placeholder,
+                    key=label_key,
+                    style={"width": f"{input_width}rem"}
+                ), span=1
+            )
+        )
+    else:
+        children.append(
+            dmc.Col(
+                dbc.Input(
+                    id=comp_id,
+                    disabled=disabled,
+                    type=input_type,
+                    value=input_value,
+                    min=input_min,
+                    max=input_max,
+                    step=input_step,
+                    placeholder=input_placeholder,
+                    key=label_key,
+                    style={"width": f"{input_width}rem"}
+                ), span=1
+            )
+        )
+
+    return dmc.Grid(
+        align="center",
+        justify="flex-start",
+        gutter="xs",
+        children=children
     )
 
 
