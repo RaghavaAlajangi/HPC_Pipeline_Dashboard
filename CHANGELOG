@@ -1,3 +1,6 @@
+0.1.2
+ - ref: create generalized drive scanner
+ - test: add test for cache_handler.py
 0.1.1
  - fix: enable or disable previous button in closed tab appropriately
 0.1.0
