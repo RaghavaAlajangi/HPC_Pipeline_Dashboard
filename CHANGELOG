@@ -1,3 +1,17 @@
+0.0.1
+ - enh: add new regex for auto rapid to fetch result path
+ - enh: add hover cards for all arguments
+ - enh: implement auto rapid pipeline request
+ - ref: remove dvc repo script
+ - ref: modified cache_handler.py for guck_division2
+ - ref: remove unwanted files
+ - ref: change the title
+ - ref: replaced hpc_workflow.jpg with zpe_workflow.jpg
+ - ref: remove dvc repo details
+ - ref: remove advanced request page
+ - ref: create fork for auto rapid project
+
+# NOTE: CHANGELOG of HPC Pipeline Dashboard
 0.1.1
  - fix: enable or disable previous button in closed tab appropriately
 0.1.0
