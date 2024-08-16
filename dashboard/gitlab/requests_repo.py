@@ -80,33 +80,45 @@ class RequestRepoAPI(BaseAPI):
             re.compile(r"Access all your experiments at:\s*(https?://\S+)")
         ]
 
-        # Initialize variables
-        total_jobs = 0
-        finished_jobs = 0
-        results_path = "Result path is not found!"
-        comments = []
-        comment_authors = []
-        dates = []
-        pipe_state = "run"
-
         issue_object = self.get_issue_object(issue_iid)
-        # Fetch comments of the issue
         issue_notes = issue_object.notes.list(all=True)
 
-        for note in issue_notes:
-            # Fetch human-readable date
-            time_stamp = self.human_readable_date(note.created_at)
-            dates.append(time_stamp)
-            auth_name = note.author["name"]
-            comment_authors.append("bot" if "*" in auth_name else auth_name)
+        data = {
+            "total_jobs": 0,
+            "finished_jobs": 0,
+            "results_path": "Result path is not found!",
+            "comments": [],
+            "comment_authors": [],
+            "dates": [],
+            "pipe_state": "run"
+        }
 
-            if "cancel" in note.body.lower():
-                pipe_state = "stop"
-            if "state: invalid" in note.body.lower():
-                pipe_state = "pause"
+        for note in issue_notes:
+            note_body_lower = note.body.lower()
+            time_stamp = self.human_readable_date(note.created_at)
+            auth_name = note.author["name"]
+
+            data["dates"].append(time_stamp)
+            data["comment_authors"].append(
+                "bot" if "*" in auth_name else auth_name)
+            # Check for pipeline state
+            if "cancel" in note_body_lower:
+                data["pipe_state"] = "cancel"
+            # "cancel" is prioritized over "error"
+            elif "state: error" in note_body_lower and \
+                    data["pipe_state"] != "cancel":
+                data["pipe_state"] = "error"
+            # "cancel" and "error" are prioritized over "invalid"
+            elif "state: invalid" in note_body_lower and \
+                    data["pipe_state"] not in ["cancel", "error"]:
+                data["pipe_state"] = "pause"
+            # "cancel" "error", and "invalid" are prioritized over "done"
+            elif "state: done" in note_body_lower and \
+                    data["pipe_state"] not in ["cancel", "error", "pause"]:
+                data["pipe_state"] = "finish"
 
             # Filter python error messages from comments
-            if "```python" in note.body:
+            if "```python" in note_body_lower:
                 note_without_code = re.sub(
                     r"```python.*?```",
                     f"Got some error! See the comment: "
@@ -114,37 +126,26 @@ class RequestRepoAPI(BaseAPI):
                     note.body,
                     flags=re.DOTALL
                 )
-                comments.append(note_without_code)
+                data["comments"].append(note_without_code)
             else:
-                comments.append(note.body)
+                data["comments"].append(note.body)
+
+            # Check for completed job
+            if job_comments[0].match(note.body):
+                data["finished_jobs"] += 1
 
             # Parse comments for specific information
             # Check for total number of pipelines
             total_match = job_comments[1].match(note.body)
             if total_match:
-                total_jobs = int(total_match.group(1))
-
-            # Check for completed job
-            if job_comments[0].match(note.body):
-                finished_jobs += 1
-
+                data["total_jobs"] = int(total_match.group(1))
             # Check for results path
             results_match = job_comments[2].search(note.body)
             if results_match:
-                results_path = f"P:/{results_match.group(1).split('main/')[1]}"
+                data["results_path"] = \
+                    f"P:/{results_match.group(1).split('main/')[1]}"
 
-        if total_jobs == 0:
-            pass
-
-        return {
-            "total_jobs": total_jobs,
-            "finished_jobs": finished_jobs,
-            "results_path": results_path,
-            "comments": comments,
-            "comment_authors": comment_authors,
-            "dates": dates,
-            "pipe_state": pipe_state
-        }
+        return data
 
     def get_request_template(self, temp_type):
         """Return either simple or advanced request"""
@@ -200,7 +201,8 @@ class RequestRepoAPI(BaseAPI):
             for comment in comments:
                 if "state: invalid" in comment.body.lower():
                     comment.delete()
-        elif action == "stop":
+                    break
+        elif action == "cancel":
             if not any("cancel" in c.body.lower() for c in comments):
                 issue_obj.notes.create({"body": "Cancel"})
         else:

@@ -151,12 +151,20 @@ def create_pipeline_accordion_item(pipeline):
     """Creates an accordion item for a given pipeline"""
 
     state_icon_dict = {
-        "run": {"color": "cyan", "icon": "fluent:play-circle-hint-24-filled"},
+        "run": {"color": "#10e84a", "icon": "line-md:loading-twotone-loop",
+                "status": "Processing"},
         "pause": {"color": "orange",
-                  "icon": "material-symbols:motion-photos-paused"},
-        "stop": {"color": "red", "icon": "flat-color-icons:cancel"},
+                  "icon": "material-symbols:motion-photos-paused",
+                  "status": "Paused"},
+
+        "cancel": {"color": "red", "icon": "flat-color-icons:cancel",
+                   "status": "Canceled"},
         "finish": {"color": "yellow",
-                   "icon": "ion:checkmark-done-circle-outline"}
+                   "icon": "ion:checkmark-done-circle-outline",
+                   "status": "Finished"},
+        "error": {"color": "red",
+                  "icon": "material-symbols:error-outline",
+                  "status": "Error"}
     }
 
     icon_dict = state_icon_dict[pipeline["pipe_state"]]
@@ -190,12 +198,16 @@ def create_pipeline_accordion_item(pipeline):
                                 span=8
                             ),
                             dmc.Col(
-                                DashIconify(
-                                    color=icon_dict["color"],
-                                    icon=icon_dict["icon"],
-                                    height=40,
-                                    width=40
-                                ),
+                                dmc.Text([
+                                    DashIconify(
+                                        color=icon_dict["color"],
+                                        icon=icon_dict["icon"],
+                                        height=40,
+                                        width=40
+                                    ),
+                                    f"  {icon_dict['status']}"
+                                ], c="white", fw=700),
+
                                 span=1
                             )
                         ],
@@ -688,14 +700,18 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
             popup_message = "The issue has been paused."
 
     elif "stop_pipe_click" in triggered_id:
-        request_gitlab.change_pipeline_status(pipeline_num, "stop")
+        request_gitlab.change_pipeline_status(pipeline_num, "cancel")
         popup_message = "The issue has been stopped."
         run_pause_disabled = True
         stop_disabled = True
         popup_open = True
-    elif pipe_state == "stop":
-        # In "stop" state, both buttons are disabled
+    elif pipe_state == "cancel":
+        # In "cancel" state, both buttons are disabled
         run_pause_disabled = True
         stop_disabled = True
+    elif pipe_state == "error":
+        # In "error" state, run_pause_disabled button is disabled
+        run_pause_disabled = True
+        stop_disabled = False
 
     return popup_open, popup_message, run_pause_disabled, stop_disabled

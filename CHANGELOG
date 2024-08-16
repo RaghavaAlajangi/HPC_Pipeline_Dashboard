@@ -1,3 +1,5 @@
+0.1.3
+ - enh: add proper icons for pipeline states & set states priority
 0.1.2
  - ref: create generalized drive scanner
  - test: add test for cache_handler.py
