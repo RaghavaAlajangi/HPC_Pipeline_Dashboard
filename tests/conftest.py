@@ -104,6 +104,13 @@ def mock_gitlab_project():
         mk_iid3, adv_txt, ["test", "Go"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
+    # This mock issue helps to test disable run/resume button when there is
+    # an error in the pipeline
+    mk_iid3 = 104
+    mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
+        mk_iid3, adv_txt, ["STATE: error", "Go"])
+    mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
+
     # Define a side effect that allow us to fetch an issue based on iid
     def issue_side_effect(iid):
         return mock_issues_by_iid.get(iid)

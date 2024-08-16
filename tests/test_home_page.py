@@ -50,6 +50,12 @@ from dashboard.pages.page_home import change_page, manage_pipeline_status
                 [{"prop_id": "stop_pipe_click.n_clicks"}],
                 "opened", 103, 0, 1, {"dummy chat dict": ["stop", "go"]},
                 (True, "The issue has been stopped.", True, True)
+        ),
+        # Test case 5: disable run/resume button when there is an error
+        (
+                [],
+                "opened", 104, 0, 0, {"dummy chat dict": ["stop", "go"]},
+                (False, None, True, False)
         )
     ]
 )
