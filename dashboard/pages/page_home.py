@@ -8,8 +8,7 @@ from dash_iconify import DashIconify
 import dash_mantine_components as dmc
 
 from .common import (chat_box, create_badge, create_list_group, header_comp,
-                     line_breaks, paragraph_comp, progressbar_comp, web_link,
-                     hover_card)
+                     hover_card, line_breaks, progressbar_comp, web_link)
 from ..gitlab import get_gitlab_instances
 
 # Get the BASENAME_PREFIX from environment variables if not default
@@ -31,38 +30,6 @@ def welcome_tab_content():
                            "marginLeft": "40px"}
                 ),
                 line_breaks(2),
-                dbc.Alert(
-                    children=[
-                        # Warning icon
-                        html.I(className="bi bi-info-circle-fill me-2"),
-                        paragraph_comp(
-                            text="If you want to segment or/and classify "
-                                 "your data, use the Simple Request on "
-                                 "the left.",
-                            comp_id="dummy2"
-                        ),
-                    ],
-                    className="d-flex align-items-inline",
-                    color="info",
-                    style={"color": "black", "width": "fit-content",
-                           "marginLeft": "40px", "height": "60px"}
-                ),
-                dbc.Alert(
-                    children=[
-                        # Warning icon
-                        html.I(className="bi bi-info-circle-fill me-2"),
-                        dcc.Markdown(
-                            f"If you are an advanced user use the Advanced "
-                            f"Request. More information at [dcevent pages]"
-                            f"({DCEVENT_DOCS})."
-                        )
-                    ],
-                    className="d-flex align-items-inline",
-                    color="info",
-                    style={"color": "black", "width": "fit-content",
-                           "marginLeft": "40px", "height": "60px"},
-                ),
-                line_breaks(2)
             ]
         )
     )

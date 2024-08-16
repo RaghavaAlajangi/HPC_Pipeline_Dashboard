@@ -1,4 +1,5 @@
 0.0.2
+ - ref: replace original pipeline chart with auto rapid chart
  - enh: add proper icons for pipeline states & set states priority
  - test: disable run/pause button when there is an error
 0.0.1
