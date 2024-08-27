@@ -11,6 +11,7 @@ class AuthenticationError(Exception):
 
 class BaseAPI:
     """Gitlab API"""
+
     def __init__(self, gitlab_url, access_token, project_num):
         self.gitlab_url = gitlab_url
         self.access_token = access_token
@@ -94,4 +95,13 @@ class BaseAPI:
 
     def total_issues(self, state):
         """Return total issues in a state"""
-        return len(self.project.issues.list(state=state, get_all=True))
+        # Retrieve all the issues via the API is an expensive operation,
+        # so we only retrieve the total number of issues from the latest issue
+        # and subtract the number of issues in the opened state to get the
+        # total number of issues in the closed state.
+        open_len = len(self.project.issues.list(state="opened", get_all=True))
+        if state == "opened":
+            return open_len
+        latest_issues = self.project.issues.list(per_page=1, get_all=False)
+        total_issues = latest_issues[0].iid
+        return total_issues - open_len
