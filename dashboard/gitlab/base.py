@@ -92,16 +92,3 @@ class BaseAPI:
         file = self.project.files.get(path, ref="main")
         file_content = file.decode().decode()
         return file_content
-
-    def total_issues(self, state):
-        """Return total issues in a state"""
-        # Retrieve all the issues via the API is an expensive operation,
-        # so we only retrieve the total number of issues from the latest issue
-        # and subtract the number of issues in the opened state to get the
-        # total number of issues in the closed state.
-        open_len = len(self.project.issues.list(state="opened", get_all=True))
-        if state == "opened":
-            return open_len
-        latest_issues = self.project.issues.list(per_page=1, get_all=False)
-        total_issues = latest_issues[0].iid
-        return total_issues - open_len

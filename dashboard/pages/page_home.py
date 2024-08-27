@@ -17,6 +17,7 @@ BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
 
 # dcevent documentation URL
 DCEVENT_DOCS = "https://blood_data_analysis.pages.gwdg.de/dcevent/"
+PIPELINES_PER_PAGE = 10
 
 
 def welcome_tab_content():
@@ -87,7 +88,7 @@ def workflow_tab_content():
     )
 
 
-def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
+def get_tab_content(tab_id, load_id, pagination_id):
     """Placeholder for opened and closed tab content. This function has
     search bar to find specific pipeline and `Previous` and `Next` buttons
     for the pagination.
@@ -118,32 +119,26 @@ def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
         dbc.ListGroup([
             dbc.ListGroupItem(id=tab_id)
         ]),
-        # Previous and next buttons
+        # Pipeline pagination
         dbc.ListGroup([
             dbc.ListGroupItem(
-                dmc.Button(
-                    "Prev",
-                    id=prev_button_id,
-                    disabled=True,
-                    leftIcon=DashIconify(
-                        icon="streamline:button-previous-solid"),
-                ),
-            ),
-            dbc.ListGroupItem(
-                dmc.Button(
-                    "Next",
-                    id=next_button_id,
-                    disabled=True,
-                    rightIcon=DashIconify(icon="streamline:button-next-solid"),
-                ),
-            ),
-            # Cache page number on the browser
-            dcc.Store(id="cache_page_num", storage_type="memory",
-                      data={"opened": 1, "closed": 1})
+                dbc.Pagination(id=pagination_id,
+                               min_value=1,
+                               max_value=1,
+                               active_page=1,
+                               first_last=True,
+                               previous_next=True,
+                               fully_expanded=False,
+                               class_name="pagination",
+                               size="md")
+            )
         ],
             horizontal=True,
             style={"justify-content": "center"}
-        )
+        ),
+        # Cache page number on the browser
+        dcc.Store(id="cache_page_num", storage_type="memory",
+                  data={"opened": 1, "closed": 1})
     ])
 
 
@@ -452,8 +447,7 @@ def home_page_layout():
                     children=get_tab_content(
                         tab_id="opened_content",
                         load_id="opened_loading",
-                        prev_button_id="opened_prev_button",
-                        next_button_id="opened_next_button"
+                        pagination_id="opened_pagination"
                     ),
                     value="opened"
                 ),
@@ -461,8 +455,7 @@ def home_page_layout():
                     children=get_tab_content(
                         tab_id="closed_content",
                         load_id="closed_loading",
-                        prev_button_id="closed_prev_button",
-                        next_button_id="closed_next_button"
+                        pagination_id="closed_pagination"
                     ),
                     value="closed"
                 ),
@@ -482,26 +475,21 @@ def home_page_layout():
 
 @callback(
     Output("cache_page_num", "data"),
-    Output("opened_prev_button", "disabled"),
-    Output("closed_prev_button", "disabled"),
-    Input("opened_prev_button", "n_clicks"),
-    Input("opened_next_button", "n_clicks"),
-    Input("closed_prev_button", "n_clicks"),
-    Input("closed_next_button", "n_clicks"),
+    Output("opened_pagination", "max_value"),
+    Output("closed_pagination", "max_value"),
     Input("main_tabs", "value"),
+    Input("opened_pagination", "active_page"),
+    Input("closed_pagination", "active_page"),
     State("cache_page_num", "data")
 )
-def change_page(opclick, onclick, cpclick, cnclick, active_tab, cache_page):
-    """Cache page number when user clicks on `Previous` and `Next` buttons"""
-    triggered_id = ctx.triggered_id
-
-    if triggered_id == f"{active_tab}_next_button":
-        cache_page[active_tab] += 1
-    if triggered_id == f"{active_tab}_prev_button":
-        cache_page[active_tab] -= 1
-    opened_prev_disabled = cache_page["opened"] < 2
-    closed_prev_disabled = cache_page["closed"] < 2
-    return cache_page, opened_prev_disabled, closed_prev_disabled
+def change_page(active_tab, opened_curr_page, closed_curr_page, cache_page):
+    """Cache page number when user clicks on pagination buttons."""
+    request_gitlab, _ = get_gitlab_instances()
+    total_pipe_num = request_gitlab.total_issues(state=active_tab)
+    num_pages = total_pipe_num // 10 + 1
+    cache_page[active_tab] = opened_curr_page if active_tab == "opened" else \
+        closed_curr_page
+    return cache_page, num_pages
 
 
 @callback(
@@ -523,8 +511,6 @@ def show_pipeline_number(pathname):
 @callback(
     Output("opened_content", "children"),
     Output("closed_content", "children"),
-    Output("opened_next_button", "disabled"),
-    Output("closed_next_button", "disabled"),
     Output("opened_loading", "parent_style"),
     Output("closed_loading", "parent_style"),
     Input("main_tabs", "value"),
@@ -534,7 +520,7 @@ def show_pipeline_number(pathname):
 def switch_tabs(active_tab, cache_page, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
-    issues_per_page = 10
+
     request_gitlab, _ = get_gitlab_instances()
 
     if active_tab in ["welcome", "workflow"]:
@@ -544,11 +530,10 @@ def switch_tabs(active_tab, cache_page, search_term):
     pipeline_meta = request_gitlab.get_issues_meta(
         state=active_tab,
         page=cache_page[active_tab],
-        per_page=issues_per_page,
+        per_page=PIPELINES_PER_PAGE,
         search_term=search_term
     )
 
-    is_disabled = len(pipeline_meta) != issues_per_page
     if len(pipeline_meta) == 0:
         return [
             html.Div([
@@ -556,8 +541,6 @@ def switch_tabs(active_tab, cache_page, search_term):
                 header_comp("⦿ No active requests found!", indent=40),
                 line_breaks(5)
             ]),
-            no_update,
-            True,
             no_update,
             no_update,
             no_update
@@ -567,8 +550,6 @@ def switch_tabs(active_tab, cache_page, search_term):
         return [
             create_pipelines_accordion(pipeline_meta),
             no_update,
-            is_disabled,
-            no_update,
             load_style,
             no_update
         ]
@@ -576,8 +557,6 @@ def switch_tabs(active_tab, cache_page, search_term):
         return [
             no_update,
             create_pipelines_accordion(pipeline_meta),
-            no_update,
-            is_disabled,
             no_update,
             load_style
         ]
