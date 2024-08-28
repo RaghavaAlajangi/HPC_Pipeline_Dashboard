@@ -77,7 +77,7 @@ class RequestRepoAPI(BaseAPI):
         job_comments = [
             re.compile(r"^Completed job"),
             re.compile(r"^We have (\d+) pipeline"),
-            re.compile(r"Access all your experiments at:\s*(https?://\S+)")
+            re.compile(r"about this particular job at:\s*(https?://\S+)")
         ]
 
         issue_object = self.get_issue_object(issue_iid)
