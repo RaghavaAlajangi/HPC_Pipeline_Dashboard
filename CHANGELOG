@@ -1,4 +1,5 @@
 0.1.4
+ - enh: apply pagination for user filtered pipelines via search
  - enh: improved pagination feature
  - enh: compute total num of opened & closed issue from latest issue iid
 0.1.3
