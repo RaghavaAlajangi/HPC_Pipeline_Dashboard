@@ -198,8 +198,7 @@ def hover_card(target, notes):
         children=[
             dmc.HoverCardTarget(target),
             dmc.HoverCardDropdown(
-                dmc.Text(notes, size="xs", color="black"),
-                # style={"background-color": "yellow", "border-color": "black"}
+                dmc.Text(notes, size="sm", color="black"),
             )
         ],
         position="right",
