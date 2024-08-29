@@ -529,7 +529,7 @@ def show_pipeline_number(pathname):
         open_num = request_gitlab.total_issues(state="opened")
         close_num = request_gitlab.total_issues(state="closed")
         return open_num, close_num
-    return no_update
+    return no_update, no_update
 
 
 @callback(
