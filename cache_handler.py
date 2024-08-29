@@ -33,7 +33,7 @@ class DriveFileScanner:
     def process_drive(self):
         t1 = time.time()
 
-        data = []
+        cache_data = []
 
         for dirpath, dirnames, filenames in os.walk(self.drive_path):
             filenames = [f for f in filenames if f.endswith(self.file_suffix)]
@@ -64,10 +64,13 @@ class DriveFileScanner:
                         "dateModified": modified_time,
                         "size": file_size
                     }
-                    data.append(entry)
+                    cache_data.append(entry)
 
+        # Get the time at which the data was processed
+        update_time = dt.now().strftime("%H:%M %p, %d-%b-%y")
+        data_dict = {"cache_data": cache_data, "update_time": update_time}
         # Save the processed data to a pickle file
-        self.save_data(data)
+        self.save_data(data_dict)
 
         disc_time = str(timedelta(seconds=time.time() - t1)).split(".")[0]
         print(f"Disc scanning time: {disc_time}")

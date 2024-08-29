@@ -1,3 +1,5 @@
+0.1.5
+ - enh: show HSMFS grid's last update time
 0.1.4
  - enh: compute total num of opened & closed issue from latest issue iid
 0.1.3
