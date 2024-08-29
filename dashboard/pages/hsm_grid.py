@@ -81,6 +81,8 @@ def create_hsm_grid():
             dmc.Group(
                 children=[
                     dmc.Text("Select HSMFS file/s:", size="md"),
+                    dmc.Badge(id="hsm_time_badge", variant="outline",
+                              size="md", color="red"),
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
@@ -207,13 +209,17 @@ def create_show_grid(comp_id):
 
 @callback(
     Output("hsm_grid", "rowData"),
+    Output("hsm_time_badge", "children"),
     Input("pipeline_accord", "active_item"),
 )
 def load_hms_grid_data(pipeline_active_accord):
-    """Show HSMFS grid only when user clicks on `Data to Process` accord"""
-    if pipeline_active_accord == "hsm_accord":
-        return load_hsm_data()
-    return None
+    """Show HSMFS grid and update time only when user clicks on
+    `Data to Process` accord"""
+    data = load_hsm_data()
+    if pipeline_active_accord == "hsm_accord" and data:
+        hsm_grid_data, hsm_time = data["cache_data"], data["update_time"]
+        return hsm_grid_data, f"Last Update: {hsm_time}"
+    return None, "Last Update: N/A"
 
 
 @callback(

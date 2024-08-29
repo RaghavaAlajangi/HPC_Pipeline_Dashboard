@@ -19,8 +19,11 @@ def test_drive_scanner():
     hsm_processor.process_drive()
 
     with open(temp_path, "rb") as file:
-        out_file = pickle.load(file)
-        assert len(out_file) > 1
-        entry = out_file[0]
+        data_dict = pickle.load(file)
+        assert "cache_data" in data_dict.keys()
+        assert "update_time" in data_dict.keys()
+        cache_data = data_dict["cache_data"]
+        assert len(cache_data) > 1
+        entry = cache_data[0]
         assert "filepath" in entry.keys()
         assert "dateModified" in entry.keys()

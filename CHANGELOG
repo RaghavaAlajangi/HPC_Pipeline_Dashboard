@@ -1,12 +1,15 @@
 0.2.0
- - feat: add an S3 flag button to indicate whether to keep or remove pipeline
+ - feat: add S3 flag button to indicate whether to keep or remove pipeline
  results
-0.1.5
+0.1.6
  - fix: show correct s3 proxy result path
-0.1.4
+0.1.6
  - test: modify tests to pass for pagination
  - enh: apply pagination for user filtered pipelines via search
  - enh: improved pagination feature
+ 0.1.5
+ - enh: show HSMFS grid's last update time
+0.1.4
  - enh: compute total num of opened & closed issue from latest issue iid
 0.1.3
  - enh: add proper icons for pipeline states & set states priority
