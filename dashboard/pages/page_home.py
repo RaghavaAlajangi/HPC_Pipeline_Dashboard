@@ -189,6 +189,8 @@ def create_pipeline_accordion_item(pipeline):
                                 create_badge(pipeline["user"], "success"),
                                 # Badge for date of submission
                                 create_badge(pipeline["date"], "info"),
+                                # Badge for date of submission
+                                create_badge(pipeline["s3_flag"], "orange"),
                             ],
                                 span=8
                             ),
@@ -292,7 +294,23 @@ def create_pipeline_accordion_item(pipeline):
                                     rightIcon=DashIconify(
                                         icon="mdi:stop-alert",
                                         height=25, width=25)
-                                )
+                                ),
+                                hover_card(
+                                    target=dmc.Button(
+                                        "Toggle S3 flag",
+                                        id={"type": "s3_flag_click",
+                                            "index": pipeline["iid"]},
+                                        disabled=False,
+                                        color="orange",
+                                        rightIcon=DashIconify(
+                                            icon="gis:poi-info",
+                                            height=20, width=20)
+                                    ),
+                                    notes="Toggles a `dont remove` flag to "
+                                          "indicate whether pipeline results "
+                                          "should be retained or removed from "
+                                          "S3."
+                                ),
                             ]),
                         ]),
                     line_breaks(1),
@@ -641,10 +659,11 @@ def show_pipeline_data(pipeline_num):
     Input({"type": "run_pause_click", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipe_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
+    Input({"type": "s3_flag_click", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True
 )
 def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
-                           stop_pipe_click, pipeline_comments):
+                           stop_pipe_click, pipeline_comments, s3_flag_click):
     """Toggle the pipeline control buttons and display popup messages based
     on user interaction.
 
@@ -657,46 +676,39 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     are disabled. The function uses the `get_gitlab_instances` method to
     interact with GitLab and retrieve the current pipeline status.
     """
+    triggered_id = ctx.triggered[0]["prop_id"]
+    request_gitlab, _ = get_gitlab_instances()
+    # Check for pipeline_num, opened tab, and pipeline content
+    if pipeline_num and isinstance(pipeline_comments, dict):
+        if "s3_flag_click" in triggered_id:
+            request_gitlab.change_s3_flag(pipeline_num)
+            popup_message = "S3 flag has been changed!"
+            return True, popup_message, no_update, no_update
 
     # Check for pipeline_num, opened tab, and pipeline content
     if not pipeline_num or active_tab != "opened" or \
             not isinstance(pipeline_comments, dict):
         return no_update, no_update, no_update, no_update
 
-    popup_open = False
-    popup_message = None
-    run_pause_disabled = False
-    stop_disabled = False
-
-    triggered_id = ctx.triggered[0]["prop_id"]
-
-    request_gitlab, _ = get_gitlab_instances()
-
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
     pipe_state = issue_notes["pipe_state"]
 
+    # Handle Run/Pause click
     if "run_pause_click" in triggered_id:
-        popup_open = True
-        if pipe_state == "pause":
-            request_gitlab.change_pipeline_status(pipeline_num, "run")
-            popup_message = "The issue has been resumed."
-        elif pipe_state == "run":
-            request_gitlab.change_pipeline_status(pipeline_num, "pause")
-            popup_message = "The issue has been paused."
+        new_state = "run" if pipe_state == "pause" else "pause"
+        request_gitlab.change_pipeline_status(pipeline_num, new_state)
+        popup_message = f"The issue has been " \
+                        f"{'resumed' if new_state == 'run' else 'paused'}."
+        return True, popup_message, no_update, no_update
 
-    elif "stop_pipe_click" in triggered_id:
+    # Handle Stop click
+    if "stop_pipe_click" in triggered_id:
         request_gitlab.change_pipeline_status(pipeline_num, "cancel")
-        popup_message = "The issue has been stopped."
-        run_pause_disabled = True
-        stop_disabled = True
-        popup_open = True
-    elif pipe_state == "cancel":
-        # In "cancel" state, both buttons are disabled
-        run_pause_disabled = True
-        stop_disabled = True
-    elif pipe_state == "error":
-        # In "error" state, run_pause_disabled button is disabled
-        run_pause_disabled = True
-        stop_disabled = False
 
-    return popup_open, popup_message, run_pause_disabled, stop_disabled
+        return True, "The issue has been stopped.", True, True
+
+    # Set button states based on pipeline state
+    run_pause_disabled = pipe_state in ["cancel", "error"]
+    stop_disabled = pipe_state == "cancel"
+
+    return no_update, no_update, run_pause_disabled, stop_disabled

@@ -67,7 +67,8 @@ class RequestRepoAPI(BaseAPI):
             "web_url": issue.web_url,
             "date": self.human_readable_date(issue.created_at),
             "type": parsed_description["type"],
-            "pipe_state": pipe_state
+            "pipe_state": pipe_state,
+            "s3_flag": parsed_description["s3_flag"]
         }
 
     def get_processed_issue_notes(self, issue_iid):
@@ -156,15 +157,18 @@ class RequestRepoAPI(BaseAPI):
         return self.read_repo_file(templates[temp_type])
 
     def parse_description(self, issue_text):
-        """Parse username and type of issue from description"""
+        """Parse username, type of issue, and whether to remove from the issue
+        description"""
         lower_text = issue_text.lower()
         data = {
             "type": "advanced" if "advanced" in lower_text else "simple",
-            "username": None
+            "username": None, "s3_flag": False
         }
 
         # Search for the username in reverse order
         for line in reversed(lower_text.split("\n")):
+            if "[x] dont_remove" in line:
+                data["s3_flag"] = "dont_remove"
             if "[x] username" in line:
                 name = line.split("=")[1].strip()
                 break
@@ -225,3 +229,17 @@ class RequestRepoAPI(BaseAPI):
             filter_params.update({"state": state})
             # Retrieve total number of issues based on filter_params
             return len(self.project.issues.list(**filter_params))
+
+    def change_s3_flag(self, issue_iid):
+        """Change the s3 flag in an issue"""
+        issue_obj = self.get_issue_object(issue_iid)
+        desc = issue_obj.description
+        if "[x] dont_remove" in desc:
+            desc = desc.replace("[x] dont_remove", "[ ] dont_remove")
+        elif "[ ] dont_remove" in desc:
+            desc = desc.replace("[ ] dont_remove", "[x] dont_remove")
+        else:
+            desc += "\n- __S3_flag__\n   - [x] dont_remove"
+
+        issue_obj.description = desc
+        issue_obj.save()

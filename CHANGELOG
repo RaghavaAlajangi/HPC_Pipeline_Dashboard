@@ -1,3 +1,6 @@
+0.2.0
+ - feat: add an S3 flag button to indicate whether to keep or remove pipeline
+ results
 0.1.5
  - fix: show correct s3 proxy result path
 0.1.4
