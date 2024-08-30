@@ -100,10 +100,11 @@ def get_tab_content(tab_id, load_id, pagination_id):
                 children=dmc.TextInput(
                     id="pipeline_filter",
                     style={"width": "100%", "color": "white"},
-                    placeholder="Filter pipelines with username or "
-                                "title or keywords...",
+                    placeholder="Filter pipelines with pipeline number or "
+                                "type or username or title or keywords...",
                     icon=DashIconify(icon="tabler:search", width=22),
-                    size="sm"
+                    size="sm",
+                    persistence=True
                 ),
                 style={"width": "80%"}
             ),

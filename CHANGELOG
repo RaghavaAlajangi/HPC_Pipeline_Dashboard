@@ -1,3 +1,5 @@
+0.2.1
+ - enh: allow users to find a pipeline based on its number via search (#13)
 0.2.0
  - feat: add S3 flag button to indicate whether to keep or remove pipeline
  results

@@ -128,6 +128,8 @@ class RequestRepoAPI(BaseAPI):
                     flags=re.DOTALL
                 )
                 data["comments"].append(note_without_code)
+            elif "changed the description" in note_body_lower:
+                continue
             else:
                 data["comments"].append(note.body)
 
@@ -154,7 +156,22 @@ class RequestRepoAPI(BaseAPI):
             "simple": ".gitlab/issue_templates/pipeline_request_simple.md",
             "advanced": ".gitlab/issue_templates/pipeline_request_advanced.md"
         }
-        return self.read_repo_file(templates[temp_type])
+        # Note: 1 is added to the latest issue iid and added to the issue
+        # description. As a result, users will be able to search for the
+        # specific issue on the dashboard via the search bar.
+        issue_titles = {
+            "simple": "# Pipeline Request",
+            "advanced": "# Pipeline Request ADVANCED"
+        }
+        latest_issue_iid = self.get_latest_issue_iid()
+        issue_template = self.read_repo_file(templates[temp_type])
+        title_idx = issue_template.find(issue_titles[temp_type])
+
+        # Split the string at the position of the specific word
+        first_part = issue_template[:title_idx + len(issue_titles[temp_type])]
+        second_part = issue_template[title_idx + len(issue_titles[temp_type]):]
+        # Add new iid to the issue description
+        return first_part + f"\n#{latest_issue_iid + 1}" + second_part
 
     def parse_description(self, issue_text):
         """Parse username, type of issue, and whether to remove from the issue
@@ -212,6 +229,11 @@ class RequestRepoAPI(BaseAPI):
         else:
             print("unknown action!")
 
+    def get_latest_issue_iid(self):
+        """Get the latest issue iid"""
+        latest_issue = self.project.issues.list(per_page=1, get_all=False)[0]
+        return latest_issue.iid
+
     def total_issues(self, state, filter_params=None):
         """Return total issues in a state or based on filter_params"""
         # NOTE: Retrieve all the issues via the API is an expensive operation,
@@ -222,8 +244,7 @@ class RequestRepoAPI(BaseAPI):
         if state == "opened" and not filter_params:
             return open_len
         elif state == "closed" and not filter_params:
-            latest_issues = self.project.issues.list(per_page=1, get_all=False)
-            total_issues = latest_issues[0].iid
+            total_issues = self.get_latest_issue_iid()
             return total_issues - open_len
         else:
             filter_params.update({"state": state})
