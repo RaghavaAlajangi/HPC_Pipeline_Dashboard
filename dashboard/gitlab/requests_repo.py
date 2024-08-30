@@ -130,6 +130,8 @@ class RequestRepoAPI(BaseAPI):
                 data["comments"].append(note_without_code)
             elif "changed the description" in note_body_lower:
                 continue
+            elif "marked the checklist" in note_body_lower:
+                continue
             else:
                 data["comments"].append(note.body)
 
