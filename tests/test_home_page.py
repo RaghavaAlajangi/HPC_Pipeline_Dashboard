@@ -5,64 +5,108 @@ from dash._callback_context import context_value
 from dash._utils import AttributeDict
 import pytest
 
-from dashboard.pages.page_home import change_page, manage_pipeline_status
+from dashboard.pages.page_home import change_page, manage_pipeline_status, \
+    show_pipeline_data, show_pipeline_number
+
+
+@pytest.mark.parametrize(
+    "active_tab, opened_curr_page, closed_curr_page, search_term, cache_page, "
+    "expected_cache_page, expected_opened_pages, expected_closed_pages",
+    [
+        # Test case 1: enable and return opened tab pages
+        (
+                "opened", 1, 1, "", {"opened": 0, "closed": 0},
+                {"opened": 1, "closed": 0}, 1, 1
+        ),
+        # Test case 2: enable and return closed tab pages
+        (
+                "closed", 1, 1, "", {"opened": 0, "closed": 0},
+                {"opened": 0, "closed": 1}, 1, 1
+        ),
+        # Test case 3: enable and return filtered pages
+        (
+                "opened", 1, 1, "username102", {"opened": 0, "closed": 0},
+                {"opened": 1, "closed": 0}, 1, 1
+        )
+    ]
+)
+def test_change_page_callback(active_tab, opened_curr_page, closed_curr_page,
+                              search_term, cache_page,
+                              expected_cache_page, expected_opened_pages,
+                              expected_closed_pages):
+    """Test functionality of previous buttons in opened and closed tabs"""
+
+    def run_callback():
+        return change_page(active_tab=active_tab,
+                           opened_curr_page=opened_curr_page,
+                           closed_curr_page=closed_curr_page,
+                           search_term=search_term, cache_page=cache_page)
+
+    ctx = copy_context()
+    response = ctx.run(run_callback)
+    cache_page, open_pages, close_pages = response
+
+    assert cache_page == expected_cache_page
+    assert open_pages == expected_opened_pages
+    assert close_pages == expected_closed_pages
 
 
 @pytest.mark.parametrize(
     "triggered_inputs, active_tab, pipeline_num, run_pause_click, "
-    "stop_pipe_click, pipeline_comments, expected_responses",
+    "stop_pipe_click, pipeline_comments, s3_flag_click, expected_responses",
     [
-        # Test case 1: manage_pipeline_status deactivation
-        (
-                [
-                    {"prop_id": "run_pause_click.n_clicks"},
-                    {"prop_id": "stop_pipe_click.n_clicks"}
-                ],
-                "closed", 100, 0, 0, {"dummy chat dict": ["stop", "go"]},
-                (no_update, no_update, no_update, no_update)
-        ),
-        # Test case 2: manage_pipeline_status activation
+        # Test case 1: skip all actions
         (
                 [],
-                "opened", 101, 0, 0, {"dummy chat dict": ["stop", "go"]},
-                (False, None, False, False)
+                "closed", None, 0, 0, None, 0,
+                (no_update, no_update, no_update, no_update, no_update)
         ),
-        # Test case 3: resume pipeline
+        # Test case 2: skip all except s3 flag
         (
-                [
-                    {"prop_id": "run_pause_click.n_clicks"},
-                    {"prop_id": "stop_pipe_click.n_clicks"}
-                ],
-                "opened", 102, 1, 0, {"dummy chat dict": ["stop", "go"]},
-                (True, "The issue has been resumed.", False, False)
+                [],
+                "closed", 2, 0, 0, {"dummy chat dict": ["stop", "go"]}, 0,
+                (no_update, no_update, no_update, no_update, False)
         ),
-        # Test case 4: pause pipeline
+        # Test case 3: toggle s3 flag
         (
-                [
-                    {"prop_id": "run_pause_click.n_clicks"},
-                    {"prop_id": "stop_pipe_click.n_clicks"}
-                ],
-                "opened", 103, 1, 0, {"dummy chat dict": ["stop", "go"]},
-                (True, "The issue has been paused.", False, False)
+                [{"prop_id": "s3_flag_click.n_clicks"}],
+                "closed", 2, 0, 0, {"dummy chat dict": ["stop", "go"]}, 1,
+                (True, "S3 flag has been changed!", no_update, no_update,
+                 False)
         ),
-        # Test case 5: stop pipeline
+        # Test case 4: resume pipeline
+        (
+                [{"prop_id": "run_pause_click.n_clicks"}],
+                "opened", 3, 1, 0, {"dummy chat dict": ["stop", "go"]}, 0,
+                (True, "The pipeline has been resumed!", no_update, no_update,
+                 False)
+        ),
+        # Test case 5: pause pipeline
+        (
+                [{"prop_id": "run_pause_click.n_clicks"}],
+                "opened", 4, 1, 0, {"dummy chat dict": ["stop", "go"]}, 0,
+                (True, "The pipeline has been paused!", no_update, no_update,
+                 False)
+        ),
+        # Test case 6: cancel pipeline
         (
                 [{"prop_id": "stop_pipe_click.n_clicks"}],
-                "opened", 103, 0, 1, {"dummy chat dict": ["stop", "go"]},
-                (True, "The issue has been stopped.", True, True)
+                "opened", 4, 1, 0, {"dummy chat dict": ["stop", "go"]}, 0,
+                (True, "The pipeline has been canceled!", True, True, False)
         ),
-        # Test case 5: disable run/resume button when there is an error
+        # Test case 7: disable run/pause button when there is an error
         (
                 [],
-                "opened", 104, 0, 0, {"dummy chat dict": ["stop", "go"]},
-                (False, None, True, False)
-        )
+                "opened", 5, 0, 0, {"dummy chat dict": ["stop", "go"]}, 0,
+                (no_update, no_update, True, False, False)
+        ),
+
     ]
 )
 def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
                                          pipeline_num, run_pause_click,
                                          stop_pipe_click, pipeline_comments,
-                                         expected_responses):
+                                         s3_flag_click, expected_responses):
     """Test manage_pipeline_status with various scenarios"""
 
     def run_callback():
@@ -76,6 +120,7 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
             pipeline_num=pipeline_num,
             run_pause_click=run_pause_click,
             stop_pipe_click=stop_pipe_click,
+            s3_flag_click=s3_flag_click,
             pipeline_comments=pipeline_comments
         )
 
@@ -86,65 +131,68 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
 
 
 @pytest.mark.parametrize(
-    "triggered_inputs, opclick, onclick, cpclick, cnclick, active_tab, "
-    "cache_page, expected_cache_page, expected_opened_prev_disabled, "
-    "expected_closed_prev_disabled",
+    "pipeline_num, expected_result_path_msg, expected_jobs, "
+    "expected_progress, expected_progress_str",
     [
-        # Test case 1: enable previous button in opened tab
+        # Test case 1: skip all actions
         (
-                [{"prop_id": "opened_next_button.n_clicks"}],
-                0, 1, 0, 0, "opened",
-                {"opened": 2, "closed": 1},
-                {"opened": 3, "closed": 1},
-                False, True
+                None,
+                no_update, no_update, no_update, no_update
         ),
-        # Test case 2: disable previous button in opened tab
+        # Test case 2: if total_job == 0
         (
-                [{"prop_id": "opened_next_button.n_clicks"}],
-                0, 1, 0, 0, "opened",
-                {"opened": 0, "closed": 1},
-                {"opened": 1, "closed": 1},
-                True, True
+                1,
+                "Result path is not found!", "Jobs: [0 / 0]", None, None
         ),
-        # Test case 3: enable previous button in closed tab
+        # Test case 3: with two jobs that are completed
         (
-                [{"prop_id": "closed_next_button.n_clicks"}],
-                0, 0, 0, 1, "closed",
-                {"opened": 1, "closed": 2},
-                {"opened": 1, "closed": 3},
-                True, False
-        ),
-        # Test case 4: disable previous button in closed tab
-        (
-                [{"prop_id": "closed_next_button.n_clicks"}],
-                0, 0, 0, 1, "closed",
-                {"opened": 1, "closed": 0},
-                {"opened": 1, "closed": 1},
-                True, True
-        ),
+                2,
+                "Result path is not found!", "Jobs: [2 / 2]", 95, "95 %"
+
+        )
     ]
 )
-def test_change_page_callback(triggered_inputs, opclick, onclick, cpclick,
-                              cnclick, active_tab, cache_page,
-                              expected_cache_page,
-                              expected_opened_prev_disabled,
-                              expected_closed_prev_disabled):
-    """Test functionality of previous buttons in opened and closed tabs"""
+def test_show_pipeline_data_callback(pipeline_num, expected_result_path_msg,
+                                     expected_jobs, expected_progress,
+                                     expected_progress_str):
+    """Test show_pipeline_data with various scenarios"""
 
     def run_callback():
-        context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": triggered_inputs
-            })
-        )
-        return change_page(opclick=opclick, onclick=onclick, cpclick=cpclick,
-                           cnclick=cnclick, active_tab=active_tab,
-                           cache_page=cache_page)
+        return show_pipeline_data(pipeline_num=pipeline_num)
 
     ctx = copy_context()
     response = ctx.run(run_callback)
-    cache_page, opened_prev_disabled, closed_prev_disabled = response
 
-    assert cache_page == expected_cache_page
-    assert opened_prev_disabled == expected_opened_prev_disabled
-    assert closed_prev_disabled == expected_closed_prev_disabled
+    assert response[1] == expected_result_path_msg
+    assert response[2] == expected_jobs
+    assert response[3] == expected_progress
+    assert response[4] == expected_progress_str
+
+
+@pytest.mark.parametrize(
+    "pathname, expected_open_num, expected_close_num",
+    [
+        # Test case 1: skip all actions
+        (
+                "/wrong_pathname/",
+                no_update, no_update
+        ),
+        # Test case 2: show only pathname is given
+        (
+                "/local-dashboard/",
+                5, 1
+        )
+    ]
+)
+def test_show_pipeline_number_callback(pathname, expected_open_num,
+                                       expected_close_num):
+    """Test show_pipeline_number with various scenarios"""
+
+    def run_callback():
+        return show_pipeline_number(pathname=pathname)
+
+    ctx = copy_context()
+    response = ctx.run(run_callback)
+
+    assert response[0] == expected_open_num
+    assert response[1] == expected_close_num

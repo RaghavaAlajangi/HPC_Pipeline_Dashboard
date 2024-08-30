@@ -19,11 +19,12 @@ def mock_comment(comment_text):
     )
 
 
-def mock_gitlab_issue(iid, description, comment_list):
+def mock_gitlab_issue(iid, state, description, comment_list):
     """Creates a mock gitlab issue"""
     mock_issue = MagicMock(
         id=f"123{iid}",
         iid=iid,
+        state=state,
         title=f"Mock Test Issue {iid}",
         author={"name": f"mock_author_{iid}"},
         web_url=f"https://mock_issue_url{iid}",
@@ -81,39 +82,54 @@ def mock_gitlab_project():
     mock_user_list = []
 
     # Simple mock issue
-    mk_iid1 = 100
+    mk_iid1 = 1
     mock_issues_by_iid[mk_iid1] = mock_gitlab_issue(
-        mk_iid1, sim_txt, ["mock comment1", "mock comment2"])
+        mk_iid1, "opened", sim_txt, ["mock comment1", "mock comment2"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid1}"))
 
     # Advanced mock issue
-    mk_iid2 = 101
+    mk_iid2 = 2
     mock_issues_by_iid[mk_iid2] = mock_gitlab_issue(
-        mk_iid2, adv_txt, ["mock comment1", "mock comment2"])
+        mk_iid2, "opened", adv_txt, ["Completed job 1", "Completed job 2",
+                                     "We have 2 pipelines", "STATE: queued",
+                                     "STATE: setup"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid2}"))
 
     # This mock issue helps to test pausing pipeline
-    mk_iid3 = 102
+    mk_iid3 = 3
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, adv_txt, ["STATE: invalid", "test", "Go"])
+        mk_iid3, "opened", adv_txt, ["STATE: invalid", "test", "Go"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # This mock issue helps to test resume pipeline
-    mk_iid3 = 103
+    mk_iid3 = 4
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, adv_txt, ["test", "Go"])
+        mk_iid3, "opened", adv_txt, ["test", "Go"])
+    mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
+
+    # This mock issue helps to pagination of closed pipelines
+    mk_iid3 = 5
+    mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
+        mk_iid3, "opened", adv_txt, ["STATE: error", "Go"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # This mock issue helps to test disable run/resume button when there is
     # an error in the pipeline
-    mk_iid3 = 104
+    mk_iid3 = 6
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, adv_txt, ["STATE: error", "Go"])
+        mk_iid3, "closed", adv_txt, ["STATE: error", "Go"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # Define a side effect that allow us to fetch an issue based on iid
     def issue_side_effect(iid):
         return mock_issues_by_iid.get(iid)
+
+    def issue_list_side_effect_by_state(state=None, per_page=1, search=None,
+                                        get_all=True):
+        if not state:
+            return [ii for ii in mock_issues_by_iid.values() if
+                    ii.state == "closed"]
+        return [ii for ii in mock_issues_by_iid.values() if ii.state == state]
 
     # Add mock templates simple & advanced as project files
     for mpath, text in mock_templates.items():
@@ -137,6 +153,9 @@ def mock_gitlab_project():
 
     # Set side effect function for mock_project.issues.get
     mock_project.issues.get.side_effect = issue_side_effect
+
+    # Set side effect function for issues.list (for opened & closed states)
+    mock_project.issues.list.side_effect = issue_list_side_effect_by_state
 
     # Set return value for mock users.list
     mock_project.users.list.return_value = mock_user_list

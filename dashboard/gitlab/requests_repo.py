@@ -29,7 +29,7 @@ class RequestRepoAPI(BaseAPI):
         filter_params = {"state": state, "per_page": per_page}
 
         if search_term:
-            filter_params.update({"search": search_term, "get_all": True})
+            filter_params.update({"search": search_term, "page": page})
         else:
             filter_params.update({"page": page, "per_page": per_page})
 
@@ -67,7 +67,8 @@ class RequestRepoAPI(BaseAPI):
             "web_url": issue.web_url,
             "date": self.human_readable_date(issue.created_at),
             "type": parsed_description["type"],
-            "pipe_state": pipe_state
+            "pipe_state": pipe_state,
+            "s3_flag": parsed_description["s3_flag"]
         }
 
     def get_processed_issue_notes(self, issue_iid):
@@ -77,7 +78,7 @@ class RequestRepoAPI(BaseAPI):
         job_comments = [
             re.compile(r"^Completed job"),
             re.compile(r"^We have (\d+) pipeline"),
-            re.compile(r"Access all your experiments at:\s*(https?://\S+)")
+            re.compile(r"about this particular job at:\s*(https?://\S+)")
         ]
 
         issue_object = self.get_issue_object(issue_iid)
@@ -156,15 +157,18 @@ class RequestRepoAPI(BaseAPI):
         return self.read_repo_file(templates[temp_type])
 
     def parse_description(self, issue_text):
-        """Parse username and type of issue from description"""
+        """Parse username, type of issue, and whether to remove from the issue
+        description"""
         lower_text = issue_text.lower()
         data = {
             "type": "advanced" if "advanced" in lower_text else "simple",
-            "username": None
+            "username": None, "s3_flag": False
         }
 
         # Search for the username in reverse order
         for line in reversed(lower_text.split("\n")):
+            if "[x] dont_remove" in line:
+                data["s3_flag"] = "dont_remove"
             if "[x] username" in line:
                 name = line.split("=")[1].strip()
                 break
@@ -207,3 +211,35 @@ class RequestRepoAPI(BaseAPI):
                 issue_obj.notes.create({"body": "Cancel"})
         else:
             print("unknown action!")
+
+    def total_issues(self, state, filter_params=None):
+        """Return total issues in a state or based on filter_params"""
+        # NOTE: Retrieve all the issues via the API is an expensive operation,
+        # so we only retrieve the total number of issues from the latest issue
+        # and subtract the number of issues in the opened state to get the
+        # total number of issues in the closed state.
+        open_len = len(self.project.issues.list(state="opened", get_all=True))
+        if state == "opened" and not filter_params:
+            return open_len
+        elif state == "closed" and not filter_params:
+            latest_issues = self.project.issues.list(per_page=1, get_all=False)
+            total_issues = latest_issues[0].iid
+            return total_issues - open_len
+        else:
+            filter_params.update({"state": state})
+            # Retrieve total number of issues based on filter_params
+            return len(self.project.issues.list(**filter_params))
+
+    def change_s3_flag(self, issue_iid):
+        """Change the s3 flag in an issue"""
+        issue_obj = self.get_issue_object(issue_iid)
+        desc = issue_obj.description
+        if "[x] dont_remove" in desc:
+            desc = desc.replace("[x] dont_remove", "[ ] dont_remove")
+        elif "[ ] dont_remove" in desc:
+            desc = desc.replace("[ ] dont_remove", "[x] dont_remove")
+        else:
+            desc += "\n- __S3_flag__\n   - [x] dont_remove"
+
+        issue_obj.description = desc
+        issue_obj.save()

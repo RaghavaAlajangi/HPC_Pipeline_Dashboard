@@ -210,3 +210,14 @@ a:hover {
 .mantine-Radio-label {
     color: white;
 }
+
+/* Set the pagination color*/
+.pagination .page-item .page-link {
+    background-color: #303030;
+    color: white;
+    border-color: black;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #10e84a;
+}

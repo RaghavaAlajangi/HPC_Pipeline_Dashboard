@@ -17,6 +17,7 @@ BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
 
 # dcevent documentation URL
 DCEVENT_DOCS = "https://blood_data_analysis.pages.gwdg.de/dcevent/"
+PIPELINES_PER_PAGE = 10
 
 
 def welcome_tab_content():
@@ -87,7 +88,7 @@ def workflow_tab_content():
     )
 
 
-def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
+def get_tab_content(tab_id, load_id, pagination_id):
     """Placeholder for opened and closed tab content. This function has
     search bar to find specific pipeline and `Previous` and `Next` buttons
     for the pagination.
@@ -118,32 +119,26 @@ def get_tab_content(tab_id, load_id, prev_button_id, next_button_id):
         dbc.ListGroup([
             dbc.ListGroupItem(id=tab_id)
         ]),
-        # Previous and next buttons
+        # Pipeline pagination
         dbc.ListGroup([
             dbc.ListGroupItem(
-                dmc.Button(
-                    "Prev",
-                    id=prev_button_id,
-                    disabled=True,
-                    leftIcon=DashIconify(
-                        icon="streamline:button-previous-solid"),
-                ),
-            ),
-            dbc.ListGroupItem(
-                dmc.Button(
-                    "Next",
-                    id=next_button_id,
-                    disabled=True,
-                    rightIcon=DashIconify(icon="streamline:button-next-solid"),
-                ),
-            ),
-            # Cache page number on the browser
-            dcc.Store(id="cache_page_num", storage_type="memory",
-                      data={"opened": 1, "closed": 1})
+                dbc.Pagination(id=pagination_id,
+                               min_value=1,
+                               max_value=1,
+                               active_page=1,
+                               first_last=True,
+                               previous_next=True,
+                               fully_expanded=False,
+                               class_name="pagination",
+                               size="md")
+            )
         ],
             horizontal=True,
             style={"justify-content": "center"}
-        )
+        ),
+        # Cache page number on the browser
+        dcc.Store(id="cache_page_num", storage_type="memory",
+                  data={"opened": 1, "closed": 1})
     ])
 
 
@@ -194,6 +189,8 @@ def create_pipeline_accordion_item(pipeline):
                                 create_badge(pipeline["user"], "success"),
                                 # Badge for date of submission
                                 create_badge(pipeline["date"], "info"),
+                                # Badge for date of submission
+                                create_badge(pipeline["s3_flag"], "orange"),
                             ],
                                 span=8
                             ),
@@ -297,7 +294,23 @@ def create_pipeline_accordion_item(pipeline):
                                     rightIcon=DashIconify(
                                         icon="mdi:stop-alert",
                                         height=25, width=25)
-                                )
+                                ),
+                                hover_card(
+                                    target=dmc.Button(
+                                        "Toggle S3 flag",
+                                        id={"type": "s3_flag_click",
+                                            "index": pipeline["iid"]},
+                                        disabled=True,
+                                        color="orange",
+                                        rightIcon=DashIconify(
+                                            icon="gis:poi-info",
+                                            height=20, width=20)
+                                    ),
+                                    notes="Toggles a `dont remove` flag to "
+                                          "indicate whether pipeline results "
+                                          "should be retained or removed from "
+                                          "S3."
+                                ),
                             ]),
                         ]),
                     line_breaks(1),
@@ -452,8 +465,7 @@ def home_page_layout():
                     children=get_tab_content(
                         tab_id="opened_content",
                         load_id="opened_loading",
-                        prev_button_id="opened_prev_button",
-                        next_button_id="opened_next_button"
+                        pagination_id="opened_pagination"
                     ),
                     value="opened"
                 ),
@@ -461,8 +473,7 @@ def home_page_layout():
                     children=get_tab_content(
                         tab_id="closed_content",
                         load_id="closed_loading",
-                        prev_button_id="closed_prev_button",
-                        next_button_id="closed_next_button"
+                        pagination_id="closed_pagination"
                     ),
                     value="closed"
                 ),
@@ -482,26 +493,27 @@ def home_page_layout():
 
 @callback(
     Output("cache_page_num", "data"),
-    Output("opened_prev_button", "disabled"),
-    Output("closed_prev_button", "disabled"),
-    Input("opened_prev_button", "n_clicks"),
-    Input("opened_next_button", "n_clicks"),
-    Input("closed_prev_button", "n_clicks"),
-    Input("closed_next_button", "n_clicks"),
+    Output("opened_pagination", "max_value"),
+    Output("closed_pagination", "max_value"),
     Input("main_tabs", "value"),
+    Input("opened_pagination", "active_page"),
+    Input("closed_pagination", "active_page"),
+    Input("pipeline_filter", "value"),
     State("cache_page_num", "data")
 )
-def change_page(opclick, onclick, cpclick, cnclick, active_tab, cache_page):
-    """Cache page number when user clicks on `Previous` and `Next` buttons"""
-    triggered_id = ctx.triggered_id
-
-    if triggered_id == f"{active_tab}_next_button":
-        cache_page[active_tab] += 1
-    if triggered_id == f"{active_tab}_prev_button":
-        cache_page[active_tab] -= 1
-    opened_prev_disabled = cache_page["opened"] < 2
-    closed_prev_disabled = cache_page["closed"] < 2
-    return cache_page, opened_prev_disabled, closed_prev_disabled
+def change_page(active_tab, opened_curr_page, closed_curr_page, search_term,
+                cache_page):
+    """Cache page number when user clicks on pagination buttons."""
+    request_gitlab, _ = get_gitlab_instances()
+    filter_params = {"search": search_term,
+                     "get_all": True} if search_term else None
+    total_pipe_num = request_gitlab.total_issues(state=active_tab,
+                                                 filter_params=filter_params)
+    # Default pipelines per page 10. Divide by 10 to get number of pages.
+    num_pages = (total_pipe_num + PIPELINES_PER_PAGE - 1) // PIPELINES_PER_PAGE
+    cache_page[active_tab] = opened_curr_page if active_tab == "opened" else \
+        closed_curr_page
+    return cache_page, num_pages, num_pages
 
 
 @callback(
@@ -517,14 +529,12 @@ def show_pipeline_number(pathname):
         open_num = request_gitlab.total_issues(state="opened")
         close_num = request_gitlab.total_issues(state="closed")
         return open_num, close_num
-    return no_update
+    return no_update, no_update
 
 
 @callback(
     Output("opened_content", "children"),
     Output("closed_content", "children"),
-    Output("opened_next_button", "disabled"),
-    Output("closed_next_button", "disabled"),
     Output("opened_loading", "parent_style"),
     Output("closed_loading", "parent_style"),
     Input("main_tabs", "value"),
@@ -534,7 +544,7 @@ def show_pipeline_number(pathname):
 def switch_tabs(active_tab, cache_page, search_term):
     """Allow user to switch between welcome, opened, and closed tabs"""
     load_style = {"position": "center"}
-    issues_per_page = 10
+
     request_gitlab, _ = get_gitlab_instances()
 
     if active_tab in ["welcome", "workflow"]:
@@ -544,11 +554,10 @@ def switch_tabs(active_tab, cache_page, search_term):
     pipeline_meta = request_gitlab.get_issues_meta(
         state=active_tab,
         page=cache_page[active_tab],
-        per_page=issues_per_page,
+        per_page=PIPELINES_PER_PAGE,
         search_term=search_term
     )
 
-    is_disabled = len(pipeline_meta) != issues_per_page
     if len(pipeline_meta) == 0:
         return [
             html.Div([
@@ -556,8 +565,6 @@ def switch_tabs(active_tab, cache_page, search_term):
                 header_comp("⦿ No active requests found!", indent=40),
                 line_breaks(5)
             ]),
-            no_update,
-            True,
             no_update,
             no_update,
             no_update
@@ -567,8 +574,6 @@ def switch_tabs(active_tab, cache_page, search_term):
         return [
             create_pipelines_accordion(pipeline_meta),
             no_update,
-            is_disabled,
-            no_update,
             load_style,
             no_update
         ]
@@ -576,8 +581,6 @@ def switch_tabs(active_tab, cache_page, search_term):
         return [
             no_update,
             create_pipelines_accordion(pipeline_meta),
-            no_update,
-            is_disabled,
             no_update,
             load_style
         ]
@@ -650,16 +653,18 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "pipeline_popup_msg", "index": MATCH}, "children"),
     Output({"type": "run_pause_click", "index": MATCH}, "disabled"),
     Output({"type": "stop_pipe_click", "index": MATCH}, "disabled"),
+    Output({"type": "s3_flag_click", "index": MATCH}, "disabled"),
 
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
     Input({"type": "run_pause_click", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipe_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
+    Input({"type": "s3_flag_click", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True
 )
 def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
-                           stop_pipe_click, pipeline_comments):
+                           stop_pipe_click, pipeline_comments, s3_flag_click):
     """Toggle the pipeline control buttons and display popup messages based
     on user interaction.
 
@@ -672,46 +677,40 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     are disabled. The function uses the `get_gitlab_instances` method to
     interact with GitLab and retrieve the current pipeline status.
     """
-
-    # Check for pipeline_num, opened tab, and pipeline content
-    if not pipeline_num or active_tab != "opened" or \
-            not isinstance(pipeline_comments, dict):
-        return no_update, no_update, no_update, no_update
-
-    popup_open = False
-    popup_message = None
-    run_pause_disabled = False
-    stop_disabled = False
-
     triggered_id = ctx.triggered[0]["prop_id"]
-
     request_gitlab, _ = get_gitlab_instances()
+    # If no pipeline is selected and its comments are loaded, skip all actions
+    if not pipeline_num or not pipeline_comments:
+        return no_update, no_update, no_update, no_update, no_update
 
+    # Handle S3 flag click, work in both opened and closed tabs
+    if "s3_flag_click" in triggered_id:
+        request_gitlab.change_s3_flag(pipeline_num)
+        return True, "S3 flag has been changed!", no_update, no_update, False
+
+    # If the tab is not "opened", skip run/pause and stop actions
+    if active_tab != "opened":
+        return no_update, no_update, no_update, no_update, False
+
+    # Get pipeline state
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
     pipe_state = issue_notes["pipe_state"]
 
+    # Handle Run/Pause click
     if "run_pause_click" in triggered_id:
-        popup_open = True
-        if pipe_state == "pause":
-            request_gitlab.change_pipeline_status(pipeline_num, "run")
-            popup_message = "The issue has been resumed."
-        elif pipe_state == "run":
-            request_gitlab.change_pipeline_status(pipeline_num, "pause")
-            popup_message = "The issue has been paused."
+        new_state = "run" if pipe_state == "pause" else "pause"
+        request_gitlab.change_pipeline_status(pipeline_num, new_state)
+        popup_message = f"The pipeline has been " \
+                        f"{'resumed' if new_state == 'run' else 'paused'}!"
+        return True, popup_message, no_update, no_update, False
 
-    elif "stop_pipe_click" in triggered_id:
+    # Handle Stop click
+    if "stop_pipe_click" in triggered_id:
         request_gitlab.change_pipeline_status(pipeline_num, "cancel")
-        popup_message = "The issue has been stopped."
-        run_pause_disabled = True
-        stop_disabled = True
-        popup_open = True
-    elif pipe_state == "cancel":
-        # In "cancel" state, both buttons are disabled
-        run_pause_disabled = True
-        stop_disabled = True
-    elif pipe_state == "error":
-        # In "error" state, run_pause_disabled button is disabled
-        run_pause_disabled = True
-        stop_disabled = False
+        return True, "The pipeline has been canceled!", True, True, False
 
-    return popup_open, popup_message, run_pause_disabled, stop_disabled
+    # Set button states based on pipeline state
+    run_pause_disabled = pipe_state in ["cancel", "error"]
+    stop_disabled = pipe_state == "cancel"
+
+    return no_update, no_update, run_pause_disabled, stop_disabled, False
