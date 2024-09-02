@@ -53,52 +53,56 @@ def test_change_page_callback(active_tab, opened_curr_page, closed_curr_page,
 
 @pytest.mark.parametrize(
     "triggered_inputs, active_tab, pipeline_num, run_pause_click, "
-    "stop_pipe_click, pipeline_comments, s3_flag_click, expected_responses",
+    "stop_pipe_click, pipeline_comments, s3_flag_click, "
+    "expected_popup_is_open, expected_popup_msg, expected_run_pause_disabled, "
+    "expected_run_pause_child, expected_stop_disabled, "
+    "expected_s3_flag_disabled",
     [
         # Test case 1: skip all actions
         (
                 [],
                 "closed", None, 0, 0, None, 0,
-                (no_update, no_update, no_update, no_update, no_update)
+                no_update, no_update, no_update, no_update, no_update, no_update
         ),
         # Test case 2: skip all except s3 flag
         (
                 [],
                 "closed", 2, 0, 0, {"dummy chat dict": ["stop", "go"]}, 0,
-                (no_update, no_update, no_update, no_update, False)
+                no_update, no_update, no_update, no_update, no_update, False
         ),
         # Test case 3: toggle s3 flag
         (
                 [{"prop_id": "s3_flag_click.n_clicks"}],
                 "closed", 2, 0, 0, {"dummy chat dict": ["stop", "go"]}, 1,
-                (True, "S3 flag has been changed!", no_update, no_update,
-                 False)
+                True, "The S3 flag has been changed!", no_update, no_update,
+                no_update, False
         ),
         # Test case 4: resume pipeline
         (
                 [{"prop_id": "run_pause_click.n_clicks"}],
                 "opened", 3, 1, 0, {"dummy chat dict": ["stop", "go"]}, 0,
-                (True, "The pipeline has been resumed!", no_update, no_update,
-                 False)
+                True, "The pipeline has been resumed!", no_update,
+                "Run Pipeline", no_update, False
         ),
         # Test case 5: pause pipeline
         (
                 [{"prop_id": "run_pause_click.n_clicks"}],
                 "opened", 4, 1, 0, {"dummy chat dict": ["stop", "go"]}, 0,
-                (True, "The pipeline has been paused!", no_update, no_update,
-                 False)
+                True, "The pipeline has been paused!", no_update, no_update,
+                no_update, False
         ),
         # Test case 6: cancel pipeline
         (
                 [{"prop_id": "stop_pipe_click.n_clicks"}],
                 "opened", 4, 1, 0, {"dummy chat dict": ["stop", "go"]}, 0,
-                (True, "The pipeline has been canceled!", True, True, False)
+                True, "The pipeline has been canceled!", True, no_update,
+                True, False
         ),
         # Test case 7: disable run/pause button when there is an error
         (
                 [],
                 "opened", 5, 0, 0, {"dummy chat dict": ["stop", "go"]}, 0,
-                (no_update, no_update, True, False, False)
+                no_update, no_update, True, no_update, False, False
         ),
 
     ]
@@ -106,7 +110,12 @@ def test_change_page_callback(active_tab, opened_curr_page, closed_curr_page,
 def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
                                          pipeline_num, run_pause_click,
                                          stop_pipe_click, pipeline_comments,
-                                         s3_flag_click, expected_responses):
+                                         s3_flag_click, expected_popup_is_open,
+                                         expected_popup_msg,
+                                         expected_run_pause_disabled,
+                                         expected_run_pause_child,
+                                         expected_stop_disabled,
+                                         expected_s3_flag_disabled):
     """Test manage_pipeline_status with various scenarios"""
 
     def run_callback():
@@ -127,7 +136,12 @@ def test_manage_pipeline_status_callback(triggered_inputs, active_tab,
     ctx = copy_context()
     response = ctx.run(run_callback)
 
-    assert response == expected_responses
+    assert response[0] == expected_popup_is_open
+    assert response[1] == expected_popup_msg
+    assert response[2] == expected_run_pause_disabled
+    assert response[3] == expected_run_pause_child
+    assert response[5] == expected_stop_disabled
+    assert response[6] == expected_s3_flag_disabled
 
 
 @pytest.mark.parametrize(

@@ -1,3 +1,6 @@
+0.2.2
+ - enh: dynamically change run/pause button label based on the current state
+ (e.g., displays "Pause" when pipeline is running and "Run" when paused)
 0.2.1
  - enh: allow users to find a pipeline based on its number via search (#13)
 0.2.0

@@ -269,14 +269,13 @@ def create_pipeline_accordion_item(pipeline):
                             dmc.Group([
                                 hover_card(
                                     target=dmc.Button(
-                                        "Run / Pause Pipeline",
+                                        "Pause Pipeline",
                                         id={"type": "run_pause_click",
                                             "index": pipeline["iid"]},
                                         disabled=True,
-                                        rightIcon=DashIconify(
-                                            icon="lets-icons:stop-and-play"
-                                                 "-fill",
-                                            height=30, width=30),
+                                        rightIcon=DashIconify(icon="wpf:pause",
+                                                              height=25,
+                                                              width=25),
                                         variant="gradient"
                                     ),
                                     notes="You can set the priority "
@@ -653,6 +652,8 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "pipeline_popup", "index": MATCH}, "is_open"),
     Output({"type": "pipeline_popup_msg", "index": MATCH}, "children"),
     Output({"type": "run_pause_click", "index": MATCH}, "disabled"),
+    Output({"type": "run_pause_click", "index": MATCH}, "children"),
+    Output({"type": "run_pause_click", "index": MATCH}, "rightIcon"),
     Output({"type": "stop_pipe_click", "index": MATCH}, "disabled"),
     Output({"type": "s3_flag_click", "index": MATCH}, "disabled"),
 
@@ -682,36 +683,48 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     request_gitlab, _ = get_gitlab_instances()
     # If no pipeline is selected and its comments are loaded, skip all actions
     if not pipeline_num or not pipeline_comments:
-        return no_update, no_update, no_update, no_update, no_update
+        return [no_update] * 7
 
     # Handle S3 flag click, work in both opened and closed tabs
     if "s3_flag_click" in triggered_id:
         request_gitlab.change_s3_flag(pipeline_num)
-        return True, "S3 flag has been changed!", no_update, no_update, False
+        popup_msg = "The S3 flag has been changed!"
+        return (True, popup_msg, no_update, no_update, no_update, no_update,
+                False)
 
     # If the tab is not "opened", skip run/pause and stop actions
     if active_tab != "opened":
-        return no_update, no_update, no_update, no_update, False
+        return (no_update, no_update, no_update, no_update, no_update,
+                no_update, False)
 
     # Get pipeline state
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
     pipe_state = issue_notes["pipe_state"]
 
+    run_icon = DashIconify(icon="wpf:play", height=25, width=25)
+    run_pause_name = "Run Pipeline" if pipe_state == "pause" else no_update
+    run_pause_icon = run_icon if pipe_state == "pause" else no_update
+
     # Handle Run/Pause click
     if "run_pause_click" in triggered_id:
         new_state = "run" if pipe_state == "pause" else "pause"
         request_gitlab.change_pipeline_status(pipeline_num, new_state)
-        popup_message = f"The pipeline has been " \
-                        f"{'resumed' if new_state == 'run' else 'paused'}!"
-        return True, popup_message, no_update, no_update, False
+        popup_msg = f"The pipeline has been " \
+                    f"{'resumed' if new_state == 'run' else 'paused'}!"
+
+        return (True, popup_msg, no_update, run_pause_name, run_pause_icon,
+                no_update, False)
 
     # Handle Stop click
     if "stop_pipe_click" in triggered_id:
         request_gitlab.change_pipeline_status(pipeline_num, "cancel")
-        return True, "The pipeline has been canceled!", True, True, False
+        popup_msg = "The pipeline has been canceled!"
+        return (True, popup_msg, True, run_pause_name, run_pause_icon, True,
+                False)
 
     # Set button states based on pipeline state
     run_pause_disabled = pipe_state in ["cancel", "error"]
     stop_disabled = pipe_state == "cancel"
 
-    return no_update, no_update, run_pause_disabled, stop_disabled, False
+    return (no_update, no_update, run_pause_disabled, run_pause_name,
+            run_pause_icon, stop_disabled, False)
