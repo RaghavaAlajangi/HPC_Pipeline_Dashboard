@@ -62,7 +62,8 @@ def test_change_page_callback(active_tab, opened_curr_page, closed_curr_page,
         (
                 [],
                 "closed", None, 0, 0, None, 0,
-                no_update, no_update, no_update, no_update, no_update, no_update
+                no_update, no_update, no_update, no_update, no_update,
+                no_update
         ),
         # Test case 2: skip all except s3 flag
         (
