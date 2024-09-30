@@ -1,3 +1,6 @@
+0.2.3
+ - enh: add keep_raw_data flag button to indicate whether to keep or remove
+ pipeline raw data (HSMFS) from S3 (#15)
 0.2.2
  - enh: dynamically change run/pause button label based on the current state
  (e.g., displays "Pause" when pipeline is running and "Run" when paused)
