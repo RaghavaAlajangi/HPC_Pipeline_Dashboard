@@ -190,8 +190,12 @@ def create_pipeline_accordion_item(pipeline):
                                 create_badge(pipeline["user"], "success"),
                                 # Badge for date of submission
                                 create_badge(pipeline["date"], "info"),
-                                # Badge for date of submission
-                                create_badge(pipeline["s3_flag"], "orange"),
+                                # Badge for keep results on S3
+                                create_badge(pipeline["s3_results_flag"],
+                                             "orange"),
+                                # Badge for keep raw data on S3
+                                create_badge(pipeline["s3_raw_data_flag"],
+                                             "orange"),
                             ],
                                 span=8
                             ),
@@ -297,19 +301,35 @@ def create_pipeline_accordion_item(pipeline):
                                 ),
                                 hover_card(
                                     target=dmc.Button(
-                                        "Toggle S3 flag",
-                                        id={"type": "s3_flag_click",
+                                        "Toggle Results flag",
+                                        id={"type": "keep_results_flag",
                                             "index": pipeline["iid"]},
-                                        disabled=True,
                                         color="orange",
                                         rightIcon=DashIconify(
                                             icon="gis:poi-info",
                                             height=20, width=20)
                                     ),
-                                    notes="Toggles a `dont remove` flag to "
+                                    notes="Toggles a `keep results` flag to "
                                           "indicate whether pipeline results "
                                           "should be retained or removed from "
                                           "S3."
+                                ),
+                                hover_card(
+                                    target=dmc.Button(
+                                        "Toggle Raw Data Flag",
+                                        id={"type": "keep_raw_data_flag",
+                                            "index": pipeline["iid"]},
+                                        color="orange",
+                                        rightIcon=DashIconify(
+                                            icon="gis:poi-info",
+                                            height=20, width=20)
+                                    ),
+                                    notes="Toggles a `keep raw data` flag to "
+                                          "indicate whether raw HSMFS data "
+                                          "used in the pipeline is retained "
+                                          "or removed from S3 after results "
+                                          "are generated. This setting does "
+                                          "not apply to DCOR."
                                 ),
                             ]),
                         ]),
@@ -655,18 +675,19 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "run_pause_click", "index": MATCH}, "children"),
     Output({"type": "run_pause_click", "index": MATCH}, "rightIcon"),
     Output({"type": "stop_pipe_click", "index": MATCH}, "disabled"),
-    Output({"type": "s3_flag_click", "index": MATCH}, "disabled"),
 
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
     Input({"type": "run_pause_click", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipe_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
-    Input({"type": "s3_flag_click", "index": MATCH}, "n_clicks"),
+    Input({"type": "keep_results_flag", "index": MATCH}, "n_clicks"),
+    Input({"type": "keep_raw_data_flag", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True
 )
 def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
-                           stop_pipe_click, pipeline_comments, s3_flag_click):
+                           stop_pipe_click, pipeline_comments,
+                           keep_results_flag, keep_raw_data_flag):
     """Toggle the pipeline control buttons and display popup messages based
     on user interaction.
 
@@ -683,19 +704,24 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     request_gitlab, _ = get_gitlab_instances()
     # If no pipeline is selected and its comments are loaded, skip all actions
     if not pipeline_num or not pipeline_comments:
-        return [no_update] * 7
+        return [no_update] * 6
 
-    # Handle S3 flag click, work in both opened and closed tabs
-    if "s3_flag_click" in triggered_id:
-        request_gitlab.change_s3_flag(pipeline_num)
-        popup_msg = "The S3 flag has been changed!"
-        return (True, popup_msg, no_update, no_update, no_update, no_update,
-                False)
+    # Handle S3 results flag click, work in both opened and closed tabs
+    if "keep_results_flag" in triggered_id:
+        request_gitlab.change_s3_flag(pipeline_num, "keep_results")
+        popup_msg = "The S3 results flag has been changed!"
+        return (True, popup_msg, no_update, no_update, no_update, no_update)
+
+    # Handle S3 raw data flag click, work in both opened and closed tabs
+    if "keep_raw_data_flag" in triggered_id:
+        request_gitlab.change_s3_flag(pipeline_num, "keep_raw_data")
+        popup_msg = "The S3 raw data flag has been changed!"
+        return (True, popup_msg, no_update, no_update, no_update, no_update)
 
     # If the tab is not "opened", skip run/pause and stop actions
     if active_tab != "opened":
         return (no_update, no_update, no_update, no_update, no_update,
-                no_update, False)
+                no_update)
 
     # Get pipeline state
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
@@ -713,18 +739,17 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
                     f"{'resumed' if new_state == 'run' else 'paused'}!"
 
         return (True, popup_msg, no_update, run_pause_name, run_pause_icon,
-                no_update, False)
+                no_update)
 
     # Handle Stop click
     if "stop_pipe_click" in triggered_id:
         request_gitlab.change_pipeline_status(pipeline_num, "cancel")
         popup_msg = "The pipeline has been canceled!"
-        return (True, popup_msg, True, run_pause_name, run_pause_icon, True,
-                False)
+        return True, popup_msg, True, run_pause_name, run_pause_icon, True
 
     # Set button states based on pipeline state
     run_pause_disabled = pipe_state in ["cancel", "error"]
     stop_disabled = pipe_state == "cancel"
 
     return (no_update, no_update, run_pause_disabled, run_pause_name,
-            run_pause_icon, stop_disabled, False)
+            run_pause_icon, stop_disabled)
