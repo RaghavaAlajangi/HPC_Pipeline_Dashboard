@@ -191,7 +191,8 @@ def create_pipeline_accordion_item(pipeline):
                                 # Badge for date of submission
                                 create_badge(pipeline["date"], "info"),
                                 # Badge for date of submission
-                                create_badge(pipeline["s3_flag"], "orange"),
+                                create_badge(pipeline["s3_results_flag"],
+                                             "orange"),
                             ],
                                 span=8
                             ),
@@ -297,8 +298,8 @@ def create_pipeline_accordion_item(pipeline):
                                 ),
                                 hover_card(
                                     target=dmc.Button(
-                                        "Toggle S3 flag",
-                                        id={"type": "s3_flag_click",
+                                        "Toggle Results flag",
+                                        id={"type": "keep_results_flag",
                                             "index": pipeline["iid"]},
                                         disabled=True,
                                         color="orange",
@@ -306,7 +307,7 @@ def create_pipeline_accordion_item(pipeline):
                                             icon="gis:poi-info",
                                             height=20, width=20)
                                     ),
-                                    notes="Toggles a `dont remove` flag to "
+                                    notes="Toggles a `keep results` flag to "
                                           "indicate whether pipeline results "
                                           "should be retained or removed from "
                                           "S3."
@@ -655,18 +656,19 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "run_pause_click", "index": MATCH}, "children"),
     Output({"type": "run_pause_click", "index": MATCH}, "rightIcon"),
     Output({"type": "stop_pipe_click", "index": MATCH}, "disabled"),
-    Output({"type": "s3_flag_click", "index": MATCH}, "disabled"),
+    Output({"type": "keep_results_flag", "index": MATCH}, "disabled"),
 
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
     Input({"type": "run_pause_click", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipe_click", "index": MATCH}, "n_clicks"),
     Input({"type": "pipeline_comments", "index": MATCH}, "children"),
-    Input({"type": "s3_flag_click", "index": MATCH}, "n_clicks"),
+    Input({"type": "keep_results_flag", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True
 )
 def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
-                           stop_pipe_click, pipeline_comments, s3_flag_click):
+                           stop_pipe_click, pipeline_comments,
+                           keep_results_flag):
     """Toggle the pipeline control buttons and display popup messages based
     on user interaction.
 
@@ -685,9 +687,9 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     if not pipeline_num or not pipeline_comments:
         return [no_update] * 7
 
-    # Handle S3 flag click, work in both opened and closed tabs
-    if "s3_flag_click" in triggered_id:
-        request_gitlab.change_s3_flag(pipeline_num)
+    # Handle S3 results flag click, work in both opened and closed tabs
+    if "keep_results_flag" in triggered_id:
+        request_gitlab.change_s3_results_flag(pipeline_num)
         popup_msg = "The S3 flag has been changed!"
         return (True, popup_msg, no_update, no_update, no_update, no_update,
                 False)
