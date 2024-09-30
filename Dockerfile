@@ -10,6 +10,8 @@ RUN apk --no-cache add --virtual .builddeps g++
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
+# This line fix no module named 'pkg_resources' error
+RUN pip install setuptools
 
 COPY dashboard /app/dashboard
 COPY resources /app/resources
