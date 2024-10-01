@@ -93,8 +93,15 @@ docker ps -a
 
 docker stop <containerID>
 ```
+### IV. Make sure you set the environment variables on the MPL server:
 
-### IV. Get Git latest commit ID:
+- Handover environment variables to the IT to set them up as environment 
+variables on the MPL server (this is already done)
+- you don't have to do this everytime but keep in mind that if the dashboard crashes 
+because of access tokens, create new tokens and handover to the IT (`benjamin.klier@mpl.mpg.de`) 
+
+
+### V. Get Git latest commit ID:
 - Git last commit ID (sort form)
 ```bash
 git rev-parse --short HEAD
@@ -102,13 +109,13 @@ git rev-parse --short HEAD
 
 
 
-### V. Login to MPL harbor-intranet using your developer credentials:
+### VI. Login to MPL harbor-intranet using your developer credentials:
 
 ```bash
 docker login harbor.intranet.mpl.mpg.de
 ```
 
-### VI. Tag & Push new docker images to the MPL server:
+### VII. Tag & Push new docker images to the MPL server:
 
 #### a. Dashboard Image (tag & push)
 - Tag both your commit and latest versions:
