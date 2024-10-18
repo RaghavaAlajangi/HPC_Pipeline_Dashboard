@@ -59,6 +59,12 @@ def advanced_title_section():
 
 
 def advanced_segmentation_section():
+    # Get the default parameters from request repo
+    request_gitlab, _ = get_gitlab_instances()
+    dcevent_params = request_gitlab.get_defaults()
+    legacy_seg = dcevent_params["legacy"]
+    watershed_seg = dcevent_params["watershed"]
+    std_seg = dcevent_params["std"]
     return dbc.AccordionItem(
         title="Segmentation Algorithm",
         children=[
@@ -124,48 +130,54 @@ def advanced_segmentation_section():
                                  "index": 1},
                         label="Threshold Value",
                         label_key="thresh",
-                        min=-10, max=10, step=1,
-                        default=-6
+                        min=legacy_seg["thresh"]["min"],
+                        max=legacy_seg["thresh"]["max"],
+                        step=legacy_seg["thresh"]["step"],
+                        default=legacy_seg["thresh"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "legacy_param",
                                  "index": 2},
                         label="blur",
                         label_key="blur",
-                        min=0, max=20, step=1,
-                        default=0
+                        min=legacy_seg["blur"]["min"],
+                        max=legacy_seg["blur"]["max"],
+                        step=legacy_seg["blur"]["step"],
+                        default=legacy_seg["blur"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "legacy_param",
                                  "index": 3},
                         label="binaryops",
                         label_key="binaryops",
-                        min=0, max=10, step=1,
-                        default=5
+                        min=legacy_seg["binaryops"]["min"],
+                        max=legacy_seg["binaryops"]["max"],
+                        step=legacy_seg["binaryops"]["step"],
+                        default=legacy_seg["binaryops"]["default"]
                     ),
                     form_group_dropdown(
                         comp_id={"type": "legacy_param",
                                  "index": 4},
                         label="diff_method",
                         label_key="diff_method",
-                        options=[0, 1],
-                        default=1
+                        options=legacy_seg["diff_method"]["options"],
+                        default=legacy_seg["diff_method"]["default"]
                     ),
                     form_group_dropdown(
                         comp_id={"type": "legacy_param",
                                  "index": 5},
                         label="clear_border",
                         label_key="clear_border",
-                        options=["True", "False"],
-                        default="True"
+                        options=legacy_seg["clear_border"]["options"],
+                        default=legacy_seg["clear_border"]["default"]
                     ),
                     form_group_dropdown(
                         comp_id={"type": "legacy_param",
                                  "index": 6},
                         label="fill_holes",
                         label_key="fill_holes",
-                        options=["True", "False"],
-                        default="True"
+                        options=legacy_seg["fill_holes"]["options"],
+                        default=legacy_seg["fill_holes"]["default"]
                     ),
 
                     form_group_input(
@@ -173,8 +185,10 @@ def advanced_segmentation_section():
                                  "index": 7},
                         label="closing_disk",
                         label_key="closing_disk",
-                        min=0, max=10, step=1,
-                        default=5
+                        min=legacy_seg["closing_disk"]["min"],
+                        max=legacy_seg["closing_disk"]["max"],
+                        step=legacy_seg["closing_disk"]["step"],
+                        default=legacy_seg["closing_disk"]["default"]
                     ),
                 ]
             ),
@@ -193,24 +207,26 @@ def advanced_segmentation_section():
                                  "index": 1},
                         label="clear_border",
                         label_key="clear_border",
-                        options=["True", "False"],
-                        default="True"
+                        options=watershed_seg["clear_border"]["options"],
+                        default=watershed_seg["clear_border"]["default"]
                     ),
                     form_group_dropdown(
                         comp_id={"type": "watershed_param",
                                  "index": 2},
                         label="fill_holes",
                         label_key="fill_holes",
-                        options=["True", "False"],
-                        default="True"
+                        options=watershed_seg["fill_holes"]["options"],
+                        default=watershed_seg["fill_holes"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "watershed_param",
                                  "index": 3},
                         label="closing_disk",
                         label_key="closing_disk",
-                        min=0, max=10, step=1,
-                        default=5
+                        min=watershed_seg["closing_disk"]["min"],
+                        max=watershed_seg["closing_disk"]["max"],
+                        step=watershed_seg["closing_disk"]["step"],
+                        default=watershed_seg["closing_disk"]["default"]
                     ),
                 ]
             ),
@@ -231,24 +247,26 @@ def advanced_segmentation_section():
                                  "index": 1},
                         label="clear_border",
                         label_key="clear_border",
-                        options=["True", "False"],
-                        default="True"
+                        options=std_seg["clear_border"]["options"],
+                        default=std_seg["clear_border"]["default"]
                     ),
                     form_group_dropdown(
                         comp_id={"type": "std_param",
                                  "index": 2},
                         label="fill_holes",
                         label_key="fill_holes",
-                        options=["True", "False"],
-                        default="True"
+                        options=std_seg["fill_holes"]["options"],
+                        default=std_seg["fill_holes"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "std_param",
                                  "index": 3},
                         label="closing_disk",
                         label_key="closing_disk",
-                        min=0, max=10, step=1,
-                        default=5
+                        min=std_seg["closing_disk"]["min"],
+                        max=std_seg["closing_disk"]["max"],
+                        step=std_seg["closing_disk"]["step"],
+                        default=std_seg["closing_disk"]["default"]
                     )
                 ]
             )
@@ -257,6 +275,11 @@ def advanced_segmentation_section():
 
 
 def background_correction_section():
+    # Get the default parameters from request repo
+    request_gitlab, _ = get_gitlab_instances()
+    dcevent_params = request_gitlab.get_defaults()
+    rollmed_bg = dcevent_params["rollmed"]
+    sparsemed_bg = dcevent_params["sparsemed"]
     return dbc.AccordionItem(
         title="Background Correction / Subtraction Method",
         children=[
@@ -276,16 +299,20 @@ def background_correction_section():
                                  "index": 1},
                         label="kernel_size",
                         label_key="kernel_size",
-                        min=50, max=500, step=1,
-                        default=100
+                        min=rollmed_bg["kernel_size"]["min"],
+                        max=rollmed_bg["kernel_size"]["max"],
+                        step=rollmed_bg["kernel_size"]["step"],
+                        default=rollmed_bg["kernel_size"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "rollmed_param",
                                  "index": 2},
                         label="batch_size",
                         label_key="batch_size",
-                        min=0, max=100000, step=1,
-                        default=10000
+                        min=rollmed_bg["batch_size"]["min"],
+                        max=rollmed_bg["batch_size"]["max"],
+                        step=rollmed_bg["batch_size"]["step"],
+                        default=rollmed_bg["batch_size"]["default"]
                     )
                 ]
             ),
@@ -309,32 +336,40 @@ def background_correction_section():
                                  "index": 1},
                         label="kernel_size",
                         label_key="kernel_size",
-                        min=50, max=500, step=1,
-                        default=200
+                        min=sparsemed_bg["kernel_size"]["min"],
+                        max=sparsemed_bg["kernel_size"]["max"],
+                        step=sparsemed_bg["kernel_size"]["step"],
+                        default=sparsemed_bg["kernel_size"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "sparsemed_param",
                                  "index": 2},
                         label="split_time",
                         label_key="split_time",
-                        min=1, max=30, step=1,
-                        default=1
+                        min=sparsemed_bg["split_time"]["min"],
+                        max=sparsemed_bg["split_time"]["max"],
+                        step=sparsemed_bg["split_time"]["step"],
+                        default=sparsemed_bg["split_time"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "sparsemed_param",
                                  "index": 3},
                         label="thresh_cleansing",
                         label_key="thresh_cleansing",
-                        min=0, max=1, step=0.1,
-                        default=0
+                        min=sparsemed_bg["thresh_cleansing"]["min"],
+                        max=sparsemed_bg["thresh_cleansing"]["max"],
+                        step=sparsemed_bg["thresh_cleansing"]["step"],
+                        default=sparsemed_bg["thresh_cleansing"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "sparsemed_param",
                                  "index": 4},
                         label="frac_cleansing",
                         label_key="frac_cleansing",
-                        min=0, max=1, step=0.1,
-                        default=0.8
+                        min=sparsemed_bg["frac_cleansing"]["min"],
+                        max=sparsemed_bg["frac_cleansing"]["max"],
+                        step=sparsemed_bg["frac_cleansing"]["step"],
+                        default=sparsemed_bg["frac_cleansing"]["default"]
                     )
                 ]
             )
@@ -343,6 +378,10 @@ def background_correction_section():
 
 
 def gating_options_section():
+    # Get the default parameters from request repo
+    request_gitlab, _ = get_gitlab_instances()
+    dcevent_params = request_gitlab.get_defaults()
+    norm_gate = dcevent_params["norm_gate"]
     return dbc.AccordionItem(
         title="Available gating options",
         children=[
@@ -360,16 +399,18 @@ def gating_options_section():
                                  "index": 1},
                         label="online_gates",
                         label_key="online_gates",
-                        options=["True", "False"],
-                        default="False",
+                        options=norm_gate["online_gates"]["options"],
+                        default=norm_gate["online_gates"]["default"]
                     ),
                     form_group_input(
                         comp_id={"type": "norm_gate_param",
                                  "index": 2},
                         label="size_thresh_mask",
                         label_key="size_thresh_mask",
-                        min=0, max=10, step=1,
-                        default=0
+                        min=norm_gate["size_thresh_mask"]["min"],
+                        max=norm_gate["size_thresh_mask"]["max"],
+                        step=norm_gate["size_thresh_mask"]["step"],
+                        default=norm_gate["size_thresh_mask"]["default"]
                     )
                 ]
             )
@@ -378,6 +419,10 @@ def gating_options_section():
 
 
 def further_options_section():
+    # Get the default parameters from request repo
+    request_gitlab, _ = get_gitlab_instances()
+    dcevent_params = request_gitlab.get_defaults()
+    reproduce = dcevent_params["reproduce"]
     return dbc.AccordionItem(
         title="Further Options",
         children=[
@@ -385,7 +430,8 @@ def further_options_section():
                 comp_id="reproduce_flag",
                 options={
                     "--reproduce": False,
-                }
+                },
+                defaults=["--reproduce"] if not reproduce else []
             )
         ]
     )
