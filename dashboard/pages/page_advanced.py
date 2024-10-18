@@ -422,7 +422,7 @@ def further_options_section():
     # Get the default parameters from request repo
     request_gitlab, _ = get_gitlab_instances()
     dcevent_params = request_gitlab.get_defaults()
-    reproduce = dcevent_params["reproduce"]
+    reproduce = eval(dcevent_params["reproduce"])
     return dbc.AccordionItem(
         title="Further Options",
         children=[
