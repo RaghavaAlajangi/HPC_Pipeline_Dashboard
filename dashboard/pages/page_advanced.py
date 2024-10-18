@@ -422,7 +422,8 @@ def further_options_section():
     # Get the default parameters from request repo
     request_gitlab, _ = get_gitlab_instances()
     dcevent_params = request_gitlab.get_defaults()
-    reproduce = dcevent_params["reproduce"]
+    reproduce = dcevent_params["reproduce"]["default"]
+    reproduce_flag = True if reproduce.lower() == "true" else False
     return dbc.AccordionItem(
         title="Further Options",
         children=[
@@ -431,7 +432,7 @@ def further_options_section():
                 options={
                     "--reproduce": False,
                 },
-                defaults=["--reproduce"] if not reproduce else []
+                defaults=["--reproduce"] if reproduce_flag else []
             )
         ]
     )
