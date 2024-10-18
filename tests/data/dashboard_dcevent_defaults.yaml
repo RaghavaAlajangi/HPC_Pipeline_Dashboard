@@ -6,11 +6,11 @@ thresh:
     min: -10
     max: 0
   clear_border:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   fill_holes:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   closing_disk:
     default: 2
     step: 1
@@ -39,11 +39,11 @@ legacy:
     step: 1
     options: [ 0, 1 ]
   clear_border:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   fill_holes:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   closing_disk:
     default: 0
     step: 1
@@ -53,11 +53,11 @@ legacy:
 watershed:
   name: Watershed algorithm
   clear_border:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   fill_holes:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   closing_disk:
     default: 0
     step: 1
@@ -67,11 +67,11 @@ watershed:
 std:
   name: Standard-deviation-based thresholding
   clear_border:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   fill_holes:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
   closing_disk:
     default: 0
     step: 1
@@ -114,14 +114,14 @@ sparsemed:
     min: 0
     max: 1
   offset_correction:
-    default: True
-    options: [ True, False ]
+    default: "True"
+    options: [ "True", "False" ]
 
 norm_gate:
   name: Gate feature data
   online_gates:
-    default: False
-    options: [ True, False ]
+    default: "False"
+    options: [ "True", "False" ]
   size_thresh_mask:
     default: 0
     step: 1
@@ -129,4 +129,4 @@ norm_gate:
     max: 10
 
 reproduce:
-  default: False
+  default: "False"
