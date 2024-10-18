@@ -1,6 +1,8 @@
 from concurrent.futures import as_completed, ThreadPoolExecutor
 import re
 
+import yaml
+
 from .base import BaseAPI
 
 
@@ -273,3 +275,9 @@ class RequestRepoAPI(BaseAPI):
 
         issue_obj.description = desc
         issue_obj.save()
+
+    def get_defaults(self):
+        defaults_path = "dashboard_dcevent_defaults.yaml"
+        default_str = self.read_repo_file(defaults_path)
+        return yaml.safe_load(default_str)
+
