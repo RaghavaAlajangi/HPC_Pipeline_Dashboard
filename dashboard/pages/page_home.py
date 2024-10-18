@@ -524,16 +524,19 @@ def home_page_layout():
 def change_page(active_tab, opened_curr_page, closed_curr_page, search_term,
                 cache_page):
     """Cache page number when user clicks on pagination buttons."""
-    request_gitlab, _ = get_gitlab_instances()
-    filter_params = {"search": search_term,
-                     "get_all": True} if search_term else None
-    total_pipe_num = request_gitlab.total_issues(state=active_tab,
-                                                 filter_params=filter_params)
-    # Default pipelines per page 10. Divide by 10 to get number of pages.
-    num_pages = (total_pipe_num + PIPELINES_PER_PAGE - 1) // PIPELINES_PER_PAGE
-    cache_page[active_tab] = opened_curr_page if active_tab == "opened" else \
-        closed_curr_page
-    return cache_page, num_pages, num_pages
+    if active_tab in ["opened", "closed"]:
+        request_gitlab, _ = get_gitlab_instances()
+        filter_dict = {"search": search_term,
+                       "get_all": True} if search_term else None
+        total_pipe_num = request_gitlab.total_issues(state=active_tab,
+                                                     filter_params=filter_dict)
+        # Default pipelines per page 10. Divide by 10 to get number of pages.
+        temp = total_pipe_num + PIPELINES_PER_PAGE - 1
+        num_pages = temp // PIPELINES_PER_PAGE
+        cache_page[active_tab] = opened_curr_page if active_tab == "opened" \
+            else closed_curr_page
+        return cache_page, num_pages, num_pages
+    return no_update
 
 
 @callback(

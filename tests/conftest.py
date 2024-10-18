@@ -67,6 +67,15 @@ def read_mock_model_ckp_files():
     return mock_ckp_list
 
 
+def read_mock_dcevent_defaults():
+    """Creates mock dcevent default params file (.yaml)"""
+    param_path = "dashboard_dcevent_defaults.yaml"
+    local_param_path = issue_template_dir / param_path
+    with open(local_param_path, "r", encoding="utf-8") as file:
+        param_content = file.read()
+    return {"path": param_path, "content": param_content}
+
+
 def mock_gitlab_project():
     """Gitlab project mocker"""
     mock_templates = read_mock_issue_templates()
@@ -142,6 +151,12 @@ def mock_gitlab_project():
         mocker_file = MagicMock()
         mocker_file.decode.return_value = mock_file["content"].encode("utf-8")
         mock_project_files[str(mock_file["path"])] = mocker_file
+
+    # Add mock dcevent default params to mock project
+    defaults = read_mock_dcevent_defaults()
+    mocker_default = MagicMock()
+    mocker_default.decode.return_value = defaults["content"].encode("utf-8")
+    mock_project_files[str(defaults["path"])] = mocker_default
 
     def files_side_effect(path, ref):
         return mock_project_files.get(path, ref)

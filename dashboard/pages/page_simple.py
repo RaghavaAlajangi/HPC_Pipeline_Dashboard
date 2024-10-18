@@ -60,6 +60,10 @@ def simple_title_section():
 
 def simple_segmentation_section():
     """Creates the segmentation section of the simple pipeline."""
+    # Get the default parameters from request repo
+    request_gitlab, _ = get_gitlab_instances()
+    dcevent_params = request_gitlab.get_defaults()
+    legacy_seg = dcevent_params["legacy"]
     return dbc.AccordionItem(
         title="Segmentation",
         children=[
@@ -143,8 +147,10 @@ def simple_segmentation_section():
                         comp_id="simple_legacy_thresh_value",
                         label="Threshold Value:",
                         label_key="thresh",
-                        min=-10, max=10, step=1,
-                        default=-6
+                        min=legacy_seg["thresh"]["min"],
+                        max=legacy_seg["thresh"]["max"],
+                        step=legacy_seg["thresh"]["step"],
+                        default=legacy_seg["thresh"]["default"]
                     )
                 ]
             )

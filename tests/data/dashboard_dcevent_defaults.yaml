@@ -1,0 +1,132 @@
+thresh:
+  name: Segmenter with multiprocessing operation
+  thresh:
+    default: -6
+    step: 1
+    min: -10
+    max: 0
+  clear_border:
+    default: "True"
+    options: [ "True", "False" ]
+  fill_holes:
+    default: "True"
+    options: [ "True", "False" ]
+  closing_disk:
+    default: 2
+    step: 1
+    min: 0
+    max: 10
+
+legacy:
+  name: Legacy thresholding with OpenCV
+  thresh:
+    default: -6
+    step: 1
+    min: -10
+    max: 0
+  blur:
+    default: 0
+    step: 1
+    min: 0
+    max: 20
+  binaryops:
+    default: 5
+    step: 1
+    min: 0
+    max: 20
+  diff_method:
+    default: 1
+    step: 1
+    options: [ 0, 1 ]
+  clear_border:
+    default: "True"
+    options: [ "True", "False" ]
+  fill_holes:
+    default: "True"
+    options: [ "True", "False" ]
+  closing_disk:
+    default: 0
+    step: 1
+    min: 0
+    max: 20
+
+watershed:
+  name: Watershed algorithm
+  clear_border:
+    default: "True"
+    options: [ "True", "False" ]
+  fill_holes:
+    default: "True"
+    options: [ "True", "False" ]
+  closing_disk:
+    default: 0
+    step: 1
+    min: 0
+    max: 20
+
+std:
+  name: Standard-deviation-based thresholding
+  clear_border:
+    default: "True"
+    options: [ "True", "False" ]
+  fill_holes:
+    default: "True"
+    options: [ "True", "False" ]
+  closing_disk:
+    default: 0
+    step: 1
+    min: 0
+    max: 20
+
+rollmed:
+  name: Rolling median RT-DC background image computation
+  kernel_size:
+    default: 100
+    step: 100
+    min: 0
+    max: 2000
+  batch_size:
+    default: 10000
+    step: 1000
+    min: 0
+    max: 100000
+
+sparsemed:
+  name: Sparse median background correction with cleansing
+  kernel_size:
+    default: 200
+    step: 100
+    min: 0
+    max: 10000
+  split_time:
+    default: 1.0
+    step: 1
+    min: 0
+    max: 10
+  thresh_cleansing:
+    default: 0
+    step: 0.1
+    min: 0
+    max: 1
+  frac_cleansing:
+    default: 0.8
+    step: 0.1
+    min: 0
+    max: 1
+  offset_correction:
+    default: "True"
+    options: [ "True", "False" ]
+
+norm_gate:
+  name: Gate feature data
+  online_gates:
+    default: "False"
+    options: [ "True", "False" ]
+  size_thresh_mask:
+    default: 0
+    step: 1
+    min: 0
+    max: 10
+
+reproduce:
+  default: "False"
