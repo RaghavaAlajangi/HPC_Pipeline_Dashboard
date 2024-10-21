@@ -1,6 +1,7 @@
 0.2.4
  - enh: implement flexible way of updating dcevent params from request repo (#17)
  - enh: add an alert for dcevent parameter modification (#17)
+ - enh: add offset_correction param dropdown under sparsemed method
 0.2.3
  - enh: add keep_raw_data flag button to indicate whether to keep or remove
  pipeline raw data (HSMFS) from S3 (#15)

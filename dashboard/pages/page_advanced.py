@@ -373,6 +373,14 @@ def background_correction_section():
                         max=sparsemed_bg["frac_cleansing"]["max"],
                         step=sparsemed_bg["frac_cleansing"]["step"],
                         default=sparsemed_bg["frac_cleansing"]["default"]
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "sparsemed_param",
+                                 "index": 5},
+                        label="offset_correction",
+                        label_key="offset_correction",
+                        options=sparsemed_bg["offset_correction"]["options"],
+                        default=sparsemed_bg["offset_correction"]["default"]
                     )
                 ]
             )
