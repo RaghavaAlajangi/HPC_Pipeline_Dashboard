@@ -11,6 +11,9 @@ from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_advanced_template
 from ..gitlab import get_gitlab_instances
 
+DEFAULTS_FILE = ("https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_"
+                 "requests/-/blob/main/dashboard_dcevent_defaults.yaml")
+
 
 def get_user_list():
     """Fetch the members list from request repo"""
@@ -501,6 +504,26 @@ def advanced_page_layout(refresh_path):
             header_comp("⦿ Choosing multiple Segmentation or Prediction "
                         "algorithms will create a matrix of jobs "
                         "(multiple jobs).", indent=40),
+
+            line_breaks(times=1),
+
+            dbc.Alert(
+                children=[
+                    # Warning icon
+                    html.I(className="bi bi-info-circle-fill me-2"),
+                    dcc.Markdown(
+                        f"To adjust the default segmentation and background "
+                        f"method parameters, visit the [Request Repository]"
+                        f"({DEFAULTS_FILE}) and modify the desired settings. "
+                        f"Your changes will be immediately reflected on the "
+                        f"dashboard."
+                    )
+                ],
+                className="d-flex align-items-inline",
+                color="info",
+                style={"color": "black", "width": "fit-content",
+                       "marginLeft": "40px", "height": "60px"},
+            ),
 
             line_breaks(times=2),
             group_accordion(
