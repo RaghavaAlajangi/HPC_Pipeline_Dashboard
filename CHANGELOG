@@ -1,3 +1,5 @@
+0.2.4
+ - enh: implement flexible way of updating dcevent params from request repo (#17)
 0.2.3
  - enh: add keep_raw_data flag button to indicate whether to keep or remove
  pipeline raw data (HSMFS) from S3 (#15)
