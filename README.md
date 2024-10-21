@@ -13,14 +13,30 @@ HPC_Pipeline_requests repo
 
 https://guck-tools.intranet.mpl.mpg.de/hpc-pipeline-dashboard/
 
+## Overview:
+
+<img src="overview.png" width="800" height="550">
+
 ## 1. Local usage:
 ### Clone the repo
 
 ```bash
 git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
 ```
+### Create a `.env` file with following (GIT ignores this file)
+```bash
+# GWDG GitLab URL
+REPO_URL="https://gitlab.gwdg.de"
 
-###  Run the below command (develop / debug)
+# Request repo creds
+REPO_TOKEN=<paste your request repo token>
+PROJECT_NUM="28692"
+
+# DVC repo creds
+DVC_REPO_TOKEN=<paste your DVC repo token>
+DVC_REPO_PROJECT_NUM="29135"
+```
+### Run the below command (develop / debug)
 ```bash
 python -m dashboard --local
 
@@ -36,6 +52,8 @@ python -m dashboard --local
   This step might require administration rights.
 - Contact IT to have a developer account
   on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
+- Since `.env` file is local, we have to provide the IT all the credentials 
+  that are mentioned in the `.env` file.
 
 
 ### II. Build ``Dashboard`` and ``Cron`` docker images:
