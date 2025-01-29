@@ -678,6 +678,7 @@ def show_pipeline_data(pipeline_num):
     Output({"type": "run_pause_click", "index": MATCH}, "children"),
     Output({"type": "run_pause_click", "index": MATCH}, "rightIcon"),
     Output({"type": "stop_pipe_click", "index": MATCH}, "disabled"),
+    Output({"type": "keep_raw_data_flag", "index": MATCH}, "disabled"),
 
     Input("main_tabs", "value"),
     Input("pipeline_accordion", "value"),
@@ -706,25 +707,30 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
     triggered_id = ctx.triggered[0]["prop_id"]
     request_gitlab, _ = get_gitlab_instances()
     # If no pipeline is selected and its comments are loaded, skip all actions
-    if not pipeline_num or not pipeline_comments:
-        return [no_update] * 6
+    if not pipeline_num:
+        return [no_update] * 7
+
+    pipe_text = request_gitlab.parse_description(pipeline_num)
+    keep_raw_data_flag = not pipe_text["has_hsm_data"]
 
     # Handle S3 results flag click, work in both opened and closed tabs
     if "keep_results_flag" in triggered_id:
         request_gitlab.change_s3_flag(pipeline_num, "keep_results")
         popup_msg = "The S3 results flag has been changed!"
-        return (True, popup_msg, no_update, no_update, no_update, no_update)
+        return (True, popup_msg, no_update, no_update, no_update, no_update,
+                keep_raw_data_flag)
 
     # Handle S3 raw data flag click, work in both opened and closed tabs
     if "keep_raw_data_flag" in triggered_id:
         request_gitlab.change_s3_flag(pipeline_num, "keep_raw_data")
         popup_msg = "The S3 raw data flag has been changed!"
-        return (True, popup_msg, no_update, no_update, no_update, no_update)
+        return (True, popup_msg, no_update, no_update, no_update, no_update,
+                keep_raw_data_flag)
 
     # If the tab is not "opened", skip run/pause and stop actions
     if active_tab != "opened":
         return (no_update, no_update, no_update, no_update, no_update,
-                no_update)
+                no_update, keep_raw_data_flag)
 
     # Get pipeline state
     issue_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
@@ -742,17 +748,18 @@ def manage_pipeline_status(active_tab, pipeline_num, run_pause_click,
                     f"{'resumed' if new_state == 'run' else 'paused'}!"
 
         return (True, popup_msg, no_update, run_pause_name, run_pause_icon,
-                no_update)
+                no_update, keep_raw_data_flag)
 
     # Handle Stop click
     if "stop_pipe_click" in triggered_id:
         request_gitlab.change_pipeline_status(pipeline_num, "cancel")
         popup_msg = "The pipeline has been canceled!"
-        return True, popup_msg, True, run_pause_name, run_pause_icon, True
+        return (True, popup_msg, True, run_pause_name, run_pause_icon, True,
+                keep_raw_data_flag)
 
     # Set button states based on pipeline state
     run_pause_disabled = pipe_state in ["cancel", "error"]
     stop_disabled = pipe_state == "cancel"
 
     return (no_update, no_update, run_pause_disabled, run_pause_name,
-            run_pause_icon, stop_disabled)
+            run_pause_icon, stop_disabled, keep_raw_data_flag)

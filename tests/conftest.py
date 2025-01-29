@@ -90,13 +90,13 @@ def mock_gitlab_project():
 
     mock_user_list = []
 
-    # Simple mock issue
+    # Simple mock issue, does not have HSM paths
     mk_iid1 = 1
     mock_issues_by_iid[mk_iid1] = mock_gitlab_issue(
         mk_iid1, "opened", sim_txt, ["mock comment1", "mock comment2"])
     mock_user_list.append(MagicMock(name=f"username{mk_iid1}"))
 
-    # Advanced mock issue
+    # Advanced mock issue, has HSM path
     mk_iid2 = 2
     mock_issues_by_iid[mk_iid2] = mock_gitlab_issue(
         mk_iid2, "opened", adv_txt, ["Completed job 1", "Completed job 2",

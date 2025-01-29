@@ -53,7 +53,7 @@ class RequestRepoAPI(BaseAPI):
         return issues_meta
 
     def process_issue(self, issue):
-        parsed_description = self.parse_description(issue.description)
+        parsed_description = self.parse_description(issue.iid)
         if issue.state == "opened":
             comments = self.get_processed_issue_notes(issue.iid)
             pipe_state = comments["pipe_state"]
@@ -178,22 +178,27 @@ class RequestRepoAPI(BaseAPI):
         # Add new iid to the issue description
         return first_part + f"\n#{latest_issue_iid + 1}" + second_part
 
-    def parse_description(self, issue_text):
+    def parse_description(self, issue_iid):
         """Parse username, type of issue, and whether to remove from the issue
         description"""
-        lower_text = issue_text.lower()
+        issue_object = self.get_issue_object(issue_iid)
+        lower_text = issue_object.description.lower()
         data = {
             "type": "advanced" if "advanced" in lower_text else "simple",
-            "username": None, "s3_results_flag": False,
-            "s3_raw_data_flag": False
+            "username": None,
+            "s3_results_flag": False,
+            "s3_raw_data_flag": False,
+            "has_hsm_data": False
         }
+
+        if "[x] keep_results" in lower_text:
+            data["s3_results_flag"] = "keep results"
+
+        if "[x] keep_raw_data" in lower_text:
+            data["s3_raw_data_flag"] = "keep raw data"
 
         # Search for the username in reverse order
         for line in reversed(lower_text.split("\n")):
-            if "[x] keep_results" in line:
-                data["s3_results_flag"] = "keep results"
-            if "[x] keep_raw_data" in line:
-                data["s3_raw_data_flag"] = "keep raw data"
             if "[x] username" in line:
                 name = line.split("=")[1].strip()
                 break
