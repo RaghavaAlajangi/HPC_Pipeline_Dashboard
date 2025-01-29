@@ -66,6 +66,7 @@ def advanced_segmentation_section():
     request_gitlab, _ = get_gitlab_instances()
     dcevent_params = request_gitlab.get_defaults()
     legacy_seg = dcevent_params["legacy"]
+    thresh_seg = dcevent_params["thresh"]
     watershed_seg = dcevent_params["watershed"]
     std_seg = dcevent_params["std"]
     return dbc.AccordionItem(
@@ -100,7 +101,7 @@ def advanced_segmentation_section():
                 ],
                 spacing=5
             ),
-            # UNet segmentation options
+            # MLUNet segmentation options
             html.Ul(
                 id="advanced_unet_options",
                 children=[
@@ -120,11 +121,25 @@ def advanced_segmentation_section():
             ),
             divider_line_comp(),
             # Legacy segmentor section
-            checklist_comp(
-                comp_id="legacy_id",
-                options={"legacy: Legacy thresholding"
-                         " with OpenCV": False}
+            dmc.Group(
+                children=[
+                    # Legacy checkbox (switch)
+                    checklist_comp(
+                        comp_id="legacy_id",
+                        options={"legacy: Legacy thresholding"
+                                 " with OpenCV": False}
+                    ),
+                    # Legacy question mark icon and hover info
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=20),
+                        notes="ShapeIN-equivalent thresholding segmentation"
+                    )
+                ],
+                spacing=5
             ),
+            # Legacy segmentor options
             html.Ul(
                 id="legacy_options",
                 children=[
@@ -192,6 +207,67 @@ def advanced_segmentation_section():
                         max=legacy_seg["closing_disk"]["max"],
                         step=legacy_seg["closing_disk"]["step"],
                         default=legacy_seg["closing_disk"]["default"]
+                    ),
+                ]
+            ),
+            divider_line_comp(),
+            # Thresholding segmentor section
+            dmc.Group(
+                children=[
+                    # Thresh segmentor checkbox (switch)
+                    checklist_comp(
+                        comp_id="thresh_seg_id",
+                        options={"thresh: thresholding segmentation": False}
+                    ),
+                    # Thresh question mark icon and hover info
+                    hover_card(
+                        target=DashIconify(
+                            icon="mage:message-question-mark-round-fill",
+                            color="yellow", width=20),
+                        notes="Thresholding based segmentation."
+                    )
+                ],
+                spacing=5
+            ),
+            # Thresholding segmentor options
+            html.Ul(
+                id="thresh_seg_options",
+                children=[
+                    form_group_input(
+                        comp_id={"type": "thresh_seg_param",
+                                 "index": 1},
+                        label="Threshold Value",
+                        label_key="thresh",
+                        min=thresh_seg["thresh"]["min"],
+                        max=thresh_seg["thresh"]["max"],
+                        step=thresh_seg["thresh"]["step"],
+                        default=thresh_seg["thresh"]["default"]
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "thresh_seg_param",
+                                 "index": 5},
+                        label="clear_border",
+                        label_key="clear_border",
+                        options=thresh_seg["clear_border"]["options"],
+                        default=thresh_seg["clear_border"]["default"]
+                    ),
+                    form_group_dropdown(
+                        comp_id={"type": "thresh_seg_param",
+                                 "index": 6},
+                        label="fill_holes",
+                        label_key="fill_holes",
+                        options=thresh_seg["fill_holes"]["options"],
+                        default=thresh_seg["fill_holes"]["default"]
+                    ),
+                    form_group_input(
+                        comp_id={"type": "thresh_seg_param",
+                                 "index": 7},
+                        label="closing_disk",
+                        label_key="closing_disk",
+                        min=thresh_seg["closing_disk"]["min"],
+                        max=thresh_seg["closing_disk"]["max"],
+                        step=thresh_seg["closing_disk"]["step"],
+                        default=thresh_seg["closing_disk"]["default"]
                     ),
                 ]
             ),
@@ -569,6 +645,7 @@ def advanced_page_layout(refresh_path):
             dcc.Store(id="cache_advanced_unet_model_path",
                       storage_type="local"),
             dcc.Store(id="cache_legacy_params", storage_type="local"),
+            dcc.Store(id="cache_thresh_seg_params", storage_type="local"),
             dcc.Store(id="cache_watershed_params", storage_type="local"),
             dcc.Store(id="cache_std_params", storage_type="local"),
             dcc.Store(id="cache_rollmed_params", storage_type="local"),
@@ -631,6 +708,25 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
 
     if legacy_opt:
         return {legacy_opt[0]: legacy_params}, {"display": "block"}
+    return None, {"display": "none"}
+
+
+@callback(
+    Output("cache_thresh_seg_params", "data"),
+    Output("thresh_seg_options", "style"),
+    Input("thresh_seg_id", "value"),
+    Input({"type": "thresh_seg_param", "index": ALL}, "key"),
+    Input({"type": "thresh_seg_param", "index": ALL}, "value"),
+)
+def toggle_thresh_seg_options(thresh_seg_opt, thresh_seg_keys,
+                              thresh_seg_values):
+    """Toggle thresholding segmentation options with thresh switch, selected
+    options will be cached"""
+    thresh_seg_params = {k: v for k, v in zip(thresh_seg_keys,
+                                              thresh_seg_values)}
+
+    if thresh_seg_opt:
+        return {thresh_seg_opt[0]: thresh_seg_params}, {"display": "block"}
     return None, {"display": "none"}
 
 
@@ -725,6 +821,7 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     # Cached options
     Input("cache_advanced_unet_model_path", "data"),
     Input("cache_legacy_params", "data"),
+    Input("cache_thresh_seg_params", "data"),
     Input("cache_watershed_params", "data"),
     Input("cache_std_params", "data"),
     Input("cache_rollmed_params", "data"),
@@ -736,10 +833,9 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
 def collect_advanced_pipeline_params(
         author_name, advanced_title,
         reproduce_flag, classifier_name, post_analysis_flag,
-        cached_unet_model_path, cached_legacy_params,
-        cache_watershed_params,
-        cache_std_params, cache_rollmed_params, cache_sparsemed_params,
-        cache_norm_gate_params,
+        cache_unet_model_path, cache_legacy_params, cache_thresh_seg_params,
+        cache_watershed_params, cache_std_params, cache_rollmed_params,
+        cache_sparsemed_params, cache_norm_gate_params,
         selected_rows
 ):
     """
@@ -754,9 +850,13 @@ def collect_advanced_pipeline_params(
 
     # Combine params from cached options
     cached_params = [
-        cached_unet_model_path, cached_legacy_params,
+        cache_unet_model_path,
+        cache_legacy_params,
+        cache_thresh_seg_params,
         cache_watershed_params,
-        cache_std_params, cache_rollmed_params, cache_sparsemed_params,
+        cache_std_params,
+        cache_rollmed_params,
+        cache_sparsemed_params,
         cache_norm_gate_params
     ]
     for param in cached_params:

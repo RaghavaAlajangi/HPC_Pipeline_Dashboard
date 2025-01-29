@@ -1,4 +1,5 @@
 0.2.5
+ - enh: add thresh segmentor option in advanced request
  - enh: disable raw data flag when there is no HSM paths in issue description
 0.2.4
  - enh: implement flexible way of updating dcevent params from request repo (#17)
