@@ -377,9 +377,10 @@ def test_collect_advanced_pipeline_params_callback_activation():
             reproduce_flag=[],
             classifier_name=["bloody-bunny_g1_bacae: Bloody Bunny"],
             post_analysis_flag=[],
-            cached_unet_model_path={
+            cache_unet_model_path={
                 "mlunet: UNET": {"model_file": "test_checkpoint"}},
-            cached_legacy_params={},
+            cache_legacy_params={},
+            cache_thresh_seg_params={},
             cache_watershed_params={},
             cache_std_params={},
             cache_rollmed_params={
@@ -415,9 +416,10 @@ def test_collect_advanced_pipeline_params_callback_deactivation():
             reproduce_flag=[],
             classifier_name=["bloody-bunny_g1_bacae: Bloody Bunny"],
             post_analysis_flag=[],
-            cached_unet_model_path={
+            cache_unet_model_path={
                 "mlunet: UNET": {"model_file": "test_checkpoint"}},
-            cached_legacy_params={},
+            cache_legacy_params={},
+            cache_thresh_seg_params={},
             cache_watershed_params={},
             cache_std_params={},
             cache_rollmed_params={
