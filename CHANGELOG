@@ -1,4 +1,5 @@
 0.2.6
+ - enh: add dcevent docs & hpc repo url links to sidebar
  - enh: format code and improve readability with black
 0.2.5
  - enh: add thresh segmentor option in advanced request

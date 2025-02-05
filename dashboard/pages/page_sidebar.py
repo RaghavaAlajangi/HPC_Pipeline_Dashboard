@@ -7,10 +7,16 @@ from dash_iconify import DashIconify
 
 from .common import line_breaks
 
-# GitLab repo URL
-PROJECT_REPO_URL = (
-    "https://gitlab.gwdg.de/blood_data_analysis/" "hpc_pipeline_dashboard"
-)
+# BDA GitHub URL
+bda_gitlab_url = "https://gitlab.gwdg.de/blood_data_analysis"
+# Important URLs
+imp_urls = {
+    "hpc_pipeline_data": f"{bda_gitlab_url}/hpc_pipeline_data",
+    "hpc_pipeline_requests": f"{bda_gitlab_url}/hpc_pipeline_requests",
+    "hpc_pipeline_dashboard": f"{bda_gitlab_url}/hpc_pipeline_dashboard",
+    "dcevent": "https://blood_data_analysis.pages.gwdg.de/dcevent/",
+}
+
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
@@ -79,6 +85,54 @@ def sidebar_layout():
                 style={"color": "red"},
                 vertical=True,
             ),
+            line_breaks(times=15),
+            # Show HPC data link
+            dmc.Anchor(
+                align="end",
+                color="green",
+                children=[
+                    DashIconify(
+                        icon="material-symbols-light:docs-outline",
+                        width=30,
+                        height=30,
+                        flip="horizontal",
+                    ),
+                    "dcevent docs",
+                ],
+                href=imp_urls["dcevent"],
+            ),
+            line_breaks(times=1),
+            # Show HPC data link
+            dmc.Anchor(
+                align="end",
+                color="green",
+                children=[
+                    DashIconify(
+                        icon="famicons:logo-gitlab",
+                        width=25,
+                        height=25,
+                        flip="horizontal",
+                    ),
+                    " hpc_pipeline_data",
+                ],
+                href=imp_urls["hpc_pipeline_data"],
+            ),
+            line_breaks(times=1),
+            # Show HPC requests link
+            dmc.Anchor(
+                align="end",
+                color="green",
+                children=[
+                    DashIconify(
+                        icon="famicons:logo-gitlab",
+                        width=25,
+                        height=25,
+                        flip="horizontal",
+                    ),
+                    " hpc_pipeline_requests",
+                ],
+                href=imp_urls["hpc_pipeline_requests"],
+            ),
             line_breaks(times=1),
             # Show project link
             dmc.Anchor(
@@ -86,14 +140,14 @@ def sidebar_layout():
                 color="green",
                 children=[
                     DashIconify(
-                        icon="lucide:gitlab",
-                        width=35,
-                        height=35,
+                        icon="famicons:logo-gitlab",
+                        width=25,
+                        height=25,
                         flip="horizontal",
                     ),
-                    " Source Code",
+                    " source code",
                 ],
-                href=PROJECT_REPO_URL,
+                href=imp_urls["hpc_pipeline_dashboard"],
             ),
         ],
         id="sidebar",
