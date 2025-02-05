@@ -1,17 +1,25 @@
 import os
 
-from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
+from dash import Dash, Input, Output, dcc, html
 
-from .pages import (advanced_page_layout, home_page_layout, sidebar_layout,
-                    simple_page_layout, wrong_page)
+from .pages import (
+    advanced_page_layout,
+    home_page_layout,
+    sidebar_layout,
+    simple_page_layout,
+    wrong_page,
+)
 
 # Dash Bootstrap CSS URL
-DBC_CSS = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap"
-           "-templates@V1.0.1/dbc.min.css")
+DBC_CSS = (
+    "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap"
+    "-templates@V1.0.1/dbc.min.css"
+)
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
+
 
 # Initialise the app
 app = Dash(
@@ -19,7 +27,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.DARKLY, DBC_CSS, dbc.icons.BOOTSTRAP],
     requests_pathname_prefix=BASENAME_PREFIX,
     routes_pathname_prefix=BASENAME_PREFIX,
-    suppress_callback_exceptions=True
+    suppress_callback_exceptions=True,
 )
 
 server = app.server
@@ -28,14 +36,16 @@ app.title = "HPC Pipelines"
 app._favicon = "dashboard/assets/favicon.ico"
 
 # Build the main layout of the app
-app.layout = html.Div([
-    sidebar_layout(),
-    dcc.Location(id="url", refresh=False),
-    html.Div(
-        id="page-content",
-        style={"align-items": "center", "overflowX": "hidden"}
-    )
-])
+app.layout = html.Div(
+    [
+        sidebar_layout(),
+        dcc.Location(id="url", refresh=False),
+        html.Div(
+            id="page-content",
+            style={"align-items": "center", "overflowX": "hidden"},
+        ),
+    ]
+)
 
 
 @app.callback(

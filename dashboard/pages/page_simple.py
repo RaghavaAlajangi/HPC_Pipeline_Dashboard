@@ -1,15 +1,25 @@
-from dash import callback, dcc, html, Input, no_update, Output, State
-from dash import callback_context as ctx
 import dash_bootstrap_components as dbc
-from dash_iconify import DashIconify
 import dash_mantine_components as dmc
+from dash import Input, Output, State, callback
+from dash import callback_context as ctx
+from dash import dcc, html, no_update
+from dash_iconify import DashIconify
 
-from .common import (button_comp, checklist_comp, divider_line_comp,
-                     form_group_input, group_accordion, header_comp,
-                     hover_card, line_breaks, paragraph_comp, popup_comp)
+from ..gitlab import get_gitlab_instances
+from .common import (
+    button_comp,
+    checklist_comp,
+    divider_line_comp,
+    form_group_input,
+    group_accordion,
+    header_comp,
+    hover_card,
+    line_breaks,
+    paragraph_comp,
+    popup_comp,
+)
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
-from ..gitlab import get_gitlab_instances
 
 
 def get_user_list():
@@ -36,9 +46,11 @@ def simple_title_section():
                             placeholder="Select Username",
                             id="simple_title_drop",
                             options=[
-                                {"label": member.name,
-                                 "value": member.username} for
-                                member in get_user_list()
+                                {
+                                    "label": member.name,
+                                    "value": member.username,
+                                }
+                                for member in get_user_list()
                             ],
                             style={"width": "18%"},
                         ),
@@ -48,13 +60,13 @@ def simple_title_section():
                             placeholder="Enter title of the pipeline...",
                             style={"width": "72%"},
                             class_name="custom-placeholder",
-                        )
+                        ),
                     ],
                     style={"width": "90%"},
                 ),
                 className="row justify-content-center",
             )
-        ]
+        ],
     )
 
 
@@ -85,15 +97,17 @@ def simple_segmentation_section():
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=20),
+                            color="yellow",
+                            width=20,
+                        ),
                         notes="A deep learning based image segmentation "
-                              "method.\n Warning: U-Net is trained on "
-                              "specific cell types. When you select correct "
-                              "option from below, appropriate model file "
-                              "will be used for segmentation."
-                    )
+                        "method.\n Warning: U-Net is trained on "
+                        "specific cell types. When you select correct "
+                        "option from below, appropriate model file "
+                        "will be used for segmentation.",
+                    ),
                 ],
-                spacing=5
+                spacing=5,
             ),
             # UNet segmentation options
             html.Ul(
@@ -103,23 +117,25 @@ def simple_segmentation_section():
                         id="simple_measure_type",
                         label="Select Measurement Type",
                         description="Please make sure that you select the "
-                                    "right option. Otherwise, the pipeline "
-                                    "might fail.",
+                        "right option. Otherwise, the pipeline "
+                        "might fail.",
                         orientation="vertical",
                         withAsterisk=True,
                         offset="md",
                         mb=10,
-                        spacing=10
+                        spacing=10,
                     )
-                ]
+                ],
             ),
             divider_line_comp(),
             dmc.Group(
                 children=[
                     dbc.Checklist(
                         options=[
-                            {"label": "Legacy Thresholding Segmentation",
-                             "value": "legacy"},
+                            {
+                                "label": "Legacy Thresholding Segmentation",
+                                "value": "legacy",
+                            },
                         ],
                         id="simple_legacy_switch",
                         switch=True,
@@ -130,15 +146,17 @@ def simple_segmentation_section():
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=20),
+                            color="yellow",
+                            width=20,
+                        ),
                         notes="This is a thresholding based segmentation "
-                              "same as the segmentation available in shapeIn "
-                              "(ZMD device). \n Default threshold value [-6]. "
-                              "Tune it according to your use case."
-                    )
+                        "same as the segmentation available in shapeIn "
+                        "(ZMD device). \n Default threshold value [-6]. "
+                        "Tune it according to your use case.",
+                    ),
                 ],
                 align="left",
-                spacing=5
+                spacing=5,
             ),
             html.Ul(
                 id="simple_legacy_options",
@@ -150,11 +168,11 @@ def simple_segmentation_section():
                         min=legacy_seg["thresh"]["min"],
                         max=legacy_seg["thresh"]["max"],
                         step=legacy_seg["thresh"]["step"],
-                        default=legacy_seg["thresh"]["default"]
+                        default=legacy_seg["thresh"]["default"],
                     )
-                ]
-            )
-        ]
+                ],
+            ),
+        ],
     )
 
 
@@ -167,9 +185,9 @@ def simple_prediction_section():
             checklist_comp(
                 comp_id="simple_classifier_name",
                 options={"bloody-bunny": False},
-                defaults=["bloody-bunny"]
-            )
-        ]
+                defaults=["bloody-bunny"],
+            ),
+        ],
     )
 
 
@@ -180,12 +198,9 @@ def simple_post_analysis_section():
         children=[
             checklist_comp(
                 comp_id="simple_post_analysis_switch",
-                options={
-                    "Benchmarking": True,
-                    "Scatter Plots": True
-                }
+                options={"Benchmarking": True, "Scatter Plots": True},
             )
-        ]
+        ],
     )
 
 
@@ -197,7 +212,7 @@ def simple_data_to_process_section():
         children=[
             create_hsm_grid(),
             line_breaks(times=2),
-        ]
+        ],
     )
 
 
@@ -206,21 +221,32 @@ def simple_page_layout(refresh_path):
     return dbc.Toast(
         id="simple_request_toast",
         header="Simple Pipeline Request",
-        header_style={"background-color": "#017b70",
-                      "font-size": "25px",
-                      "color": "white"},
+        header_style={
+            "background-color": "#017b70",
+            "font-size": "25px",
+            "color": "white",
+        },
         is_open=True,
         className="my-toast",
         children=[
-            popup_comp(comp_id="simple_popup", refresh_path=refresh_path,
-                       text="Pipeline request has been submitted!"),
+            popup_comp(
+                comp_id="simple_popup",
+                refresh_path=refresh_path,
+                text="Pipeline request has been submitted!",
+            ),
             line_breaks(times=1),
-            header_comp("⦿ Pipeline for segmentation and/or classification "
-                        "(prediction) and analysis of data.", indent=40),
+            header_comp(
+                "⦿ Pipeline for segmentation and/or classification "
+                "(prediction) and analysis of data.",
+                indent=40,
+            ),
             line_breaks(times=1),
-            header_comp("⦿ Choosing multiple Segmentation or Prediction "
-                        "algorithms will create a matrix of jobs (multiple "
-                        "jobs).", indent=40),
+            header_comp(
+                "⦿ Choosing multiple Segmentation or Prediction "
+                "algorithms will create a matrix of jobs (multiple "
+                "jobs).",
+                indent=40,
+            ),
             line_breaks(times=2),
             group_accordion(
                 children=[
@@ -228,31 +254,35 @@ def simple_page_layout(refresh_path):
                     simple_segmentation_section(),
                     simple_prediction_section(),
                     simple_post_analysis_section(),
-                    simple_data_to_process_section()
+                    simple_data_to_process_section(),
                 ],
                 middle=True,
                 open_first=True,
-                comp_id="pipeline_accord"
+                comp_id="pipeline_accord",
             ),
             line_breaks(times=3),
             create_show_grid(comp_id="show_grid"),
             line_breaks(times=3),
-            button_comp(label="Create pipeline",
-                        disabled=True,
-                        comp_id="create_simple_pipeline_button"),
+            button_comp(
+                label="Create pipeline",
+                disabled=True,
+                comp_id="create_simple_pipeline_button",
+            ),
             line_breaks(times=2),
-            dbc.Alert("Note: Username, pipeline title, and data paths are "
-                      "mandatory fields to activate 'Create Pipeline' button.",
-                      color="warning",
-                      style={
-                          "color": "black",
-                          "width": "fit-content",
-                          "margin": "auto",
-                      }),
+            dbc.Alert(
+                "Note: Username, pipeline title, and data paths are "
+                "mandatory fields to activate 'Create Pipeline' button.",
+                color="warning",
+                style={
+                    "color": "black",
+                    "width": "fit-content",
+                    "margin": "auto",
+                },
+            ),
             line_breaks(times=5),
             dcc.Store(id="cache_simple_template", storage_type="local"),
             dcc.Store(id="cache_simple_seg_options", storage_type="local"),
-        ]
+        ],
     )
 
 
@@ -262,10 +292,11 @@ def simple_page_layout(refresh_path):
     Input("simple_unet_switch", "value"),
     Input("simple_measure_type", "value"),
     Input("simple_legacy_switch", "value"),
-    Input("simple_legacy_thresh_value", "value")
+    Input("simple_legacy_thresh_value", "value"),
 )
-def show_and_cache_segment_options(unet_click, measurement_type, legacy_click,
-                                   legacy_thresh):
+def show_and_cache_segment_options(
+    unet_click, measurement_type, legacy_click, legacy_thresh
+):
     """This circular callback fetches unet model metadata from the DVC repo
     and shows it as dmc.RadioGroup options, enable the user to select the
     appropriate options from the same dmc.RadioItem options."""
@@ -277,9 +308,12 @@ def show_and_cache_segment_options(unet_click, measurement_type, legacy_click,
     check_boxes = [
         dmc.Radio(
             label=f"{meta['device'].capitalize()} device, "
-                  f"{meta['type'].capitalize()} cells",
-            value=model_ckp, color="green"
-        ) for model_ckp, meta in model_dict.items()]
+            f"{meta['type'].capitalize()} cells",
+            value=model_ckp,
+            color="green",
+        )
+        for model_ckp, meta in model_dict.items()
+    ]
 
     segm_options = {}
     if unet_click and measurement_type:
@@ -320,16 +354,21 @@ def toggle_legacy_options(legacy_click):
     Input("cache_simple_seg_options", "data"),
     Input("simple_classifier_name", "value"),
     Input("simple_post_analysis_switch", "value"),
-    Input("show_grid", "selectedRows")
+    Input("show_grid", "selectedRows"),
 )
-def collect_simple_pipeline_params(author_name, simple_title,
-                                   cached_seg_options,
-                                   simple_classifier, simple_postana,
-                                   selected_files):
+def collect_simple_pipeline_params(
+    author_name,
+    simple_title,
+    cached_seg_options,
+    simple_classifier,
+    simple_postana,
+    selected_files,
+):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    params = list(
-        cached_seg_options.keys()) + simple_classifier + simple_postana
+    params = (
+        list(cached_seg_options.keys()) + simple_classifier + simple_postana
+    )
 
     # Update the template, only when author name, title, and data files
     # to process are entered
@@ -338,9 +377,13 @@ def collect_simple_pipeline_params(author_name, simple_title,
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
-        description = update_simple_template(params, cached_seg_options,
-                                             author_name, rtdc_files,
-                                             get_simple_template())
+        description = update_simple_template(
+            params,
+            cached_seg_options,
+            author_name,
+            rtdc_files,
+            get_simple_template(),
+        )
         pipeline_template["description"] = description
         return pipeline_template
     return no_update
@@ -351,14 +394,20 @@ def collect_simple_pipeline_params(author_name, simple_title,
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
     Input("show_grid", "selectedRows"),
-    Input("cache_simple_seg_options", "data")
+    Input("cache_simple_seg_options", "data"),
 )
-def toggle_simple_create_pipeline_button(author_name, title, selected_files,
-                                         cached_seg_options):
+def toggle_simple_create_pipeline_button(
+    author_name, title, selected_files, cached_seg_options
+):
     """Activates create pipeline button only when author name, title,
     data files, and segmentation method are entered"""
-    if author_name and title and title.strip() and selected_files and \
-            cached_seg_options:
+    if (
+        author_name
+        and title
+        and title.strip()
+        and selected_files
+        and cached_seg_options
+    ):
         return False
     return True
 
@@ -368,7 +417,7 @@ def toggle_simple_create_pipeline_button(author_name, title, selected_files,
     Input("create_simple_pipeline_button", "n_clicks"),
     Input("cache_simple_template", "data"),
     Input("simple_popup_close", "n_clicks"),
-    State("simple_popup", "is_open")
+    State("simple_popup", "is_open"),
 )
 def simple_request_submission_popup(_, cached_template, close_popup, popup):
     """Show a popup when user clicks on create pipeline button. Then, user

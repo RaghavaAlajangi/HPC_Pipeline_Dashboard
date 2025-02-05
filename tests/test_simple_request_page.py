@@ -5,17 +5,19 @@ from dash._callback_context import context_value
 from dash._utils import AttributeDict
 import dash_bootstrap_components as dbc
 
-from dashboard.pages.page_simple import (collect_simple_pipeline_params,
-                                         show_and_cache_segment_options,
-                                         simple_data_to_process_section,
-                                         simple_page_layout,
-                                         simple_post_analysis_section,
-                                         simple_prediction_section,
-                                         simple_request_submission_popup,
-                                         simple_segmentation_section,
-                                         toggle_legacy_options,
-                                         toggle_simple_create_pipeline_button,
-                                         toggle_unet_options)
+from dashboard.pages.page_simple import (
+    collect_simple_pipeline_params,
+    show_and_cache_segment_options,
+    simple_data_to_process_section,
+    simple_page_layout,
+    simple_post_analysis_section,
+    simple_prediction_section,
+    simple_request_submission_popup,
+    simple_segmentation_section,
+    toggle_legacy_options,
+    toggle_simple_create_pipeline_button,
+    toggle_unet_options,
+)
 
 
 def test_simple_title_section():
@@ -51,7 +53,7 @@ def test_show_and_cache_segment_options_callback():
             unet_click=["mlunet"],
             measurement_type="model_checkpoint",
             legacy_click=["legacy"],
-            legacy_thresh="-2"
+            legacy_thresh="-2",
         )
 
     # Run the callback within the appropriate context
@@ -124,12 +126,16 @@ def test_collect_simple_pipeline_params_callback_activation():
         return collect_simple_pipeline_params(
             author_name="test_username",
             simple_title="test_title",
-            cached_seg_options={"legacy": {"thresh": -6},
-                                "mlunet": {"model_file": "model_checkpoint"}},
+            cached_seg_options={
+                "legacy": {"thresh": -6},
+                "mlunet": {"model_file": "model_checkpoint"},
+            },
             simple_classifier=["bloody-bunny_g1_bacae"],
             simple_postana=["benchmarking"],
-            selected_files=[{"filepath": "test1.rtdc"},
-                            {"filepath": "test2.rtdc"}]
+            selected_files=[
+                {"filepath": "test1.rtdc"},
+                {"filepath": "test2.rtdc"},
+            ],
         )
 
     ctx = copy_context()
@@ -153,12 +159,16 @@ def test_collect_simple_pipeline_params_callback_deactivation():
         return collect_simple_pipeline_params(
             author_name="",
             simple_title="test_title",
-            cached_seg_options={"legacy": {"thresh": -6},
-                                "mlunet": {"model_file": "model_checkpoint"}},
+            cached_seg_options={
+                "legacy": {"thresh": -6},
+                "mlunet": {"model_file": "model_checkpoint"},
+            },
             simple_classifier=["bloody-bunny_g1_bacae"],
             simple_postana=["benchmarking"],
-            selected_files=[{"filepath": "test1.rtdc"},
-                            {"filepath": "test2.rtdc"}]
+            selected_files=[
+                {"filepath": "test1.rtdc"},
+                {"filepath": "test2.rtdc"},
+            ],
         )
 
     ctx = copy_context()
@@ -191,7 +201,7 @@ def test_toggle_simple_create_pipeline_button_callback_deactivation():
             title="test_title",
             selected_files=[{"filepath": "test1.rtdc"}],
             # Empty data should not activate the "Create Pipeline" button
-            cached_seg_options={}
+            cached_seg_options={},
         )
 
     ctx = copy_context()
@@ -204,15 +214,18 @@ def test_simple_request_submission_popup_callback_activation():
 
     test_template = {
         "title": "test without notes create",
-        "description": "test description"
+        "description": "test description",
     }
 
     def run_callback():
         context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": [
-                    {"prop_id": "create_simple_pipeline_button.n_clicks"}]
-            })
+            AttributeDict(
+                **{
+                    "triggered_inputs": [
+                        {"prop_id": "create_simple_pipeline_button.n_clicks"}
+                    ]
+                }
+            )
         )
         return simple_request_submission_popup(
             1, cached_template=test_template, close_popup=0, popup=False
@@ -226,17 +239,17 @@ def test_simple_request_submission_popup_callback_activation():
 def test_simple_request_submission_popup_callback_close_popup():
     """Test close notification popup"""
 
-    test_template = {
-        "title": "testing",
-        "description": "test description"
-    }
+    test_template = {"title": "testing", "description": "test description"}
 
     def run_callback():
         context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": [
-                    {"prop_id": "simple_popup_close.n_clicks"}]
-            })
+            AttributeDict(
+                **{
+                    "triggered_inputs": [
+                        {"prop_id": "simple_popup_close.n_clicks"}
+                    ]
+                }
+            )
         )
         return simple_request_submission_popup(
             0, cached_template=test_template, close_popup=1, popup=True
@@ -249,16 +262,13 @@ def test_simple_request_submission_popup_callback_close_popup():
 
 def test_simple_request_submission_popup_callback_deactivation():
     """Test callback deactivation"""
-    test_template = {
-        "title": "testing",
-        "description": "test description"
-    }
+    test_template = {"title": "testing", "description": "test description"}
 
     def run_callback():
         context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": [{"prop_id": "dummy_click.n_clicks"}]
-            })
+            AttributeDict(
+                **{"triggered_inputs": [{"prop_id": "dummy_click.n_clicks"}]}
+            )
         )
         return simple_request_submission_popup(
             0, cached_template=test_template, close_popup=0, popup=False

@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 import re
+from datetime import datetime, timedelta
 
 import gitlab
 from gitlab.exceptions import GitlabAuthenticationError
@@ -18,8 +18,9 @@ class BaseAPI:
         self.project_num = project_num
 
         try:
-            gitlab_obj = gitlab.Gitlab(url=gitlab_url,
-                                       private_token=access_token)
+            gitlab_obj = gitlab.Gitlab(
+                url=gitlab_url, private_token=access_token
+            )
             gitlab_obj.auth()
             self.project = gitlab_obj.projects.get(project_num)
         except GitlabAuthenticationError as exc:
@@ -73,7 +74,7 @@ class BaseAPI:
                 note_wo_code = pattern.sub(
                     f"Got some error! See the comment: "
                     f"{issue.web_url}#note_{note.id}",
-                    note.body
+                    note.body,
                 )
                 comments.append(note_wo_code)
             else:

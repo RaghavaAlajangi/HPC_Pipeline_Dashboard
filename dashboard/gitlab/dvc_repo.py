@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 import yaml
 
 from .base import BaseAPI
@@ -22,7 +23,7 @@ class DVCRepoAPI(BaseAPI):
                     path = dict_data["outs"][0]["path"]
                     model_meta[path] = {
                         "device": dict_data["meta"]["device"],
-                        "type": dict_data["meta"]["type"]
+                        "type": dict_data["meta"]["type"],
                     }
 
         return model_meta

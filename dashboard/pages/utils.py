@@ -1,8 +1,9 @@
 import re
 
 
-def update_simple_template(params, segment_options, author_name, rtdc_paths,
-                           template):
+def update_simple_template(
+    params, segment_options, author_name, rtdc_paths, template
+):
     """Update th simple issue template with user selected options"""
     # Uncheck all the boxes in the template before update
     template = template.replace("[x]", "[ ]")
@@ -10,16 +11,26 @@ def update_simple_template(params, segment_options, author_name, rtdc_paths,
     for param in params:
         param_lower = param.lower()
         if param_lower in template.lower() or param in template:
-            template = re.sub(re.escape(f"[ ] {param}"), f"[x] {param}",
-                              template, flags=re.IGNORECASE)
+            template = re.sub(
+                re.escape(f"[ ] {param}"),
+                f"[x] {param}",
+                template,
+                flags=re.IGNORECASE,
+            )
 
     for seg in segment_options:
-        template = re.sub(re.escape(f"[ ] {seg}"), f"[x] {seg}",
-                          template, flags=re.IGNORECASE)
+        template = re.sub(
+            re.escape(f"[ ] {seg}"),
+            f"[x] {seg}",
+            template,
+            flags=re.IGNORECASE,
+        )
 
         # Template option after which you want to add a new line
-        template_options = ["mlunet: UNET",
-                            "legacy: Legacy thresholding with OpenCV"]
+        template_options = [
+            "mlunet: UNET",
+            "legacy: Legacy thresholding with OpenCV",
+        ]
 
         for temp_opt in template_options:
 
@@ -28,7 +39,7 @@ def update_simple_template(params, segment_options, author_name, rtdc_paths,
                 word_index = template.find(temp_opt)
 
                 # Split the string at the position of the specific word
-                first_part = template[:word_index + len(temp_opt)]
+                first_part = template[: word_index + len(temp_opt)]
                 second_part = template[word_index + len(temp_opt):]
 
                 # Get the segmentation kwarg from the segment_options dict
@@ -50,8 +61,9 @@ def update_simple_template(params, segment_options, author_name, rtdc_paths,
     template = template + "\n\n    <!-- option end -->"
 
     # Insert the username in the issue description
-    template = template + (f"\n- __Author__"
-                           f"\n   - [x] username={author_name}")
+    template = template + (
+        f"\n- __Author__" f"\n   - [x] username={author_name}"
+    )
 
     return template
 
@@ -68,7 +80,8 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
             },
             "Segmentation Algorithm": {
                 "mlunet: UNET": {
-                    "model_file": "unet-double-d3-f3_g1_81bbe.ckp"},
+                    "model_file": "unet-double-d3-f3_g1_81bbe.ckp"
+                },
                 "legacy: Legacy thresholding with OpenCV": {
                     "thresh": -6,
                     "blur": 0,
@@ -103,23 +116,20 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
                 },
             },
             "Available gating options": {
-                "norm gating": {"online_gates": False,
-                                "size_thresh_mask": 0},
+                "norm gating": {"online_gates": False, "size_thresh_mask": 0},
             },
             "Further Options": {
                 "--reproduce": {},
             },
         },
         "Prediction": {
-            "Classification Model": {
-                "bloody-bunny_g1_bacae: Bloody Bunny": {}
-            }
+            "Classification Model": {"bloody-bunny_g1_bacae: Bloody Bunny": {}}
         },
         "Post Analysis": {
             "Benchmarking": {},
             "Scatter Plot": {},
         },
-        "Data to Process": {}
+        "Data to Process": {},
     }
     # Loop through sections and subsections to update the template
     for sec_head, sub1 in sections.items():
@@ -136,8 +146,9 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
                         # otherwise, get the default value.
                         curr_val = params_dict.get(sub4, {}).get(pkey, pval)
                         # Update template with tick, param name, and curr_value
-                        template += (f"\n      - [{sub4_check}] "
-                                     f"{pkey}={curr_val}")
+                        template += (
+                            f"\n      - [{sub4_check}] " f"{pkey}={curr_val}"
+                        )
                     template += "\n    <!-- option end -->"
             else:
                 sub2_check = "x" if sub2 in params_dict else " "
@@ -152,7 +163,8 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
     template = template + "\n\n    <!-- option end -->"
 
     # Insert the username in the issue description
-    template = template + (f"\n- __Author__"
-                           f"\n   - [x] username={author_name}")
+    template = template + (
+        f"\n- __Author__" f"\n   - [x] username={author_name}"
+    )
 
     return template

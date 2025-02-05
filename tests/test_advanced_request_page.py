@@ -127,7 +127,8 @@ def test_toggle_legacy_options_callback_activation():
         return toggle_legacy_options(
             legacy_opt=[threshold_key],
             leg_keys=["thresh", "diff_method", "clear_border"],
-            leg_values=["-6", "1", True])
+            leg_values=["-6", "1", True],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -149,7 +150,8 @@ def test_toggle_legacy_options_callback_deactivation():
         return toggle_legacy_options(
             legacy_opt=[],
             leg_keys=["thresh", "diff_method", "clear_border"],
-            leg_values=["-6", "1", True])
+            leg_values=["-6", "1", True],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -168,7 +170,8 @@ def test_toggle_watershed_options_callback_activation():
         return toggle_watershed_options(
             watershed_opt=[watershed_key],
             water_keys=["clear_border", "closing_disk"],
-            water_values=[True, "5"])
+            water_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -191,7 +194,8 @@ def test_toggle_watershed_options_callback_deactivation():
         return toggle_watershed_options(
             watershed_opt=[],
             water_keys=["clear_border", "closing_disk"],
-            water_values=[True, "5"])
+            water_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -210,7 +214,8 @@ def test_toggle_std_options_callback_activation():
         return toggle_std_options(
             std_opt=[std_key],
             std_keys=["clear_border", "closing_disk"],
-            std_values=[True, "5"])
+            std_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -232,7 +237,8 @@ def test_toggle_std_options_callback_deactivation():
         return toggle_std_options(
             std_opt=[],
             std_keys=["clear_border", "closing_disk"],
-            std_values=[True, "5"])
+            std_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -251,7 +257,8 @@ def test_toggle_rollmed_options_callback_activation():
         return toggle_rollmed_options(
             rollmed_opt=[rollmed_key],
             rollmed_keys=["kernel_size"],
-            rollmed_values=[200])
+            rollmed_values=[200],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -273,7 +280,8 @@ def test_toggle_rollmed_options_callback_deactivation():
         return toggle_rollmed_options(
             rollmed_opt=[],
             rollmed_keys=["clear_border", "closing_disk"],
-            rollmed_values=[True, "5"])
+            rollmed_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -286,14 +294,16 @@ def test_toggle_rollmed_options_callback_deactivation():
 def test_toggle_sparsemed_options_callback_activation():
     """Test sparse medium options expansion when a user clicks on sparsemed
     switch"""
-    sparemed_key = "sparsemed: Sparse median background correction " \
-                   "with cleansing"
+    sparemed_key = (
+        "sparsemed: Sparse median background correction " "with cleansing"
+    )
 
     def run_callback():
         return toggle_sparsemed_options(
             sparsemed_opt=[sparemed_key],
             sparsemed_keys=["kernel_size"],
-            sparsemed_values=[8])
+            sparsemed_values=[8],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -315,7 +325,8 @@ def test_toggle_sparsemed_options_callback_deactivation():
         return toggle_sparsemed_options(
             sparsemed_opt=[],
             sparsemed_keys=["clear_border", "closing_disk"],
-            sparsemed_values=[True, "5"])
+            sparsemed_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -334,7 +345,8 @@ def test_toggle_norm_gate_options_callback_activation():
         return toggle_norm_gate_options(
             ngate_opt=[norm_gate_key],
             ngate_keys=["online_gates"],
-            ngate_values=[False])
+            ngate_values=[False],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -356,7 +368,8 @@ def test_toggle_norm_gate_options_callback_deactivation():
         return toggle_norm_gate_options(
             ngate_opt=[],
             ngate_keys=["clear_border", "closing_disk"],
-            ngate_values=[True, "5"])
+            ngate_values=[True, "5"],
+        )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
@@ -378,17 +391,21 @@ def test_collect_advanced_pipeline_params_callback_activation():
             classifier_name=["bloody-bunny_g1_bacae: Bloody Bunny"],
             post_analysis_flag=[],
             cache_unet_model_path={
-                "mlunet: UNET": {"model_file": "test_checkpoint"}},
+                "mlunet: UNET": {"model_file": "test_checkpoint"}
+            },
             cache_legacy_params={},
             cache_thresh_seg_params={},
             cache_watershed_params={},
             cache_std_params={},
             cache_rollmed_params={
                 "rollmed: Rolling median RT-DC background image computation": {
-                    "kernel_size": 200, "batch_size": 5000}},
+                    "kernel_size": 200,
+                    "batch_size": 5000,
+                }
+            },
             cache_sparsemed_params=None,
             cache_norm_gate_params={},
-            selected_rows=[{"filepath": "test.rtdc"}]
+            selected_rows=[{"filepath": "test.rtdc"}],
         )
 
     ctx = copy_context()
@@ -417,17 +434,21 @@ def test_collect_advanced_pipeline_params_callback_deactivation():
             classifier_name=["bloody-bunny_g1_bacae: Bloody Bunny"],
             post_analysis_flag=[],
             cache_unet_model_path={
-                "mlunet: UNET": {"model_file": "test_checkpoint"}},
+                "mlunet: UNET": {"model_file": "test_checkpoint"}
+            },
             cache_legacy_params={},
             cache_thresh_seg_params={},
             cache_watershed_params={},
             cache_std_params={},
             cache_rollmed_params={
                 "rollmed: Rolling median RT-DC background image computation": {
-                    "kernel_size": 200, "batch_size": 5000}},
+                    "kernel_size": 200,
+                    "batch_size": 5000,
+                }
+            },
             cache_sparsemed_params=None,
             cache_norm_gate_params={},
-            selected_rows=[{"filepath": "test.rtdc"}]
+            selected_rows=[{"filepath": "test.rtdc"}],
         )
 
     ctx = copy_context()
@@ -440,15 +461,18 @@ def test_advanced_request_submission_popup_callback_activation():
 
     test_template = {
         "title": "test without notes create",
-        "description": "test description"
+        "description": "test description",
     }
 
     def run_callback():
         context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": [
-                    {"prop_id": "create_advanced_pipeline_button.n_clicks"}]
-            })
+            AttributeDict(
+                **{
+                    "triggered_inputs": [
+                        {"prop_id": "create_advanced_pipeline_button.n_clicks"}
+                    ]
+                }
+            )
         )
         return advanced_request_submission_popup(
             1, cached_adv_temp=test_template, close_popup=0, popup=False
@@ -462,17 +486,17 @@ def test_advanced_request_submission_popup_callback_activation():
 def test_advanced_request_submission_popup_callback_close_popup():
     """Test close notification popup"""
 
-    test_template = {
-        "title": "testing",
-        "description": "test description"
-    }
+    test_template = {"title": "testing", "description": "test description"}
 
     def run_callback():
         context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": [
-                    {"prop_id": "advanced_popup_close.n_clicks"}]
-            })
+            AttributeDict(
+                **{
+                    "triggered_inputs": [
+                        {"prop_id": "advanced_popup_close.n_clicks"}
+                    ]
+                }
+            )
         )
         return advanced_request_submission_popup(
             0, cached_adv_temp=test_template, close_popup=1, popup=True
@@ -485,16 +509,13 @@ def test_advanced_request_submission_popup_callback_close_popup():
 
 def test_advanced_request_submission_popup_callback_deactivation():
     """Test callback deactivation"""
-    test_template = {
-        "title": "testing",
-        "description": "test description"
-    }
+    test_template = {"title": "testing", "description": "test description"}
 
     def run_callback():
         context_value.set(
-            AttributeDict(**{
-                "triggered_inputs": [{"prop_id": "dummy_click.n_clicks"}]
-            })
+            AttributeDict(
+                **{"triggered_inputs": [{"prop_id": "dummy_click.n_clicks"}]}
+            )
         )
         return advanced_request_submission_popup(
             0, cached_adv_temp=test_template, close_popup=0, popup=False
@@ -514,10 +535,11 @@ def test_toggle_advanced_create_pipeline_button_callback_activation():
             title="test_title",
             selected_files=[{"filepath": "test1.rtdc"}],
             cached_unet_model_path={
-                "mlunet: UNET": {"model_file": "test_checkpoint"}},
+                "mlunet: UNET": {"model_file": "test_checkpoint"}
+            },
             cached_legacy_params={},
             cache_watershed_params={},
-            cache_std_params={}
+            cache_std_params={},
         )
 
     ctx = copy_context()
@@ -537,7 +559,7 @@ def test_toggle_advanced_create_pipeline_button_callback_deactivation():
             cached_unet_model_path={},
             cached_legacy_params={},
             cache_watershed_params={},
-            cache_std_params={}
+            cache_std_params={},
         )
 
     ctx = copy_context()

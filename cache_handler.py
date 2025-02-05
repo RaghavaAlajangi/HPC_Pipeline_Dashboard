@@ -18,9 +18,9 @@ class DriveFileScanner:
     def get_file_size(file_path):
         """Compute size of the file."""
         file_size_bytes = os.path.getsize(file_path)
-        if file_size_bytes < 1024 ** 2:  # Less than 1 MB
+        if file_size_bytes < 1024**2:  # Less than 1 MB
             return None
-        elif file_size_bytes < 1024 ** 3:  # Less than 1 GB
+        elif file_size_bytes < 1024**3:  # Less than 1 GB
             return f"{file_size_bytes / (1024 ** 2):.1f} MB"
         else:
             return f"{file_size_bytes / (1024 ** 3):.1f} GB"
@@ -46,7 +46,8 @@ class DriveFileScanner:
                     # Get the modified date of the file
                     modified_time = os.path.getmtime(fpath)
                     modified_time = dt.fromtimestamp(modified_time).strftime(
-                        "%d-%b-%Y %I.%M %p")
+                        "%d-%b-%Y %I.%M %p"
+                    )
 
                     # Save files in "HSMFS:/Data/path/to/the/rtdc/file"
                     fpath = str(fpath).strip()
@@ -62,7 +63,7 @@ class DriveFileScanner:
                     entry = {
                         "filepath": fpath_list,
                         "dateModified": modified_time,
-                        "size": file_size
+                        "size": file_size,
                     }
                     cache_data.append(entry)
 
