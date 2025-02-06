@@ -24,6 +24,7 @@ class DVCRepoAPI(BaseAPI):
                     model_meta[path] = {
                         "device": dict_data["meta"]["device"],
                         "type": dict_data["meta"]["type"],
+                        "label": dict_data["meta"]["label"],
                     }
 
         return model_meta

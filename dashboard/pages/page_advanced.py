@@ -17,6 +17,8 @@ from .common import (
     hover_card,
     line_breaks,
     popup_comp,
+    unet_segmentation_options,
+    unet_segmentation_section,
 )
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_advanced_template
@@ -86,55 +88,10 @@ def advanced_segmentation_section():
         title="Segmentation Algorithm",
         children=[
             # MLUNet segmentor section
-            dmc.Group(
-                children=[
-                    # UNet checkbox (switch)
-                    dbc.Checklist(
-                        options=[
-                            {
-                                "label": "U-Net Segmentation",
-                                "value": "mlunet: UNET",
-                            },
-                        ],
-                        id="advanced_unet_id",
-                        switch=True,
-                        value=[],
-                        labelCheckedClassName="text-success",
-                        inputCheckedClassName="border-success bg-success",
-                    ),
-                    # UNet question mark icon and hover info
-                    hover_card(
-                        target=DashIconify(
-                            icon="mage:message-question-mark-round-fill",
-                            color="yellow",
-                            width=20,
-                        ),
-                        notes="A deep learning based image segmentation "
-                        "method.\n Warning: U-Net is trained on "
-                        "specific cell types. When you select correct "
-                        "option from below, appropriate model file "
-                        "will be used for segmentation.",
-                    ),
-                ],
-                spacing=5,
-            ),
-            # MLUNet segmentation options
-            html.Ul(
-                id="advanced_unet_options",
-                children=[
-                    dmc.RadioGroup(
-                        id="advanced_measure_options",
-                        label="Select Measurement Type",
-                        description="Please make sure that you select the "
-                        "right option. Otherwise, the pipeline "
-                        "might fail.",
-                        orientation="vertical",
-                        withAsterisk=True,
-                        offset="md",
-                        mb=10,
-                        spacing=10,
-                    )
-                ],
+            unet_segmentation_section(
+                unet_switch_id="advanced_unet_switch",
+                unet_toggle_id="advanced_unet_options",
+                unet_options_id="advanced_measure_type",
             ),
             divider_line_comp(),
             # Legacy segmentor section
@@ -667,10 +624,10 @@ def advanced_page_layout(refresh_path):
 
 
 @callback(
-    Output("advanced_measure_options", "children"),
+    Output("advanced_measure_type", "children"),
     Output("cache_advanced_unet_model_path", "data"),
-    Input("advanced_unet_id", "value"),
-    Input("advanced_measure_options", "value"),
+    Input("advanced_unet_switch", "value"),
+    Input("advanced_measure_type", "value"),
 )
 def show_and_cache_unet_model_meta(unet_click, measure_option):
     """This circular callback fetches unet model metadata from the DVC repo
@@ -680,16 +637,7 @@ def show_and_cache_unet_model_meta(unet_click, measure_option):
     _, dvc_gitlab = get_gitlab_instances()
 
     model_dict = dvc_gitlab.get_model_metadata()
-
-    check_boxes = [
-        dmc.Radio(
-            label=f"{meta['device'].capitalize()} device, "
-            f"{meta['type'].capitalize()} cells",
-            value=model_ckp,
-            color="green",
-        )
-        for model_ckp, meta in model_dict.items()
-    ]
+    check_boxes = unet_segmentation_options(model_dict)
 
     segm_options = {}
     if unet_click and measure_option:
@@ -699,7 +647,7 @@ def show_and_cache_unet_model_meta(unet_click, measure_option):
 
 @callback(
     Output("advanced_unet_options", "style"),
-    Input("advanced_unet_id", "value"),
+    Input("advanced_unet_switch", "value"),
 )
 def toggle_unet_options(unet_click):
     """Toggle mlunet segmentation options with unet switch"""

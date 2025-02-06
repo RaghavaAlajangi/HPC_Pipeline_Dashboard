@@ -17,6 +17,8 @@ from .common import (
     line_breaks,
     paragraph_comp,
     popup_comp,
+    unet_segmentation_options,
+    unet_segmentation_section,
 )
 from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
@@ -80,52 +82,10 @@ def simple_segmentation_section():
         title="Segmentation",
         children=[
             # MLUNet segmentor section
-            dmc.Group(
-                children=[
-                    # UNet checkbox (switch)
-                    dbc.Checklist(
-                        options=[
-                            {"label": "U-Net Segmentation", "value": "mlunet"},
-                        ],
-                        id="simple_unet_switch",
-                        switch=True,
-                        value=[],
-                        labelCheckedClassName="text-success",
-                        inputCheckedClassName="border-success bg-success",
-                    ),
-                    # UNet question mark icon and hover info
-                    hover_card(
-                        target=DashIconify(
-                            icon="mage:message-question-mark-round-fill",
-                            color="yellow",
-                            width=20,
-                        ),
-                        notes="A deep learning based image segmentation "
-                        "method.\n Warning: U-Net is trained on "
-                        "specific cell types. When you select correct "
-                        "option from below, appropriate model file "
-                        "will be used for segmentation.",
-                    ),
-                ],
-                spacing=5,
-            ),
-            # UNet segmentation options
-            html.Ul(
-                id="simple_unet_options",
-                children=[
-                    dmc.RadioGroup(
-                        id="simple_measure_type",
-                        label="Select Measurement Type",
-                        description="Please make sure that you select the "
-                        "right option. Otherwise, the pipeline "
-                        "might fail.",
-                        orientation="vertical",
-                        withAsterisk=True,
-                        offset="md",
-                        mb=10,
-                        spacing=10,
-                    )
-                ],
+            unet_segmentation_section(
+                unet_switch_id="simple_unet_switch",
+                unet_toggle_id="simple_unet_options",
+                unet_options_id="simple_measure_type",
             ),
             divider_line_comp(),
             dmc.Group(
@@ -304,16 +264,7 @@ def show_and_cache_segment_options(
     _, dvc_gitlab = get_gitlab_instances()
 
     model_dict = dvc_gitlab.get_model_metadata()
-
-    check_boxes = [
-        dmc.Radio(
-            label=f"{meta['device'].capitalize()} device, "
-            f"{meta['type'].capitalize()} cells",
-            value=model_ckp,
-            color="green",
-        )
-        for model_ckp, meta in model_dict.items()
-    ]
+    check_boxes = unet_segmentation_options(model_dict)
 
     segm_options = {}
     if unet_click and measurement_type:
