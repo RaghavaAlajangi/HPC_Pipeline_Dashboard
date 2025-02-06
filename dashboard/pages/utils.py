@@ -91,6 +91,12 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
                     "fill_holes": True,
                     "closing_disk": 5,
                 },
+                "thresh: thresholding segmentation": {
+                    "clear_border": "True",
+                    "closing_disk": 2,
+                    "fill_holes": "True",
+                    "thresh": -6,
+                },
                 "watershed: Watershed algorithm": {
                     "clear_border": True,
                     "fill_holes": True,
