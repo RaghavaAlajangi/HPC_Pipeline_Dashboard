@@ -60,7 +60,7 @@ def test_show_and_cache_segment_options_callback():
     ctx = copy_context()
     check_boxes, segm_opt = ctx.run(run_callback)
 
-    assert isinstance(check_boxes, dbc.Row)     
+    assert isinstance(check_boxes, dbc.Row)
     assert isinstance(segm_opt, dict)
     assert "mlunet" in segm_opt.keys()
 

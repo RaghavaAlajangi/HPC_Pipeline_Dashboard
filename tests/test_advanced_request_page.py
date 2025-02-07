@@ -88,7 +88,7 @@ def test_show_and_cache_unet_model_meta_callback():
 
     print(check_boxes)
 
-    assert isinstance(check_boxes, dbc.Row) 
+    assert isinstance(check_boxes, dbc.Row)
     assert isinstance(segm_opt, dict)
     assert "mlunet" in segm_opt.keys()
 
