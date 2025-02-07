@@ -9,3 +9,4 @@ meta:
   archive: True
   device: accelerator
   type: blood
+  label: test label

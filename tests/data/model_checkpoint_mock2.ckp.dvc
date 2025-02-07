@@ -11,3 +11,4 @@ meta:
   archive: False
   device: accelerator
   type: blood
+  label: test label

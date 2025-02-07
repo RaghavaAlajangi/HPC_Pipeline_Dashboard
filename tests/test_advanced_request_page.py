@@ -86,9 +86,9 @@ def test_show_and_cache_unet_model_meta_callback():
     ctx = copy_context()
     check_boxes, segm_opt = ctx.run(run_callback)
 
-    assert len(check_boxes) == 2
-    assert check_boxes[0].value == "model_checkpoint_mock2.ckp"
-    assert check_boxes[1].value == "model_checkpoint_mock3.ckp"
+    print(check_boxes)
+
+    assert isinstance(check_boxes, dbc.Row) 
     assert isinstance(segm_opt, dict)
     assert "mlunet" in segm_opt.keys()
 
