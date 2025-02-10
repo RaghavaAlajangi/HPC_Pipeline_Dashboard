@@ -1,3 +1,9 @@
+0.2.6
+ - ref: remove post analysis and modify classification option
+ - fix: missing thereshold segmentor arguments in advanced request
+ - enh: change unet segmentation options to be more user-friendly 
+ - enh: add dcevent docs & hpc repo url links to sidebar
+ - enh: format code and improve readability with black
 0.2.5
  - enh: add thresh segmentor option in advanced request
  - enh: disable raw data flag when there is no HSM paths in issue description

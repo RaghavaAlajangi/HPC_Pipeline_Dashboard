@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -14,8 +14,7 @@ issue_template_dir = Path(__file__).parents[0] / "data"
 def mock_comment(comment_text):
     """Creates a mock issue comment"""
     return MagicMock(
-        body=comment_text,
-        created_at=datetime.utcnow().isoformat() + "Z"
+        body=comment_text, created_at=datetime.utcnow().isoformat() + "Z"
     )
 
 
@@ -31,8 +30,9 @@ def mock_gitlab_issue(iid, state, description, comment_list):
         description=description,
         created_at=datetime.now(timezone.utc),
     )
-    mock_issue.notes.list.return_value = [mock_comment(msg) for msg in
-                                          comment_list]
+    mock_issue.notes.list.return_value = [
+        mock_comment(msg) for msg in comment_list
+    ]
     return mock_issue
 
 
@@ -62,8 +62,12 @@ def read_mock_model_ckp_files():
         with open(dvc_file, "r", encoding="utf-8") as file:
             dvc_content = file.read()
             mock_ckp_list.append(
-                {"name": dvc_file.name, "path": ckp_path + f"/{dvc_file.name}",
-                 "content": dvc_content})
+                {
+                    "name": dvc_file.name,
+                    "path": ckp_path + f"/{dvc_file.name}",
+                    "content": dvc_content,
+                }
+            )
     return mock_ckp_list
 
 
@@ -93,51 +97,69 @@ def mock_gitlab_project():
     # Simple mock issue, does not have HSM paths
     mk_iid1 = 1
     mock_issues_by_iid[mk_iid1] = mock_gitlab_issue(
-        mk_iid1, "opened", sim_txt, ["mock comment1", "mock comment2"])
+        mk_iid1, "opened", sim_txt, ["mock comment1", "mock comment2"]
+    )
     mock_user_list.append(MagicMock(name=f"username{mk_iid1}"))
 
     # Advanced mock issue, has HSM path
     mk_iid2 = 2
     mock_issues_by_iid[mk_iid2] = mock_gitlab_issue(
-        mk_iid2, "opened", adv_txt, ["Completed job 1", "Completed job 2",
-                                     "We have 2 pipelines", "STATE: queued",
-                                     "STATE: setup"])
+        mk_iid2,
+        "opened",
+        adv_txt,
+        [
+            "Completed job 1",
+            "Completed job 2",
+            "We have 2 pipelines",
+            "STATE: queued",
+            "STATE: setup",
+        ],
+    )
     mock_user_list.append(MagicMock(name=f"username{mk_iid2}"))
 
     # This mock issue helps to test pausing pipeline
     mk_iid3 = 3
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, "opened", adv_txt, ["STATE: invalid", "test", "Go"])
+        mk_iid3, "opened", adv_txt, ["STATE: invalid", "test", "Go"]
+    )
+
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # This mock issue helps to test resume pipeline
     mk_iid3 = 4
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, "opened", adv_txt, ["test", "Go"])
+        mk_iid3, "opened", adv_txt, ["test", "Go"]
+    )
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # This mock issue helps to pagination of closed pipelines
     mk_iid3 = 5
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, "opened", adv_txt, ["STATE: error", "Go"])
+        mk_iid3, "opened", adv_txt, ["STATE: error", "Go"]
+    )
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # This mock issue helps to test disable run/resume button when there is
     # an error in the pipeline
     mk_iid3 = 6
     mock_issues_by_iid[mk_iid3] = mock_gitlab_issue(
-        mk_iid3, "closed", adv_txt, ["STATE: error", "Go"])
+        mk_iid3, "closed", adv_txt, ["STATE: error", "Go"]
+    )
     mock_user_list.append(MagicMock(name=f"username{mk_iid3}"))
 
     # Define a side effect that allow us to fetch an issue based on iid
     def issue_side_effect(iid):
         return mock_issues_by_iid.get(iid)
 
-    def issue_list_side_effect_by_state(state=None, per_page=1, search=None,
-                                        get_all=True):
+    def issue_list_side_effect_by_state(
+        state=None, per_page=1, search=None, get_all=True
+    ):
         if not state:
-            return [ii for ii in mock_issues_by_iid.values() if
-                    ii.state == "closed"]
+            return [
+                ii
+                for ii in mock_issues_by_iid.values()
+                if ii.state == "closed"
+            ]
         return [ii for ii in mock_issues_by_iid.values() if ii.state == state]
 
     # Add mock templates simple & advanced as project files
@@ -196,12 +218,12 @@ def mock_gitlab_instances(mocker):
     mock_request_repo_instance = RequestRepoAPI(
         os.getenv("MY_REPO_URL"),
         os.getenv("REPO_TOKEN"),
-        os.getenv("PROJECT_NUM")
+        os.getenv("PROJECT_NUM"),
     )
     mock_dvc_repo_instance = DVCRepoAPI(
         os.getenv("DVC_REPO_URL"),
         os.getenv("DVC_REPO_TOKEN"),
-        os.getenv("DVC_PROJECT_NUM")
+        os.getenv("DVC_PROJECT_NUM"),
     )
 
     return mock_request_repo_instance, mock_dvc_repo_instance

@@ -1,5 +1,5 @@
-from concurrent.futures import as_completed, ThreadPoolExecutor
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import yaml
 
@@ -40,7 +40,8 @@ class RequestRepoAPI(BaseAPI):
         issues_meta = []
         with ThreadPoolExecutor() as executor:
             future_to_issue = {
-                executor.submit(self.process_issue, ii): ii for ii in issues}
+                executor.submit(self.process_issue, ii): ii for ii in issues
+            }
             for future in as_completed(future_to_issue):
                 try:
                     result = future.result()
@@ -71,7 +72,7 @@ class RequestRepoAPI(BaseAPI):
             "type": parsed_description["type"],
             "pipe_state": pipe_state,
             "s3_results_flag": parsed_description["s3_results_flag"],
-            "s3_raw_data_flag": parsed_description["s3_raw_data_flag"]
+            "s3_raw_data_flag": parsed_description["s3_raw_data_flag"],
         }
 
     def get_processed_issue_notes(self, issue_iid):
@@ -81,7 +82,7 @@ class RequestRepoAPI(BaseAPI):
         job_comments = [
             re.compile(r"^Completed job"),
             re.compile(r"^We have (\d+) pipeline"),
-            re.compile(r"about this particular job at:\s*(https?://\S+)")
+            re.compile(r"about this particular job at:\s*(https?://\S+)"),
         ]
 
         issue_object = self.get_issue_object(issue_iid)
@@ -94,7 +95,7 @@ class RequestRepoAPI(BaseAPI):
             "comments": [],
             "comment_authors": [],
             "dates": [],
-            "pipe_state": "run"
+            "pipe_state": "run",
         }
 
         for note in issue_notes:
@@ -104,21 +105,33 @@ class RequestRepoAPI(BaseAPI):
 
             data["dates"].append(time_stamp)
             data["comment_authors"].append(
-                "bot" if "*" in auth_name else auth_name)
+                "bot" if "*" in auth_name else auth_name
+            )
             # Check for pipeline state
             if "cancel" in note_body_lower:
                 data["pipe_state"] = "cancel"
             # "cancel" is prioritized over "error"
-            elif "state: error" in note_body_lower and \
-                    data["pipe_state"] != "cancel":
+            elif (
+                "state: error" in note_body_lower
+                and data["pipe_state"] != "cancel"
+            ):
                 data["pipe_state"] = "error"
             # "cancel" and "error" are prioritized over "invalid"
-            elif "state: invalid" in note_body_lower and \
-                    data["pipe_state"] not in ["cancel", "error"]:
+            elif "state: invalid" in note_body_lower and data[
+                "pipe_state"
+            ] not in [
+                "cancel",
+                "error",
+            ]:
                 data["pipe_state"] = "pause"
             # "cancel" "error", and "invalid" are prioritized over "done"
-            elif "state: done" in note_body_lower and \
-                    data["pipe_state"] not in ["cancel", "error", "pause"]:
+            elif "state: done" in note_body_lower and data[
+                "pipe_state"
+            ] not in [
+                "cancel",
+                "error",
+                "pause",
+            ]:
                 data["pipe_state"] = "finish"
 
             # Filter python error messages from comments
@@ -128,7 +141,7 @@ class RequestRepoAPI(BaseAPI):
                     f"Got some error! See the comment: "
                     f"{issue_object.web_url}#note_{note.id}",
                     note.body,
-                    flags=re.DOTALL
+                    flags=re.DOTALL,
                 )
                 data["comments"].append(note_without_code)
             elif "changed the description" in note_body_lower:
@@ -150,8 +163,9 @@ class RequestRepoAPI(BaseAPI):
             # Check for results path
             results_match = job_comments[2].search(note.body)
             if results_match:
-                data["results_path"] = \
+                data["results_path"] = (
                     f"P:/{results_match.group(1).split('main/')[1]}"
+                )
 
         return data
 
@@ -159,22 +173,24 @@ class RequestRepoAPI(BaseAPI):
         """Return either simple or advanced request"""
         templates = {
             "simple": ".gitlab/issue_templates/pipeline_request_simple.md",
-            "advanced": ".gitlab/issue_templates/pipeline_request_advanced.md"
+            "advanced": ".gitlab/issue_templates/pipeline_request_advanced.md",
         }
         # Note: 1 is added to the latest issue iid and added to the issue
         # description. As a result, users will be able to search for the
         # specific issue on the dashboard via the search bar.
         issue_titles = {
             "simple": "# Pipeline Request",
-            "advanced": "# Pipeline Request ADVANCED"
+            "advanced": "# Pipeline Request ADVANCED",
         }
         latest_issue_iid = self.get_latest_issue_iid()
         issue_template = self.read_repo_file(templates[temp_type])
         title_idx = issue_template.find(issue_titles[temp_type])
 
         # Split the string at the position of the specific word
-        first_part = issue_template[:title_idx + len(issue_titles[temp_type])]
-        second_part = issue_template[title_idx + len(issue_titles[temp_type]):]
+        first_part = issue_template[: title_idx + len(issue_titles[temp_type])]
+        second_part = issue_template[
+            title_idx + len(issue_titles[temp_type]):
+        ]
         # Add new iid to the issue description
         return first_part + f"\n#{latest_issue_iid + 1}" + second_part
 
@@ -188,7 +204,7 @@ class RequestRepoAPI(BaseAPI):
             "username": None,
             "s3_results_flag": False,
             "s3_raw_data_flag": False,
-            "has_hsm_data": False
+            "has_hsm_data": False,
         }
 
         if "[x] keep_results" in lower_text:

@@ -1,4 +1,5 @@
 import click
+
 from .app_main import app
 
 

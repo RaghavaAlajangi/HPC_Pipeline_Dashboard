@@ -16,6 +16,5 @@ def extract_data(zip_file):
 
 
 def retrieve_test_drive(zip_file):
-    """Extract contents of zip file and return drive dir
-    """
+    """Extract contents of zip file and return drive dir"""
     return extract_data(zip_file)

@@ -1,13 +1,14 @@
-from pathlib import Path
 import pickle
+from pathlib import Path
 
-from dash import callback, dcc, html, Input, Output, State
-from dash import callback_context as cc
-from dash.exceptions import PreventUpdate
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
-from dash_iconify import DashIconify
 import dash_mantine_components as dmc
+from dash import Input, Output, State, callback
+from dash import callback_context as cc
+from dash import dcc, html
+from dash.exceptions import PreventUpdate
+from dash_iconify import DashIconify
 
 from .common import hover_card, line_breaks
 
@@ -29,71 +30,81 @@ def create_hsm_grid():
         [
             dcc.Store(id="cache_dcor_files", data=[]),
             dcc.Store(id="cache_hsm_files", data=[]),
-
             dmc.Group(
                 children=[
                     dmc.Text("Select DCOR-Colab file:", size="md"),
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=22),
+                            color="yellow",
+                            width=22,
+                        ),
                         notes="Copy and paste dataset ID / Circle name / "
-                              "Collection name from DCOR-Colab and click "
-                              "'add button' to add it to the pipeline "
-                    )
+                        "Collection name from DCOR-Colab and click "
+                        "'add button' to add it to the pipeline ",
+                    ),
                 ],
-                spacing=5
+                spacing=5,
             ),
-            dmc.Text("NOTE: HPC Pipeline does not work with DCOR data.",
-                     size="sm", color="red"),
-
+            dmc.Text(
+                "NOTE: HPC Pipeline does not work with DCOR data.",
+                size="sm",
+                color="red",
+            ),
             line_breaks(times=1),
-
-            dbc.InputGroup([
-                dbc.Select(
-                    placeholder="Source",
-                    id="input_group_drop",
-                    options=[
-                        {"label": "DCOR-Colab", "value": "DCOR"},
-                    ],
-                    value="DCOR",
-                    style={"width": "20%"},
-                    disabled=False
-                ),
-                dbc.Input(
-                    type="text", id="input_group_text",
-                    placeholder="Enter DVC path or DCOR-colab Id, "
-                                "Circle, or Dataset etc...",
-                    style={"width": "70%"},
-                    class_name="custom-placeholder",
-                    disabled=False,
-                ),
-                dbc.Button(
-                    "Add", id="input_group_button", color="info",
-                    style={"width": "10%"},
-                    disabled=False
-                ),
-            ],
-                style={"width": "80%"}
+            dbc.InputGroup(
+                [
+                    dbc.Select(
+                        placeholder="Source",
+                        id="input_group_drop",
+                        options=[
+                            {"label": "DCOR-Colab", "value": "DCOR"},
+                        ],
+                        value="DCOR",
+                        style={"width": "20%"},
+                        disabled=False,
+                    ),
+                    dbc.Input(
+                        type="text",
+                        id="input_group_text",
+                        placeholder="Enter DVC path or DCOR-colab Id, "
+                        "Circle, or Dataset etc...",
+                        style={"width": "70%"},
+                        class_name="custom-placeholder",
+                        disabled=False,
+                    ),
+                    dbc.Button(
+                        "Add",
+                        id="input_group_button",
+                        color="info",
+                        style={"width": "10%"},
+                        disabled=False,
+                    ),
+                ],
+                style={"width": "80%"},
             ),
-
             line_breaks(times=2),
             dmc.Group(
                 children=[
                     dmc.Text("Select HSMFS file/s:", size="md"),
-                    dmc.Badge(id="hsm_time_badge", variant="outline",
-                              size="md", color="red"),
+                    dmc.Badge(
+                        id="hsm_time_badge",
+                        variant="outline",
+                        size="md",
+                        color="red",
+                    ),
                     hover_card(
                         target=DashIconify(
                             icon="mage:message-question-mark-round-fill",
-                            color="yellow", width=22
+                            color="yellow",
+                            width=22,
                         ),
                         notes="NOTE: The HSMFS drive gets updated every one "
-                              "hour. If you do not find your dataset in the "
-                              "below grid, please comeback after one hour."
-                    )
+                        "hour. If you do not find your dataset in the "
+                        "below grid, please comeback after one hour.",
+                    ),
                 ],
-                spacing=5
+                spacing=5,
             ),
             line_breaks(times=1),
             dmc.TextInput(
@@ -101,7 +112,7 @@ def create_hsm_grid():
                 style={"width": 500, "color": "white"},
                 placeholder="Search dataset name with a keyword",
                 icon=DashIconify(icon="tabler:search", width=22),
-                size="md"
+                size="md",
             ),
             dag.AgGrid(
                 id="hsm_grid",
@@ -114,7 +125,7 @@ def create_hsm_grid():
                     "flex": 1,
                     "sortable": True,
                     "resizable": True,
-                    "filter": True
+                    "filter": True,
                 },
                 dashGridOptions={
                     "autoGroupColumnDef": {
@@ -151,7 +162,7 @@ def create_hsm_grid():
                 enableEnterpriseModules=True,
                 style={"height": 600},
                 # getRowId="params.data.filepath",
-            )
+            ),
         ]
     )
 
@@ -161,18 +172,27 @@ def create_show_grid(comp_id):
     show_button = dbc.Button(
         [
             "Selected files:",
-            dbc.Badge(id="num_files", color="danger", text_color="dark",
-                      className="ms-1"),
+            dbc.Badge(
+                id="num_files",
+                color="danger",
+                text_color="dark",
+                className="ms-1",
+            ),
         ],
         color="info",
-        style={"margin-right": "10px"}
+        style={"margin-right": "10px"},
     )
 
     show_grid = dag.AgGrid(
         id=comp_id,
         className="ag-theme-alpine-dark",
-        columnDefs=[{"field": "filepath", "checkboxSelection": True,
-                     "headerCheckboxSelection": True}],
+        columnDefs=[
+            {
+                "field": "filepath",
+                "checkboxSelection": True,
+                "headerCheckboxSelection": True,
+            }
+        ],
         style={"width": "70%", "height": 400},
         dashGridOptions={
             "autoGroupColumnDef": {
@@ -201,9 +221,7 @@ def create_show_grid(comp_id):
     )
 
     return dmc.Stack(
-        children=[show_button, show_grid],
-        align="center",
-        spacing=1
+        children=[show_button, show_grid], align="center", spacing=1
     )
 
 
@@ -227,7 +245,7 @@ def load_hms_grid_data(pipeline_active_accord):
     Output("show_grid", "selectedRows"),
     Input("cache_dcor_files", "data"),
     Input("cache_hsm_files", "data"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def update_show_grid_data(dcor_files, hsm_files):
     """Collect the user-selected data files and send them to `show_grid`"""
@@ -239,7 +257,7 @@ def update_show_grid_data(dcor_files, hsm_files):
 @callback(
     Output("num_files", "children"),
     Input("show_grid", "selectedRows"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def display_selected_files_number(show_grid_rows):
     """Display the number of selected files"""
@@ -249,7 +267,7 @@ def display_selected_files_number(show_grid_rows):
 @callback(
     Output("input_group_button", "disabled"),
     Input("input_group_drop", "value"),
-    Input("input_group_text", "value")
+    Input("input_group_text", "value"),
 )
 def toggle_input_group_button(drop_value, filename):
     """Activates Add button in DCOR input bar only when the dropdown value
@@ -267,7 +285,7 @@ def toggle_input_group_button(drop_value, filename):
     Input("input_group_drop", "value"),
     Input("input_group_text", "value"),
     State("cache_dcor_files", "data"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
     """Collects the user selected dcor files and cache them"""
@@ -286,7 +304,7 @@ def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
     Output("cache_hsm_files", "data"),
     Input("hsm_grid", "selectedRows"),
     State("cache_hsm_files", "data"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def cache_user_given_hsm_files(hsm_selection, cached_files):
     """Collects the user selected hsm files and cache them"""
@@ -304,7 +322,7 @@ def cache_user_given_hsm_files(hsm_selection, cached_files):
     Output("hsm_grid", "dashGridOptions"),
     Input("grid_filter", "value"),
     State("hsm_grid", "dashGridOptions"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def update_filter(filter_value, grid_options):
     """Filter grid rows based on filter value"""
