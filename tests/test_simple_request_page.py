@@ -1,17 +1,15 @@
 from contextvars import copy_context
 
+import dash_bootstrap_components as dbc
 from dash import no_update
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
-import dash_bootstrap_components as dbc
 
 from dashboard.pages.page_simple import (
     collect_simple_pipeline_params,
     show_and_cache_segment_options,
     simple_data_to_process_section,
     simple_page_layout,
-    simple_post_analysis_section,
-    simple_prediction_section,
     simple_request_submission_popup,
     simple_segmentation_section,
     toggle_legacy_options,
@@ -28,16 +26,6 @@ def test_simple_title_section():
 def test_simple_segmentation_section():
     """Test simple_segmentation_section type"""
     assert isinstance(simple_segmentation_section(), dbc.AccordionItem)
-
-
-def test_simple_prediction_section():
-    """Test simple_prediction_section type"""
-    assert isinstance(simple_prediction_section(), dbc.AccordionItem)
-
-
-def test_simple_post_analysis_section():
-    """Test simple_prediction_section type"""
-    assert isinstance(simple_post_analysis_section(), dbc.AccordionItem)
 
 
 def test_simple_data_to_process_section():
@@ -129,7 +117,6 @@ def test_collect_simple_pipeline_params_callback_activation():
                 "mlunet": {"model_file": "model_checkpoint"},
             },
             simple_classifier=["bloody-bunny_g1_bacae"],
-            simple_postana=["benchmarking"],
             selected_files=[
                 {"filepath": "test1.rtdc"},
                 {"filepath": "test2.rtdc"},
@@ -162,7 +149,6 @@ def test_collect_simple_pipeline_params_callback_deactivation():
                 "mlunet": {"model_file": "model_checkpoint"},
             },
             simple_classifier=["bloody-bunny_g1_bacae"],
-            simple_postana=["benchmarking"],
             selected_files=[
                 {"filepath": "test1.rtdc"},
                 {"filepath": "test2.rtdc"},

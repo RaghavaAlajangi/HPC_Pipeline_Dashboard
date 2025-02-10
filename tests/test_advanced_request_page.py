@@ -1,17 +1,15 @@
 from contextvars import copy_context
 
+import dash_bootstrap_components as dbc
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
-import dash_bootstrap_components as dbc
 
 from dashboard.pages.page_advanced import (
     advanced_data_to_process_section,
     advanced_page_layout,
-    advanced_post_analysis_section,
-    advanced_prediction_section,
     advanced_request_submission_popup,
-    advanced_title_section,
     advanced_segmentation_section,
+    advanced_title_section,
     background_correction_section,
     collect_advanced_pipeline_params,
     further_options_section,
@@ -23,8 +21,8 @@ from dashboard.pages.page_advanced import (
     toggle_rollmed_options,
     toggle_sparsemed_options,
     toggle_std_options,
-    toggle_watershed_options,
     toggle_unet_options,
+    toggle_watershed_options,
 )
 
 
@@ -51,16 +49,6 @@ def test_gating_options_section():
 def test_further_options_section():
     """Test further_options_section type"""
     assert isinstance(further_options_section(), dbc.AccordionItem)
-
-
-def test_advanced_prediction_section():
-    """Test advanced_prediction_section type"""
-    assert isinstance(advanced_prediction_section(), dbc.AccordionItem)
-
-
-def test_advanced_post_analysis_section():
-    """Test advanced_post_analysis_section type"""
-    assert isinstance(advanced_post_analysis_section(), dbc.AccordionItem)
 
 
 def test_advanced_data_to_process_section():
@@ -389,7 +377,6 @@ def test_collect_advanced_pipeline_params_callback_activation():
             advanced_title="test_title",
             reproduce_flag=[],
             classifier_name=["bloody-bunny_g1_bacae: Bloody Bunny"],
-            post_analysis_flag=[],
             cache_unet_model_path={
                 "mlunet: UNET": {"model_file": "test_checkpoint"}
             },
@@ -432,7 +419,6 @@ def test_collect_advanced_pipeline_params_callback_deactivation():
             advanced_title="",
             reproduce_flag=[],
             classifier_name=["bloody-bunny_g1_bacae: Bloody Bunny"],
-            post_analysis_flag=[],
             cache_unet_model_path={
                 "mlunet: UNET": {"model_file": "test_checkpoint"}
             },

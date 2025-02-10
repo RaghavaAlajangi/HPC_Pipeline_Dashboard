@@ -8,6 +8,7 @@ from dash_iconify import DashIconify
 from ..gitlab import get_gitlab_instances
 from .common import (
     button_comp,
+    cell_classifier_section,
     checklist_comp,
     divider_line_comp,
     form_group_dropdown,
@@ -478,36 +479,6 @@ def further_options_section():
     )
 
 
-def advanced_prediction_section():
-    return dbc.AccordionItem(
-        title="Classification Model",
-        children=[
-            checklist_comp(
-                comp_id="classifier_name",
-                options={
-                    "bloody-bunny_g1_bacae: " "Bloody Bunny": False,
-                },
-                defaults=["bloody-bunny_g1_bacae: " "Bloody Bunny"],
-            )
-        ],
-    )
-
-
-def advanced_post_analysis_section():
-    return dbc.AccordionItem(
-        title="Post Analysis (Not Implemented)",
-        children=[
-            checklist_comp(
-                comp_id="advanced_post_analysis_flag",
-                options={
-                    "Benchmarking": True,
-                    "Scatter Plot": True,
-                },
-            )
-        ],
-    )
-
-
 def advanced_data_to_process_section():
     return dbc.AccordionItem(
         title="Data to Process",
@@ -580,8 +551,7 @@ def advanced_page_layout(refresh_path):
                     background_correction_section(),
                     gating_options_section(),
                     further_options_section(),
-                    advanced_prediction_section(),
-                    advanced_post_analysis_section(),
+                    cell_classifier_section(classifier_id="classifier_name"),
                     advanced_data_to_process_section(),
                 ],
                 middle=True,
@@ -781,7 +751,6 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     # Direct options
     Input("reproduce_flag", "value"),
     Input("classifier_name", "value"),
-    Input("advanced_post_analysis_flag", "value"),
     # Cached options
     Input("cache_advanced_unet_model_path", "data"),
     Input("cache_legacy_params", "data"),
@@ -799,7 +768,6 @@ def collect_advanced_pipeline_params(
     advanced_title,
     reproduce_flag,
     classifier_name,
-    post_analysis_flag,
     cache_unet_model_path,
     cache_legacy_params,
     cache_thresh_seg_params,
@@ -815,7 +783,7 @@ def collect_advanced_pipeline_params(
     the advanced issue template. The updated template will be cached.
     """
     # Combine params from direct options
-    direct_params = [reproduce_flag, classifier_name, post_analysis_flag]
+    direct_params = [reproduce_flag, classifier_name]
     params_list = [
         item for sublist in direct_params if sublist for item in sublist
     ]

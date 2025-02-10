@@ -463,3 +463,38 @@ def unet_segmentation_options(unet_options):
     )
 
     return cards
+
+
+def post_analysis_section(option_id):
+    return dbc.AccordionItem(
+        title="Post Analysis (Not Implemented)",
+        children=[
+            checklist_comp(
+                comp_id=option_id,
+                options={
+                    "Benchmarking": True,
+                    "Scatter Plot": True,
+                },
+            )
+        ],
+    )
+
+
+def cell_classifier_section(classifier_id):
+    """Creates the cell classifier section of the pipeline."""
+    return dbc.AccordionItem(
+        title="Classification Model",
+        children=[
+            html.P(
+                "- First generation cell classification algorithm. Not "
+                "stable performance!"
+            ),
+            checklist_comp(
+                comp_id=classifier_id,
+                options={
+                    "bloody-bunny_g1_bacae: " "Bloody Bunny": False,
+                },
+                defaults=["bloody-bunny_g1_bacae: " "Bloody Bunny"],
+            ),
+        ],
+    )

@@ -8,14 +8,13 @@ from dash_iconify import DashIconify
 from ..gitlab import get_gitlab_instances
 from .common import (
     button_comp,
-    checklist_comp,
+    cell_classifier_section,
     divider_line_comp,
     form_group_input,
     group_accordion,
     header_comp,
     hover_card,
     line_breaks,
-    paragraph_comp,
     popup_comp,
     unet_segmentation_options,
     unet_segmentation_section,
@@ -136,34 +135,6 @@ def simple_segmentation_section():
     )
 
 
-def simple_prediction_section():
-    """Creates the prediction section of the simple pipeline."""
-    return dbc.AccordionItem(
-        title="Prediction",
-        children=[
-            paragraph_comp("Classification Model"),
-            checklist_comp(
-                comp_id="simple_classifier_name",
-                options={"bloody-bunny": False},
-                defaults=["bloody-bunny"],
-            ),
-        ],
-    )
-
-
-def simple_post_analysis_section():
-    """Creates the post analysis section of the simple pipeline."""
-    return dbc.AccordionItem(
-        title="Post Analysis (Not Implemented)",
-        children=[
-            checklist_comp(
-                comp_id="simple_post_analysis_switch",
-                options={"Benchmarking": True, "Scatter Plots": True},
-            )
-        ],
-    )
-
-
 def simple_data_to_process_section():
     """Creates the data to process section of the simple pipeline."""
     return dbc.AccordionItem(
@@ -212,8 +183,9 @@ def simple_page_layout(refresh_path):
                 children=[
                     simple_title_section(),
                     simple_segmentation_section(),
-                    simple_prediction_section(),
-                    simple_post_analysis_section(),
+                    cell_classifier_section(
+                        classifier_id="simple_classifier_name"
+                    ),
                     simple_data_to_process_section(),
                 ],
                 middle=True,
@@ -304,7 +276,6 @@ def toggle_legacy_options(legacy_click):
     Input("simple_title_text", "value"),
     Input("cache_simple_seg_options", "data"),
     Input("simple_classifier_name", "value"),
-    Input("simple_post_analysis_switch", "value"),
     Input("show_grid", "selectedRows"),
 )
 def collect_simple_pipeline_params(
@@ -312,14 +283,11 @@ def collect_simple_pipeline_params(
     simple_title,
     cached_seg_options,
     simple_classifier,
-    simple_postana,
     selected_files,
 ):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    params = (
-        list(cached_seg_options.keys()) + simple_classifier + simple_postana
-    )
+    params = list(cached_seg_options.keys()) + simple_classifier
 
     # Update the template, only when author name, title, and data files
     # to process are entered

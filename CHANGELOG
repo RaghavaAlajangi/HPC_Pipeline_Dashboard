@@ -1,4 +1,5 @@
 0.2.6
+ - ref: remove post analysis and modify classification option
  - fix: missing thereshold segmentor arguments in advanced request
  - enh: change unet segmentation options to be more user-friendly 
  - enh: add dcevent docs & hpc repo url links to sidebar
