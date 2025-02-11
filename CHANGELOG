@@ -1,4 +1,5 @@
 0.2.7
+ - ref: enhance sidebar layout with hover cards and improved links
  - ref: eliminate code duplication, rename module, and cleanup code
 0.2.6
  - ref: remove post analysis and modify classification option
