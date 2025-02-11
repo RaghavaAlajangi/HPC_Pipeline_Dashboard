@@ -9,7 +9,7 @@ from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from ..gitlab import get_gitlab_instances
-from .common import (
+from .common_components import (
     chat_box,
     create_badge,
     create_list_group,

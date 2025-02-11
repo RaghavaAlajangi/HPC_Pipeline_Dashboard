@@ -8,7 +8,6 @@ from dash._utils import AttributeDict
 from dashboard.pages.page_simple import (
     collect_simple_pipeline_params,
     show_and_cache_segment_options,
-    simple_data_to_process_section,
     simple_page_layout,
     simple_request_submission_popup,
     simple_segmentation_section,
@@ -26,11 +25,6 @@ def test_simple_title_section():
 def test_simple_segmentation_section():
     """Test simple_segmentation_section type"""
     assert isinstance(simple_segmentation_section(), dbc.AccordionItem)
-
-
-def test_simple_data_to_process_section():
-    """Test simple_data_to_process_section type"""
-    assert isinstance(simple_data_to_process_section(), dbc.AccordionItem)
 
 
 def test_show_and_cache_segment_options_callback():

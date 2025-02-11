@@ -6,9 +6,7 @@ from dash import dcc, html, no_update
 from dash_iconify import DashIconify
 
 from ..gitlab import get_gitlab_instances
-from .common import (
-    button_comp,
-    cell_classifier_section,
+from .common_components import (
     divider_line_comp,
     form_group_input,
     group_accordion,
@@ -16,59 +14,22 @@ from .common import (
     hover_card,
     line_breaks,
     popup_comp,
+)
+from .common_sections import (
+    cell_classifier_section,
+    input_data_display_section,
+    input_data_selection_section,
+    title_section,
     unet_segmentation_options,
     unet_segmentation_section,
 )
-from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_simple_template
-
-
-def get_user_list():
-    """Fetch the members list from request repo"""
-    request_gitlab, _ = get_gitlab_instances()
-    return request_gitlab.get_project_members()
 
 
 def get_simple_template():
     """Fetch the simple request template from request repo"""
     request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_request_template(temp_type="simple")
-
-
-def simple_title_section():
-    """Creates a simple title section for the pipeline."""
-    return dbc.AccordionItem(
-        title="Title (required)",
-        children=[
-            html.Div(
-                dbc.InputGroup(
-                    children=[
-                        dbc.Select(
-                            placeholder="Select Username",
-                            id="simple_title_drop",
-                            options=[
-                                {
-                                    "label": member.name,
-                                    "value": member.username,
-                                }
-                                for member in get_user_list()
-                            ],
-                            style={"width": "18%"},
-                        ),
-                        dbc.Input(
-                            type="text",
-                            id="simple_title_text",
-                            placeholder="Enter title of the pipeline...",
-                            style={"width": "72%"},
-                            class_name="custom-placeholder",
-                        ),
-                    ],
-                    style={"width": "90%"},
-                ),
-                className="row justify-content-center",
-            )
-        ],
-    )
 
 
 def simple_segmentation_section():
@@ -135,18 +96,6 @@ def simple_segmentation_section():
     )
 
 
-def simple_data_to_process_section():
-    """Creates the data to process section of the simple pipeline."""
-    return dbc.AccordionItem(
-        title="Data to Process",
-        item_id="hsm_accord",
-        children=[
-            create_hsm_grid(),
-            line_breaks(times=2),
-        ],
-    )
-
-
 def simple_page_layout(refresh_path):
     """Creates simple request page"""
     return dbc.Toast(
@@ -181,37 +130,24 @@ def simple_page_layout(refresh_path):
             line_breaks(times=2),
             group_accordion(
                 children=[
-                    simple_title_section(),
+                    title_section(
+                        dropdown_id="simple_title_drop",
+                        text_id="simple_title_text",
+                    ),
                     simple_segmentation_section(),
                     cell_classifier_section(
                         classifier_id="simple_classifier_name"
                     ),
-                    simple_data_to_process_section(),
+                    input_data_selection_section(),
                 ],
                 middle=True,
                 open_first=True,
                 comp_id="pipeline_accord",
             ),
-            line_breaks(times=3),
-            create_show_grid(comp_id="show_grid"),
-            line_breaks(times=3),
-            button_comp(
-                label="Create pipeline",
-                disabled=True,
-                comp_id="create_simple_pipeline_button",
+            input_data_display_section(
+                show_grid_id="show_grid",
+                button_id="create_simple_pipeline_button",
             ),
-            line_breaks(times=2),
-            dbc.Alert(
-                "Note: Username, pipeline title, and data paths are "
-                "mandatory fields to activate 'Create Pipeline' button.",
-                color="warning",
-                style={
-                    "color": "black",
-                    "width": "fit-content",
-                    "margin": "auto",
-                },
-            ),
-            line_breaks(times=5),
             dcc.Store(id="cache_simple_template", storage_type="local"),
             dcc.Store(id="cache_simple_seg_options", storage_type="local"),
         ],

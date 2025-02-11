@@ -5,7 +5,7 @@ import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
 
-from .common import line_breaks
+from .common_components import line_breaks
 
 # BDA GitHub URL
 bda_gitlab_url = "https://gitlab.gwdg.de/blood_data_analysis"

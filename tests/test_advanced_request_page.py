@@ -5,11 +5,9 @@ from dash._callback_context import context_value
 from dash._utils import AttributeDict
 
 from dashboard.pages.page_advanced import (
-    advanced_data_to_process_section,
     advanced_page_layout,
     advanced_request_submission_popup,
     advanced_segmentation_section,
-    advanced_title_section,
     background_correction_section,
     collect_advanced_pipeline_params,
     further_options_section,
@@ -24,11 +22,6 @@ from dashboard.pages.page_advanced import (
     toggle_unet_options,
     toggle_watershed_options,
 )
-
-
-def test_advanced_title_section():
-    """Test advanced_title_section type"""
-    assert isinstance(advanced_title_section(), dbc.AccordionItem)
 
 
 def test_advanced_segmentation_section():
@@ -49,11 +42,6 @@ def test_gating_options_section():
 def test_further_options_section():
     """Test further_options_section type"""
     assert isinstance(further_options_section(), dbc.AccordionItem)
-
-
-def test_advanced_data_to_process_section():
-    """Test advanced_data_to_process_section type"""
-    assert isinstance(advanced_data_to_process_section(), dbc.AccordionItem)
 
 
 def test_advanced_page_layout():
