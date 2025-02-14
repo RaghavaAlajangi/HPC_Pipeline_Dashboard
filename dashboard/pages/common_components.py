@@ -3,7 +3,6 @@ import re
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash import html
-from dash_iconify import DashIconify
 
 
 def button_comp(label, comp_id, type="primary", disabled=False):
@@ -91,27 +90,21 @@ def chat_box(messages, gap=18):
 
 
 def checklist_comp(comp_id, options, defaults=None):
-    """Creates a checklist component.
-    Parameters
+    """Creates a checklist component with the given options and defaults.
+    parameters
     ----------
     comp_id: str
-        Identify the component in the dom
+        The id of the checklist component
     options: dict
-        Checklist options with their values and whether they are disabled
-        or not. The keys are labels and values are booleans indicating whether
-        they should be disabled or not (True = Disabled).  This argument is
-        required.
-    defaults
-        default selections (optional)
+        A dictionary of options to be displayed in the checklist
+    defaults: list
+        A list of default options to be selected in the checklist
     Returns
     -------
-    A checklist component
+    A dbc.Checklist component
     """
     if defaults is None:
         defaults = []
-    options = [
-        {"label": k, "value": k, "disabled": v} for k, v in options.items()
-    ]
     defaults = [op for op in defaults]
     return dbc.Checklist(
         options=options,
@@ -210,7 +203,7 @@ def header_comp(text, indent=0, middle=False):
     return html.Div(html.H6(text, style=style))
 
 
-def hover_card(target, notes):
+def hover_card(target, notes, width=400):
     return dmc.HoverCard(
         children=[
             dmc.HoverCardTarget(target),
@@ -220,7 +213,7 @@ def hover_card(target, notes):
         ],
         position="right",
         shadow="xs",
-        width=400,
+        width=width,
         withArrow=True,
         transition="pop",
     )
@@ -332,169 +325,3 @@ def web_link_check(text):
     replaced_text_parts.append(text[start_idx:])
 
     return replaced_text_parts
-
-
-def unet_segmentation_section(unet_switch_id, unet_toggle_id, unet_options_id):
-    """Creates a section for U-Net segmentation options.
-
-    Parameters
-    ----------
-    unet_switch_id: str
-        The ID for the U-Net switch component.
-    unet_toggle_id: str
-        The ID for the U-Net toggle container.
-    unet_options_id: str
-        The ID for the U-Net options radio group.
-
-    Returns
-    -------
-    A Div containing the U-Net segmentation section.
-    """
-    return html.Div(
-        [
-            dmc.Group(
-                children=[
-                    # UNet checkbox (switch)
-                    dbc.Checklist(
-                        options=[
-                            {
-                                "label": "U-Net Segmentation",
-                                "value": "mlunet: UNET",
-                            },
-                        ],
-                        id=unet_switch_id,
-                        switch=True,
-                        value=[],
-                        labelCheckedClassName="text-success",
-                        inputCheckedClassName="border-success bg-success",
-                    ),
-                    # UNet question mark icon and hover info
-                    hover_card(
-                        target=DashIconify(
-                            icon="mage:message-question-mark-round-fill",
-                            color="yellow",
-                            width=20,
-                        ),
-                        notes="A deep learning based image segmentation "
-                        "method.\n Warning: U-Net is trained on "
-                        "specific cell types. When you select correct "
-                        "option from below, appropriate model file "
-                        "will be used for segmentation.",
-                    ),
-                ],
-                spacing=5,
-            ),
-            # UNet segmentation options
-            html.Ul(
-                id=unet_toggle_id,
-                children=[
-                    dmc.RadioGroup(
-                        id=unet_options_id,
-                        label="Select your Device and Sample",
-                        description="If you select wrong sample, segmentation "
-                        "might not be reliable. If you select "
-                        "wrong device pipeline will fail.",
-                        orientation="vertical",
-                        withAsterisk=True,
-                        offset="md",
-                        mb=10,
-                        spacing=10,
-                    )
-                ],
-            ),
-        ]
-    )
-
-
-def unet_segmentation_options(unet_options):
-    """Creates radio group options for U-Net segmentation.
-
-    Parameters
-    ----------
-    unet_options: dict
-        A dictionary containing the U-Net segmentation options.
-
-    Returns
-    -------
-    A list of Radio components for U-Net segmentation options.
-    """
-    radio_groups = {"naiad": [], "accelerator": []}
-
-    for model_ckp, meta in unet_options.items():
-        if meta["device"] in radio_groups:
-            radio_groups[meta["device"]].extend(
-                [
-                    dmc.Radio(
-                        label=meta["label"], value=model_ckp, color="green"
-                    ),
-                    line_breaks(1),
-                ]
-            )
-
-    accelerator_card = dbc.Card(
-        dbc.CardBody(
-            [
-                html.H5("Accelerator Devices:", className="card-title"),
-                html.P("- Only available for image size 250x80 pixels"),
-                *radio_groups["accelerator"],
-            ]
-        ),
-        color="success",
-        outline=True,
-    )
-
-    naiad_card = dbc.Card(
-        dbc.CardBody(
-            [
-                html.H5("Naiad Devices:", className="card-title"),
-                html.P("- For image size 320x80 pixels"),
-                *radio_groups["naiad"],
-            ]
-        ),
-        color="success",
-        outline=True,
-    )
-
-    cards = dbc.Row(
-        [
-            dbc.Col(accelerator_card, width=5),
-            dbc.Col(naiad_card, width=5),
-        ]
-    )
-
-    return cards
-
-
-def post_analysis_section(option_id):
-    return dbc.AccordionItem(
-        title="Post Analysis (Not Implemented)",
-        children=[
-            checklist_comp(
-                comp_id=option_id,
-                options={
-                    "Benchmarking": True,
-                    "Scatter Plot": True,
-                },
-            )
-        ],
-    )
-
-
-def cell_classifier_section(classifier_id):
-    """Creates the cell classifier section of the pipeline."""
-    return dbc.AccordionItem(
-        title="Classification Model",
-        children=[
-            html.P(
-                "- First generation cell classification algorithm. Not "
-                "stable performance!"
-            ),
-            checklist_comp(
-                comp_id=classifier_id,
-                options={
-                    "bloody-bunny_g1_bacae: " "Bloody Bunny": False,
-                },
-                defaults=["bloody-bunny_g1_bacae: " "Bloody Bunny"],
-            ),
-        ],
-    )

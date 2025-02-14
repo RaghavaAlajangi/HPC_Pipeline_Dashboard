@@ -5,14 +5,15 @@ import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
 
-from .common import line_breaks
+from .common_components import hover_card, line_breaks
 
 # BDA GitHub URL
 bda_gitlab_url = "https://gitlab.gwdg.de/blood_data_analysis"
 # Important URLs
 imp_urls = {
     "hpc_pipeline_data": f"{bda_gitlab_url}/hpc_pipeline_data",
-    "hpc_pipeline_requests": f"{bda_gitlab_url}/hpc_pipeline_requests",
+    "hpc_default_params": f"{bda_gitlab_url}/hpc_pipeline_requests/-/blob"
+    "/main/dashboard_dcevent_defaults.yaml",
     "hpc_pipeline_dashboard": f"{bda_gitlab_url}/hpc_pipeline_dashboard",
     "dcevent": "https://blood_data_analysis.pages.gwdg.de/dcevent/",
 }
@@ -34,6 +35,90 @@ def wrong_page(pathname):
 
 
 def sidebar_layout():
+    """Creates the sidebar layout for the dashboard."""
+    sidebar_menu = dbc.Nav(
+        children=[
+            dbc.NavLink(
+                children="Home",
+                href=BASENAME_PREFIX,
+                id="home_page_link",
+            ),
+            dbc.NavLink(
+                children="Simple Request",
+                href=f"{BASENAME_PREFIX}simple_request",
+                id="simple_page_link",
+            ),
+            dbc.NavLink(
+                children="Advanced Request",
+                href=f"{BASENAME_PREFIX}advanced_request",
+                id="advanced_page_link",
+            ),
+        ],
+        pills=True,
+        style={"color": "red"},
+        vertical=True,
+    )
+
+    dcevent_docs_link = dmc.Anchor(
+        align="end",
+        color="green",
+        children=[
+            DashIconify(
+                icon="material-symbols-light:docs-outline",
+                width=30,
+                height=30,
+                flip="horizontal",
+            ),
+            "dcevent docs",
+        ],
+        href=imp_urls["dcevent"],
+    )
+
+    hpc_data_repo_link = dmc.Anchor(
+        align="end",
+        color="green",
+        children=[
+            DashIconify(
+                icon="famicons:logo-gitlab",
+                width=25,
+                height=25,
+                flip="horizontal",
+            ),
+            " pipeline data",
+        ],
+        href=imp_urls["hpc_pipeline_data"],
+    )
+
+    hpc_params_link = dmc.Anchor(
+        align="end",
+        color="green",
+        children=[
+            DashIconify(
+                icon="famicons:logo-gitlab",
+                width=25,
+                height=25,
+                flip="horizontal",
+            ),
+            " default params",
+        ],
+        href=imp_urls["hpc_default_params"],
+    )
+
+    hpc_dashboard_repo_link = dmc.Anchor(
+        align="end",
+        color="green",
+        children=[
+            DashIconify(
+                icon="famicons:logo-gitlab",
+                width=25,
+                height=25,
+                flip="horizontal",
+            ),
+            " source code",
+        ],
+        href=imp_urls["hpc_pipeline_dashboard"],
+    )
+
     return html.Div(
         children=[
             # Title for the dashboard
@@ -62,92 +147,54 @@ def sidebar_layout():
                 style={"color": "black", "width": "fit-content"},
             ),
             line_breaks(times=1),
-            # Links for other pages
-            dbc.Nav(
-                children=[
-                    dbc.NavLink(
-                        children="Home",
-                        href=BASENAME_PREFIX,
-                        id="home_page_link",
+            dbc.ListGroup(
+                [
+                    # Links for other pages
+                    dbc.ListGroupItem(
+                        [
+                            sidebar_menu,
+                        ],
+                        color="#017b70",
                     ),
-                    dbc.NavLink(
-                        children="Simple Request",
-                        href=f"{BASENAME_PREFIX}simple_request",
-                        id="simple_page_link",
+                    dbc.ListGroupItem(
+                        [
+                            # Show HPC data link
+                            hover_card(
+                                target=dcevent_docs_link,
+                                notes="Documentation for the dcevent package."
+                                "",
+                                width=200,
+                            ),
+                            line_breaks(times=1),
+                            # Show HPC data link
+                            hover_card(
+                                target=hpc_data_repo_link,
+                                notes="Pipeline data repository. Here you "
+                                "can find the input data, pipeline results, "
+                                "and ML models used in the pipeline.",
+                                width=200,
+                            ),
+                            line_breaks(times=1),
+                            # Show HPC requests link
+                            hover_card(
+                                target=hpc_params_link,
+                                notes="You can update the dashboard default "
+                                "parameters here. If you change the default "
+                                "parameters, the dashboard fetches them "
+                                "automatically.",
+                                width=200,
+                            ),
+                            line_breaks(times=1),
+                            # Show project link
+                            hover_card(
+                                target=hpc_dashboard_repo_link,
+                                notes="Source code for the dashboard.",
+                                width=200,
+                            ),
+                        ],
+                        color="#017b70",
                     ),
-                    dbc.NavLink(
-                        children="Advanced Request",
-                        href=f"{BASENAME_PREFIX}advanced_request",
-                        id="advanced_page_link",
-                    ),
-                ],
-                pills=True,
-                style={"color": "red"},
-                vertical=True,
-            ),
-            line_breaks(times=15),
-            # Show HPC data link
-            dmc.Anchor(
-                align="end",
-                color="green",
-                children=[
-                    DashIconify(
-                        icon="material-symbols-light:docs-outline",
-                        width=30,
-                        height=30,
-                        flip="horizontal",
-                    ),
-                    "dcevent docs",
-                ],
-                href=imp_urls["dcevent"],
-            ),
-            line_breaks(times=1),
-            # Show HPC data link
-            dmc.Anchor(
-                align="end",
-                color="green",
-                children=[
-                    DashIconify(
-                        icon="famicons:logo-gitlab",
-                        width=25,
-                        height=25,
-                        flip="horizontal",
-                    ),
-                    " hpc_pipeline_data",
-                ],
-                href=imp_urls["hpc_pipeline_data"],
-            ),
-            line_breaks(times=1),
-            # Show HPC requests link
-            dmc.Anchor(
-                align="end",
-                color="green",
-                children=[
-                    DashIconify(
-                        icon="famicons:logo-gitlab",
-                        width=25,
-                        height=25,
-                        flip="horizontal",
-                    ),
-                    " hpc_pipeline_requests",
-                ],
-                href=imp_urls["hpc_pipeline_requests"],
-            ),
-            line_breaks(times=1),
-            # Show project link
-            dmc.Anchor(
-                align="end",
-                color="green",
-                children=[
-                    DashIconify(
-                        icon="famicons:logo-gitlab",
-                        width=25,
-                        height=25,
-                        flip="horizontal",
-                    ),
-                    " source code",
-                ],
-                href=imp_urls["hpc_pipeline_dashboard"],
+                ]
             ),
         ],
         id="sidebar",

@@ -10,15 +10,15 @@ from dash import dcc, html
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
-from .common import hover_card, line_breaks
+from .common_components import hover_card, line_breaks
 
-HSM_DATA_DIR = Path(__file__).parents[2] / "resources"
+HSM_DATA_FILE = Path(__file__).parents[2] / "resources" / "hsm_drive.pkl"
 
 
 def load_hsm_data():
     """Load rtdc file paths from pickled HSMFS drive"""
-    if (HSM_DATA_DIR / "hsm_drive.pkl").exists():
-        with open(HSM_DATA_DIR / "hsm_drive.pkl", "rb") as file:
+    if HSM_DATA_FILE.exists():
+        with open(HSM_DATA_FILE, "rb") as file:
             return pickle.load(file)
     else:
         return None
@@ -28,8 +28,10 @@ def create_hsm_grid():
     """Creates the HSMFS file explorer grid"""
     return html.Div(
         [
+            # Cache component to store selected files (dcor and hsm)
             dcc.Store(id="cache_dcor_files", data=[]),
             dcc.Store(id="cache_hsm_files", data=[]),
+            # DCOR heading section
             dmc.Group(
                 children=[
                     dmc.Text("Select DCOR-Colab file:", size="md"),
@@ -52,11 +54,12 @@ def create_hsm_grid():
                 color="red",
             ),
             line_breaks(times=1),
+            # DCOR input bar
             dbc.InputGroup(
                 [
                     dbc.Select(
                         placeholder="Source",
-                        id="input_group_drop",
+                        id="dcor_drop_down",
                         options=[
                             {"label": "DCOR-Colab", "value": "DCOR"},
                         ],
@@ -66,7 +69,7 @@ def create_hsm_grid():
                     ),
                     dbc.Input(
                         type="text",
-                        id="input_group_text",
+                        id="dcor_text_input",
                         placeholder="Enter DVC path or DCOR-colab Id, "
                         "Circle, or Dataset etc...",
                         style={"width": "70%"},
@@ -75,7 +78,7 @@ def create_hsm_grid():
                     ),
                     dbc.Button(
                         "Add",
-                        id="input_group_button",
+                        id="dcor_button",
                         color="info",
                         style={"width": "10%"},
                         disabled=False,
@@ -84,6 +87,7 @@ def create_hsm_grid():
                 style={"width": "80%"},
             ),
             line_breaks(times=2),
+            # HSMS heading and time bagde section
             dmc.Group(
                 children=[
                     dmc.Text("Select HSMFS file/s:", size="md"),
@@ -107,13 +111,15 @@ def create_hsm_grid():
                 spacing=5,
             ),
             line_breaks(times=1),
+            # HSMFS grid filter input
             dmc.TextInput(
-                id="grid_filter",
+                id="grid_filter_text",
                 style={"width": 500, "color": "white"},
                 placeholder="Search dataset name with a keyword",
                 icon=DashIconify(icon="tabler:search", width=22),
                 size="md",
             ),
+            # HSMFS grid section
             dag.AgGrid(
                 id="hsm_grid",
                 className="ag-theme-alpine-dark",
@@ -167,8 +173,9 @@ def create_hsm_grid():
     )
 
 
-def create_show_grid(comp_id):
+def create_show_grid(show_grid_id):
     """Create show grid to display user selected files for final refining"""
+    # Selected files number indicatir
     show_button = dbc.Button(
         [
             "Selected files:",
@@ -182,9 +189,9 @@ def create_show_grid(comp_id):
         color="info",
         style={"margin-right": "10px"},
     )
-
+    # Show grid section
     show_grid = dag.AgGrid(
-        id=comp_id,
+        id=show_grid_id,
         className="ag-theme-alpine-dark",
         columnDefs=[
             {
@@ -265,11 +272,11 @@ def display_selected_files_number(show_grid_rows):
 
 
 @callback(
-    Output("input_group_button", "disabled"),
-    Input("input_group_drop", "value"),
-    Input("input_group_text", "value"),
+    Output("dcor_button", "disabled"),
+    Input("dcor_drop_down", "value"),
+    Input("dcor_text_input", "value"),
 )
-def toggle_input_group_button(drop_value, filename):
+def toggle_dcor_button(drop_value, filename):
     """Activates Add button in DCOR input bar only when the dropdown value
     and DCOR identifier is entered"""
     if drop_value and filename:
@@ -279,11 +286,11 @@ def toggle_input_group_button(drop_value, filename):
 
 @callback(
     Output("cache_dcor_files", "data"),
-    Output("input_group_drop", "value"),
-    Output("input_group_text", "value"),
-    Input("input_group_button", "n_clicks"),
-    Input("input_group_drop", "value"),
-    Input("input_group_text", "value"),
+    Output("dcor_drop_down", "value"),
+    Output("dcor_text_input", "value"),
+    Input("dcor_button", "n_clicks"),
+    Input("dcor_drop_down", "value"),
+    Input("dcor_text_input", "value"),
     State("cache_dcor_files", "data"),
     prevent_initial_call=True,
 )
@@ -291,7 +298,7 @@ def cache_user_given_dcor_files(_, drop_input, text_input, cached_files):
     """Collects the user selected dcor files and cache them"""
     button_triggered = cc.triggered[0]["prop_id"].split(".")[0]
 
-    if button_triggered == "input_group_button":
+    if button_triggered == "dcor_button":
         if text_input and drop_input:
             input_path = f"{drop_input}: {text_input}"
             if input_path not in cached_files:
@@ -320,7 +327,7 @@ def cache_user_given_hsm_files(hsm_selection, cached_files):
 
 @callback(
     Output("hsm_grid", "dashGridOptions"),
-    Input("grid_filter", "value"),
+    Input("grid_filter_text", "value"),
     State("hsm_grid", "dashGridOptions"),
     prevent_initial_call=True,
 )

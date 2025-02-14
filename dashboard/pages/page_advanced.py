@@ -6,9 +6,7 @@ from dash import dcc, html
 from dash_iconify import DashIconify
 
 from ..gitlab import get_gitlab_instances
-from .common import (
-    button_comp,
-    cell_classifier_section,
+from .common_components import (
     checklist_comp,
     divider_line_comp,
     form_group_dropdown,
@@ -18,10 +16,15 @@ from .common import (
     hover_card,
     line_breaks,
     popup_comp,
+)
+from .common_sections import (
+    cell_classifier_section,
+    input_data_display_section,
+    input_data_selection_section,
+    title_section,
     unet_segmentation_options,
     unet_segmentation_section,
 )
-from .hsm_grid import create_hsm_grid, create_show_grid
 from .utils import update_advanced_template
 
 DEFAULTS_FILE = (
@@ -30,51 +33,10 @@ DEFAULTS_FILE = (
 )
 
 
-def get_user_list():
-    """Fetch the members list from request repo"""
-    request_gitlab, _ = get_gitlab_instances()
-    return request_gitlab.get_project_members()
-
-
 def get_advanced_template():
     """Fetch the advanced request template from request repo"""
     request_gitlab, _ = get_gitlab_instances()
     return request_gitlab.get_request_template(temp_type="advanced")
-
-
-def advanced_title_section():
-    return dbc.AccordionItem(
-        title="Title (required)",
-        children=[
-            html.Div(
-                dbc.InputGroup(
-                    [
-                        dbc.Select(
-                            placeholder="Select Username",
-                            id="advanced_title_drop",
-                            options=[
-                                {
-                                    "label": member.name,
-                                    "value": member.username,
-                                }
-                                for member in get_user_list()
-                            ],
-                            style={"width": "18%"},
-                        ),
-                        dbc.Input(
-                            type="text",
-                            id="advanced_title_text",
-                            placeholder="Enter the name of " "the pipeline...",
-                            style={"width": "72%"},
-                            class_name="custom-placeholder",
-                        ),
-                    ],
-                    style={"width": "90%"},
-                ),
-                className="row justify-content-center",
-            )
-        ],
-    )
 
 
 def advanced_segmentation_section():
@@ -101,9 +63,15 @@ def advanced_segmentation_section():
                     # Legacy checkbox (switch)
                     checklist_comp(
                         comp_id="legacy_id",
-                        options={
-                            "legacy: Legacy thresholding" " with OpenCV": False
-                        },
+                        options=[
+                            {
+                                "label": "legacy: Legacy thresholding "
+                                "with OpenCV",
+                                "value": "legacy: Legacy thresholding "
+                                "with OpenCV",
+                                "disabled": False,
+                            }
+                        ],
                     ),
                     # Legacy question mark icon and hover info
                     hover_card(
@@ -187,7 +155,13 @@ def advanced_segmentation_section():
                     # Thresh segmentor checkbox (switch)
                     checklist_comp(
                         comp_id="thresh_seg_id",
-                        options={"thresh: thresholding segmentation": False},
+                        options=[
+                            {
+                                "label": "thresh: thresholding segmentation",
+                                "value": "thresh: thresholding segmentation",
+                                "disabled": False,
+                            }
+                        ],
                     ),
                     # Thresh question mark icon and hover info
                     hover_card(
@@ -242,9 +216,13 @@ def advanced_segmentation_section():
             divider_line_comp(),
             checklist_comp(
                 comp_id="watershed_id",
-                options={
-                    "watershed: Watershed algorithm": False,
-                },
+                options=[
+                    {
+                        "label": "watershed: Watershed algorithm",
+                        "value": "watershed: Watershed algorithm",
+                        "disabled": False,
+                    }
+                ],
             ),
             html.Ul(
                 id="watershed_options",
@@ -278,9 +256,15 @@ def advanced_segmentation_section():
             # STD segmentor section
             checklist_comp(
                 comp_id="std_id",
-                options={
-                    "std: Standard-deviation-" "based thresholding": False,
-                },
+                options=[
+                    {
+                        "label": "std: Standard-deviation-"
+                        "based thresholding",
+                        "value": "std: Standard-deviation-"
+                        "based thresholding",
+                        "disabled": False,
+                    }
+                ],
             ),
             html.Ul(
                 id="std_options",
@@ -325,11 +309,15 @@ def background_correction_section():
         children=[
             checklist_comp(
                 comp_id="rollmed_id",
-                options={
-                    "rollmed: Rolling median "
-                    "RT-DC background image "
-                    "computation": False,
-                },
+                options=[
+                    {
+                        "label": "rollmed: Rolling median RT-DC background "
+                        "image computation",
+                        "value": "rollmed: Rolling median RT-DC background "
+                        "image computation",
+                        "disabled": False,
+                    }
+                ],
             ),
             html.Ul(
                 id="rollmed_options",
@@ -357,14 +345,17 @@ def background_correction_section():
             divider_line_comp(),
             checklist_comp(
                 comp_id="sparsemed_id",
-                options={
-                    "sparsemed: Sparse median "
-                    "background correction with "
-                    "cleansing": False,
-                },
+                options=[
+                    {
+                        "label": "sparsemed: Sparse median background "
+                        "correction with cleansing",
+                        "value": "sparsemed: Sparse median background "
+                        "correction with cleansing",
+                        "disabled": False,
+                    }
+                ],
                 defaults=[
-                    "sparsemed: Sparse median "
-                    "background correction with "
+                    "sparsemed: Sparse median background correction with "
                     "cleansing"
                 ],
             ),
@@ -430,9 +421,13 @@ def gating_options_section():
         children=[
             checklist_comp(
                 comp_id="norm_gate_id",
-                options={
-                    "norm gating": False,
-                },
+                options=[
+                    {
+                        "label": "norm gating",
+                        "value": "norm gating",
+                        "disabled": False,
+                    }
+                ],
             ),
             html.Ul(
                 id="norm_gate_options",
@@ -470,22 +465,15 @@ def further_options_section():
         children=[
             checklist_comp(
                 comp_id="reproduce_flag",
-                options={
-                    "--reproduce": False,
-                },
+                options=[
+                    {
+                        "label": "--reproduce",
+                        "value": "--reproduce",
+                        "disabled": False,
+                    }
+                ],
                 defaults=["--reproduce"] if reproduce_flag else [],
             )
-        ],
-    )
-
-
-def advanced_data_to_process_section():
-    return dbc.AccordionItem(
-        title="Data to Process",
-        item_id="hsm_accord",
-        children=[
-            create_hsm_grid(),
-            line_breaks(times=2),
         ],
     )
 
@@ -546,38 +534,25 @@ def advanced_page_layout(refresh_path):
             line_breaks(times=2),
             group_accordion(
                 children=[
-                    advanced_title_section(),
+                    title_section(
+                        dropdown_id="advanced_title_drop",
+                        text_id="advanced_title_text",
+                    ),
                     advanced_segmentation_section(),
                     background_correction_section(),
                     gating_options_section(),
                     further_options_section(),
                     cell_classifier_section(classifier_id="classifier_name"),
-                    advanced_data_to_process_section(),
+                    input_data_selection_section(),
                 ],
                 middle=True,
                 open_first=True,
                 comp_id="pipeline_accord",
             ),
-            line_breaks(times=3),
-            create_show_grid(comp_id="show_grid"),
-            line_breaks(times=4),
-            button_comp(
-                label="Create pipeline",
-                disabled=True,
-                comp_id="create_advanced_pipeline_button",
+            input_data_display_section(
+                show_grid_id="show_grid",
+                button_id="create_advanced_pipeline_button",
             ),
-            line_breaks(times=2),
-            dbc.Alert(
-                "Note: Username, pipeline title, and data paths are "
-                "mandatory fields to activate 'Create Pipeline' button.",
-                color="warning",
-                style={
-                    "color": "black",
-                    "width": "fit-content",
-                    "margin": "auto",
-                },
-            ),
-            line_breaks(times=5),
             dcc.Store(id="cache_advanced_template", storage_type="local"),
             dcc.Store(
                 id="cache_advanced_unet_model_path", storage_type="local"
@@ -782,12 +757,8 @@ def collect_advanced_pipeline_params(
     Collects all the user-selected and cached parameters to update
     the advanced issue template. The updated template will be cached.
     """
-    # Combine params from direct options
-    direct_params = [reproduce_flag, classifier_name]
-    params_list = [
-        item for sublist in direct_params if sublist for item in sublist
-    ]
-    params_dict = {param: {} for param in params_list}
+    # Initialize the params dictionary with empty dictionaries
+    params_dict = {param: {} for param in [*reproduce_flag, *classifier_name]}
 
     # Combine params from cached options
     cached_params = [
@@ -800,9 +771,11 @@ def collect_advanced_pipeline_params(
         cache_sparsemed_params,
         cache_norm_gate_params,
     ]
-    for param in cached_params:
-        if param:
-            params_dict.update(param)
+
+    # Update params_dict with non-empty cached params
+    params_dict.update(
+        {k: v for param in cached_params if param for k, v in param.items()}
+    )
 
     # Extract file paths from selected rows
     rtdc_files = (

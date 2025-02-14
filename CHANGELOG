@@ -1,3 +1,7 @@
+0.2.7
+ - ref: clean code and improve docstrings for clarity and consistency
+ - ref: enhance sidebar layout with hover cards and improved links
+ - ref: eliminate code duplication, rename module, and cleanup code
 0.2.6
  - ref: remove post analysis and modify classification option
  - fix: missing thereshold segmentor arguments in advanced request
