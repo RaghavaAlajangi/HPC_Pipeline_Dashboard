@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -14,7 +14,8 @@ issue_template_dir = Path(__file__).parents[0] / "data"
 def mock_comment(comment_text):
     """Creates a mock issue comment."""
     return MagicMock(
-        body=comment_text, created_at=datetime.utcnow().isoformat() + "Z"
+        body=comment_text,
+        created_at=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
     )
 
 
@@ -28,7 +29,7 @@ def mock_gitlab_issue(iid, state, description, comment_list):
         author={"name": f"mock_author_{iid}"},
         web_url=f"https://mock_issue_url{iid}",
         description=description,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
     )
     mock_issue.notes.list.return_value = [
         mock_comment(msg) for msg in comment_list
@@ -159,7 +160,7 @@ def mock_gitlab_project():
         return mock_issues_by_iid.get(iid)
 
     def issue_list_side_effect_by_state(
-        state=None, per_page=1, search=None, get_all=True
+        state=None, per_page=1, search=None, get_all=True, page=1
     ):
         return [
             issue

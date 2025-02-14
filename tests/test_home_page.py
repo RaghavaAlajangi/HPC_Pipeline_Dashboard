@@ -1,5 +1,6 @@
 from contextvars import copy_context
 
+import dash_mantine_components as dmc
 import pytest
 from dash import no_update
 from dash._callback_context import context_value
@@ -10,7 +11,56 @@ from dashboard.pages.page_home import (
     manage_pipeline_status,
     show_pipeline_data,
     show_pipeline_number,
+    switch_tabs,
 )
+
+
+@pytest.mark.parametrize(
+    "callback_function, args, expected",
+    [
+        (
+            # Test case 1: enable and return opened tab pages
+            switch_tabs,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "cache_page": {"opened": 1},
+                "search_term": None,
+            },
+            # Expected Outputs:
+            {
+                "opened_content": dmc.Accordion(),
+                "closed_content": no_update,
+                "opened_loading": {"position": "center"},
+                "closed_loading": no_update,
+            },
+        ),
+        (
+            # Test case 2: enable and return opened tab pages
+            switch_tabs,
+            # Inputs:
+            {
+                "active_tab": "closed",
+                "cache_page": {"closed": 1},
+                "search_term": None,
+            },
+            # Expected Outputs:
+            {
+                "opened_content": no_update,
+                "closed_content": dmc.Accordion(),
+                "opened_loading": no_update,
+                "closed_loading": {"position": "center"},
+            },
+        ),
+    ],
+)
+def test_switch_tabs_callback(callback_function, args, expected):
+    """Test switch_tabs with various scenarios"""
+    response = callback_function(**args)
+    assert type(response[0]) is type(expected["opened_content"])
+    assert type(response[1]) is type(expected["closed_content"])
+    assert response[2] == expected["opened_loading"]
+    assert response[3] == expected["closed_loading"]
 
 
 @pytest.mark.parametrize(
