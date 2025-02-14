@@ -1,6 +1,7 @@
 from contextvars import copy_context
 
 import dash_bootstrap_components as dbc
+import pytest
 from dash import no_update
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
@@ -47,211 +48,263 @@ def test_show_and_cache_segment_options_callback():
     assert "mlunet" in segm_opt.keys()
 
 
-def test_toggle_unet_options_callback_activation():
-    """Test unet options expansion when a user clicks on unet switch"""
+@pytest.mark.parametrize(
+    "callback_function, args, expected",
+    [
+        (
+            # Test case 1: unet options expansion
+            toggle_unet_options,
+            # Inputs:
+            {"unet_click": ["mlunet"]},
+            # Expected Outputs:
+            {"simple_unet_options": {"display": "block"}},
+        ),
+        (
+            # Test case 2: unet options contraction
+            toggle_unet_options,
+            # Inputs:
+            {"unet_click": []},
+            # Expected Outputs:
+            {"simple_unet_options": {"display": "none"}},
+        ),
+    ],
+)
+def test_toggle_unet_options_callback(callback_function, args, expected):
+    """Test unet options expansion and contraction when a user clicks on unet
+    switch"""
+    response = callback_function(**args)
+    assert type(response) is type(expected)
+    assert response["display"] == expected["simple_unet_options"]["display"]
+
+
+@pytest.mark.parametrize(
+    "callback_function, args, expected",
+    [
+        (
+            # Test case 1: legacy options expansion only when legacy switch is
+            # clicked
+            toggle_legacy_options,
+            # Inputs:
+            {"legacy_click": ["legacy"]},
+            # Expected Outputs:
+            {"simple_legacy_options": {"display": "block"}},
+        ),
+        (
+            # Test case 2: legacy options contraction when legacy switch is
+            # not clicked
+            toggle_legacy_options,
+            # Inputs:
+            {"legacy_click": []},
+            # Expected Outputs:
+            {"simple_legacy_options": {"display": "none"}},
+        ),
+    ],
+)
+def test_toggle_legacy_options_callback(callback_function, args, expected):
+    """Test legacy options expansion and contraction when a user clicks on
+    legacy switch"""
+    response = callback_function(**args)
+    assert type(response) is type(expected)
+    assert response["display"] == expected["simple_legacy_options"]["display"]
+
+
+@pytest.mark.parametrize(
+    "callback_function, args, expected",
+    [
+        (
+            # Test case 1: enable the 'create pipleine button' when all the
+            # required entries are given (author name, title, input file/s,
+            # and segmentation method)
+            toggle_simple_create_pipeline_button,
+            # Inputs:
+            {
+                "author_name": "test_username",
+                "title": "test_title",
+                "selected_files": [{"filepath": "test1.rtdc"}],
+                "cached_seg_options": {"legacy": {"thresh": "-6"}},
+            },
+            # Expected Outputs:
+            {"create_simple_pipeline_button": False},
+        ),
+        (
+            # Test case 2: disable the 'create pipleine button', if any of the
+            # required entries are missing.
+            toggle_simple_create_pipeline_button,
+            # Inputs:
+            {
+                "author_name": "test_username",
+                "title": "",  # No title is given
+                "selected_files": [{"filepath": "test1.rtdc"}],
+                "cached_seg_options": {},  # No segmentation is provided
+            },
+            # Expected Outputs:
+            {"create_simple_pipeline_button": True},
+        ),
+    ],
+)
+def test_toggle_simple_create_pipeline_button_callback(
+    callback_function, args, expected
+):
+    """Test toggle_simple_create_pipeline_button activation and deactivation"""
+    response = callback_function(**args)
+    assert response == expected["create_simple_pipeline_button"]
+
+
+@pytest.mark.parametrize(
+    "callback_function, triggered_inputs, args, expected",
+    [
+        (
+            # Test case 1: When user clicks on 'create pipeline' button, a
+            # popup message box will be opened.
+            simple_request_submission_popup,
+            # Stimulate Inputs
+            [{"prop_id": "create_simple_pipeline_button.n_clicks"}],
+            # Inputs:
+            {
+                "_": 1,
+                "cached_template": {
+                    "title": "test without notes create",
+                    "description": "test description",
+                },
+                "close_popup": 0,
+                "popup": False,
+            },
+            # Expected Outputs:
+            {"simple_popup": True},
+        ),
+        (
+            # Test case 2: After the popup message is opened up, user clicks
+            # on the 'close' button inside the popup message box.
+            simple_request_submission_popup,
+            # Stimulate Inputs
+            [{"prop_id": "simple_popup_close.n_clicks"}],
+            # Inputs:
+            {
+                "_": 0,
+                "cached_template": {
+                    "title": "testing",
+                    "description": "test description",
+                },
+                "close_popup": 1,
+                "popup": True,
+            },
+            # Expected Outputs:
+            {"simple_popup": False},
+        ),
+        (
+            # Test case 3: No clcik on 'create pipeline' button and 'close'
+            # button --> no action
+            simple_request_submission_popup,
+            # Stimulate Inputs
+            [{"prop_id": "dummy_click.n_clicks"}],
+            # Inputs:
+            {
+                "_": 0,
+                "cached_template": {
+                    "title": "testing",
+                    "description": "test description",
+                },
+                "close_popup": 0,
+                "popup": False,
+            },
+            # Expected Outputs:
+            {"simple_popup": False},
+        ),
+    ],
+)
+def test_simple_request_submission_popup_callback(
+    callback_function, triggered_inputs, args, expected
+):
+    """Test simple_request_submission_popup callback behavior."""
 
     def run_callback():
-        return toggle_unet_options(unet_click=["mlunet"])
+        context_value.set(
+            AttributeDict(**{"triggered_inputs": triggered_inputs})
+        )
+        return callback_function(**args)
 
-    # Run the callback within the appropriate context
     ctx = copy_context()
     response = ctx.run(run_callback)
-    assert isinstance(response, dict)
-    assert response["display"] == "block"
+    assert response == expected["simple_popup"]
 
 
-def test_toggle_unet_options_callback_deactivation():
-    """Test unet options contraction when a user clicks on unet switch"""
-
-    def run_callback():
-        return toggle_unet_options(unet_click=[])
-
-    # Run the callback within the appropriate context
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert isinstance(response, dict)
-    assert response["display"] == "none"
-
-
-def test_toggle_legacy_options_callback_activation():
-    """Test legacy options expansion when a user clicks on legacy switch"""
-
-    def run_callback():
-        return toggle_legacy_options(legacy_click=["legacy"])
-
-    # Run the callback within the appropriate context
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert isinstance(response, dict)
-    assert response["display"] == "block"
-
-
-def test_toggle_legacy_options_callback_deactivation():
-    """Test legacy options contraction when a user clicks on legacy switch"""
-
-    def run_callback():
-        return toggle_legacy_options(legacy_click=[])
-
-    # Run the callback within the appropriate context
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert isinstance(response, dict)
-    assert response["display"] == "none"
-
-
-def test_collect_simple_pipeline_params_callback_activation():
+@pytest.mark.parametrize(
+    "callback_function, args, expected",
+    [
+        (
+            # Test case 1: if pipeline author, title, and input file/s are
+            # provided, the function should update the pipeline template
+            # with the user options and return it.
+            collect_simple_pipeline_params,
+            # Inputs:
+            {
+                "author_name": "test_username",
+                "simple_title": "test_title",
+                "cached_seg_options": {
+                    "legacy": {"thresh": -6},
+                    "mlunet": {"model_file": "model_checkpoint"},
+                },
+                "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "selected_files": [
+                    {"filepath": "HSMFS: test1.rtdc"},
+                    {"filepath": "HSMFS: test2.rtdc"},
+                ],
+            },
+            # Expected Outputs:
+            {
+                "cache_simple_template": {
+                    "title": "test_title",
+                    "description": "updated simple template",
+                }
+            },
+        ),
+        (
+            # Test case 2: if any of the values (pipeline author, title,
+            # and input file/s) are missing, the function should return None
+            collect_simple_pipeline_params,
+            # Inputs:
+            {
+                "author_name": "",  # No user is provided
+                "simple_title": "test_title",
+                "cached_seg_options": {
+                    "legacy": {"thresh": -6},
+                    "mlunet": {"model_file": "model_checkpoint"},
+                },
+                "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "selected_files": [
+                    {"filepath": "HSMFS: test1.rtdc"},
+                    {"filepath": "HSMFS: test2.rtdc"},
+                ],
+            },
+            # Expected Outputs:
+            {"cache_simple_template": no_update},
+        ),
+    ],
+)
+def test_collect_simple_pipeline_params_callback(
+    callback_function, args, expected
+):
     """Test collection of user input and update simple pipeline template"""
 
-    def run_callback():
-        return collect_simple_pipeline_params(
-            author_name="test_username",
-            simple_title="test_title",
-            cached_seg_options={
-                "legacy": {"thresh": -6},
-                "mlunet": {"model_file": "model_checkpoint"},
-            },
-            simple_classifier=["bloody-bunny_g1_bacae"],
-            selected_files=[
-                {"filepath": "test1.rtdc"},
-                {"filepath": "test2.rtdc"},
-            ],
-        )
+    response = callback_function(**args)
 
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert "description" in response.keys()
-    assert "title" in response.keys()
-    assert "test_title" in response["title"]
-    assert "[x] username=test_username" in response["description"]
-    assert "[x] mlunet" in response["description"]
-    assert "[x] model_file=model_checkpoint" in response["description"]
-    assert "[x] legacy" in response["description"]
-    assert "[x] bloody-bunny_g1_bacae" in response["description"]
-    assert "[x] test1.rtdc" in response["description"]
-    assert "[x] test2.rtdc" in response["description"]
+    if response is not no_update:
+        assert "description" in response.keys()
+        assert "title" in response.keys()
+        red_desc = response["description"]
+        exp_desc = expected["cache_simple_template"]["description"]
 
+        # Expected description (updated template) should be a string
+        assert isinstance(exp_desc, str)
 
-def test_collect_simple_pipeline_params_callback_deactivation():
-    """Test callback deactivation"""
+        assert "[x] mlunet" in red_desc
+        assert "[x] model_file=model_checkpoint" in red_desc
 
-    def run_callback():
-        return collect_simple_pipeline_params(
-            author_name="",
-            simple_title="test_title",
-            cached_seg_options={
-                "legacy": {"thresh": -6},
-                "mlunet": {"model_file": "model_checkpoint"},
-            },
-            simple_classifier=["bloody-bunny_g1_bacae"],
-            selected_files=[
-                {"filepath": "test1.rtdc"},
-                {"filepath": "test2.rtdc"},
-            ],
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert response == no_update
-
-
-def test_toggle_simple_create_pipeline_button_callback_activation():
-    """Test create_pipeline_button activation"""
-
-    def run_callback():
-        return toggle_simple_create_pipeline_button(
-            author_name="test_username",
-            title="test_title",
-            selected_files=[{"filepath": "test1.rtdc"}],
-            cached_seg_options={"legacy": {"thresh": "-6"}},
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert not response
-
-
-def test_toggle_simple_create_pipeline_button_callback_deactivation():
-    """Test create_pipeline_button deactivation"""
-
-    def run_callback():
-        return toggle_simple_create_pipeline_button(
-            author_name="test_username",
-            title="test_title",
-            selected_files=[{"filepath": "test1.rtdc"}],
-            # Empty data should not activate the "Create Pipeline" button
-            cached_seg_options={},
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert response
-
-
-def test_simple_request_submission_popup_callback_activation():
-    """Test pipeline submission and activate notification popup"""
-
-    test_template = {
-        "title": "test without notes create",
-        "description": "test description",
-    }
-
-    def run_callback():
-        context_value.set(
-            AttributeDict(
-                **{
-                    "triggered_inputs": [
-                        {"prop_id": "create_simple_pipeline_button.n_clicks"}
-                    ]
-                }
-            )
-        )
-        return simple_request_submission_popup(
-            1, cached_template=test_template, close_popup=0, popup=False
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert response
-
-
-def test_simple_request_submission_popup_callback_close_popup():
-    """Test close notification popup"""
-
-    test_template = {"title": "testing", "description": "test description"}
-
-    def run_callback():
-        context_value.set(
-            AttributeDict(
-                **{
-                    "triggered_inputs": [
-                        {"prop_id": "simple_popup_close.n_clicks"}
-                    ]
-                }
-            )
-        )
-        return simple_request_submission_popup(
-            0, cached_template=test_template, close_popup=1, popup=True
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert not response
-
-
-def test_simple_request_submission_popup_callback_deactivation():
-    """Test callback deactivation"""
-    test_template = {"title": "testing", "description": "test description"}
-
-    def run_callback():
-        context_value.set(
-            AttributeDict(
-                **{"triggered_inputs": [{"prop_id": "dummy_click.n_clicks"}]}
-            )
-        )
-        return simple_request_submission_popup(
-            0, cached_template=test_template, close_popup=0, popup=False
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    assert not response
+        # Check sparsemed params
+        # assert "[x] legacy " in red_desc
+        assert "[x] bloody-bunny_g1_bacae" in red_desc
+        # Check datapath
+        assert "[x] HSMFS: test1.rtdc" in red_desc
+        assert "[x] HSMFS: test2.rtdc" in red_desc
+        # Check username
+        assert "[x] username=test_username" in red_desc

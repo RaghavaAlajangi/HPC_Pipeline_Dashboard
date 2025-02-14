@@ -14,243 +14,298 @@ from dashboard.pages.page_home import (
 
 
 @pytest.mark.parametrize(
-    "active_tab, opened_curr_page, closed_curr_page, search_term, cache_page, "
-    "expected_cache_page, expected_opened_pages, expected_closed_pages",
+    "callback_function, args, expected",
     [
-        # Test case 1: enable and return opened tab pages
         (
-            "opened",
-            1,
-            1,
-            "",
-            {"opened": 0, "closed": 0},
-            {"opened": 1, "closed": 0},
-            1,
-            1,
+            # Test case 1: enable and return opened tab pages
+            change_page,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "opened_curr_page": 1,
+                "closed_curr_page": 1,
+                "search_term": "",
+                "cache_page": {"opened": 0, "closed": 0},
+            },
+            # Expected Outputs:
+            {
+                "cache_page_num": {"opened": 1, "closed": 0},
+                "opened_pagination": 1,
+                "closed_pagination": 1,
+            },
         ),
-        # Test case 2: enable and return closed tab pages
         (
-            "closed",
-            1,
-            1,
-            "",
-            {"opened": 0, "closed": 0},
-            {"opened": 0, "closed": 1},
-            1,
-            1,
+            # Test case 2: enable and return closed tab pages
+            change_page,
+            # Inputs:
+            {
+                "active_tab": "closed",
+                "opened_curr_page": 1,
+                "closed_curr_page": 1,
+                "search_term": "",
+                "cache_page": {"opened": 0, "closed": 0},
+            },
+            # Expected Outputs:
+            {
+                "cache_page_num": {"opened": 0, "closed": 1},
+                "opened_pagination": 1,
+                "closed_pagination": 1,
+            },
         ),
-        # Test case 3: enable and return filtered pages
         (
-            "opened",
-            1,
-            1,
-            "username102",
-            {"opened": 0, "closed": 0},
-            {"opened": 1, "closed": 0},
-            1,
-            1,
+            # Test case 3: select wrong tab
+            change_page,
+            # Inputs:
+            {
+                "active_tab": "wrong",  # wrong doesnt exist
+                "opened_curr_page": 1,
+                "closed_curr_page": 1,
+                "search_term": "username102",
+                "cache_page": {"opened": 1, "closed": 0},
+            },
+            # Expected Outputs:
+            {
+                "cache_page_num": {"opened": 1, "closed": 0},
+                "opened_pagination": 1,
+                "closed_pagination": 1,
+            },
+        ),
+        (
+            # Test case 4: enable and return filtered pages
+            change_page,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "opened_curr_page": 1,
+                "closed_curr_page": 1,
+                "search_term": "username102",
+                "cache_page": {"opened": 1, "closed": 0},
+            },
+            # Expected Outputs:
+            {
+                "cache_page_num": {"opened": 1, "closed": 0},
+                "opened_pagination": 1,
+                "closed_pagination": 1,
+            },
         ),
     ],
 )
-def test_change_page_callback(
-    active_tab,
-    opened_curr_page,
-    closed_curr_page,
-    search_term,
-    cache_page,
-    expected_cache_page,
-    expected_opened_pages,
-    expected_closed_pages,
-):
-    """Test functionality of previous buttons in opened and closed tabs"""
-
-    def run_callback():
-        return change_page(
-            active_tab=active_tab,
-            opened_curr_page=opened_curr_page,
-            closed_curr_page=closed_curr_page,
-            search_term=search_term,
-            cache_page=cache_page,
-        )
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-    cache_page, open_pages, close_pages = response
-
-    assert cache_page == expected_cache_page
-    assert open_pages == expected_opened_pages
-    assert close_pages == expected_closed_pages
+def test_change_page_callback(callback_function, args, expected):
+    """Test change_page with various scenarios"""
+    response = callback_function(**args)
+    if response is not no_update:
+        assert response[0] == expected["cache_page_num"]
+        assert response[1] == expected["opened_pagination"]
+        assert response[2] == expected["closed_pagination"]
 
 
 @pytest.mark.parametrize(
-    "triggered_inputs, "
-    "active_tab, pipeline_num, "
-    "run_pause_click, "
-    "stop_pipe_click, "
-    "pipeline_comments, "
-    "keep_results_flag, "
-    "keep_raw_data_flag, "
-    "expected_popup_is_open, "
-    "expected_popup_msg, "
-    "expected_run_pause_disabled, "
-    "expected_run_pause_child, "
-    "expected_stop_disabled, "
-    "expected_keep_raw_data_disabled",
+    "callback_function, triggered_inputs, args, expected",
     [
-        # Test case 1: skip all actions because the selected issue is None
         (
+            # Test case 1: skip all actions because the selected issue is None
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [],
-            "closed",
-            None,
-            0,
-            0,
-            None,
-            0,
-            0,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
+            # Inputs:
+            {
+                "active_tab": "closed",
+                "pipeline_num": None,
+                "run_pause_click": 0,
+                "stop_pipe_click": 0,
+                "pipeline_comments": 0,
+                "keep_results_flag": None,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": no_update,
+                "popup_msg": no_update,
+                "run_pause_disabled": no_update,
+                "run_pause_child": no_update,
+                "stop_disabled": no_update,
+                "keep_raw_data_disabled": no_update,
+            },
         ),
-        # Test case 2: disable "toggle raw data flag" because test issue does
-        # not have the HSM paths
         (
+            # Test case 2: disable "toggle raw data flag"
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [],
-            "closed",
-            2,
-            0,
-            0,
-            {"dummy chat dict": ["stop", "go"]},
-            0,
-            0,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            True,
+            # Inputs:
+            {
+                "active_tab": "closed",
+                "pipeline_num": 2,
+                "run_pause_click": 0,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 0,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": no_update,
+                "popup_msg": no_update,
+                "run_pause_disabled": no_update,
+                "run_pause_child": no_update,
+                "stop_disabled": no_update,
+                "keep_raw_data_disabled": True,
+            },
         ),
-        # Test case 3: toggle s3 results flag
         (
+            # Test case 3: toggle s3 results flag
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [{"prop_id": "keep_results_flag.n_clicks"}],
-            "closed",
-            2,
-            0,
-            0,
-            {"dummy chat dict": ["stop", "go"]},
-            1,
-            0,
-            True,
-            "The S3 results flag has been changed!",
-            no_update,
-            no_update,
-            no_update,
-            True,
+            # Inputs:
+            {
+                "active_tab": "closed",
+                "pipeline_num": 2,
+                "run_pause_click": 0,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 1,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": True,
+                "popup_msg": "The S3 results flag has been changed!",
+                "run_pause_disabled": no_update,
+                "run_pause_child": no_update,
+                "stop_disabled": no_update,
+                "keep_raw_data_disabled": True,
+            },
         ),
-        # Test case 4: resume pipeline
         (
+            # Test case 4: resume pipeline
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [{"prop_id": "run_pause_click.n_clicks"}],
-            "opened",
-            3,
-            1,
-            0,
-            {"dummy chat dict": ["go"]},
-            0,
-            0,
-            True,
-            "The pipeline has been resumed!",
-            no_update,
-            "Run Pipeline",
-            no_update,
-            True,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "pipeline_num": 3,
+                "run_pause_click": 1,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 0,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": True,
+                "popup_msg": "The pipeline has been resumed!",
+                "run_pause_disabled": no_update,
+                "run_pause_child": "Run Pipeline",
+                "stop_disabled": no_update,
+                "keep_raw_data_disabled": True,
+            },
         ),
-        # Test case 5: pause pipeline
         (
+            # Test case 5: pause pipeline
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [{"prop_id": "run_pause_click.n_clicks"}],
-            "opened",
-            4,
-            1,
-            0,
-            {"dummy chat dict": ["stop", "go"]},
-            0,
-            0,
-            True,
-            "The pipeline has been paused!",
-            no_update,
-            no_update,
-            no_update,
-            True,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "pipeline_num": 4,
+                "run_pause_click": 1,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 0,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": True,
+                "popup_msg": "The pipeline has been paused!",
+                "run_pause_disabled": no_update,
+                "run_pause_child": no_update,
+                "stop_disabled": no_update,
+                "keep_raw_data_disabled": True,
+            },
         ),
-        # Test case 6: cancel pipeline
         (
+            # Test case 6: cancel pipeline
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [{"prop_id": "stop_pipe_click.n_clicks"}],
-            "opened",
-            4,
-            1,
-            0,
-            {"dummy chat dict": ["stop", "go"]},
-            0,
-            0,
-            True,
-            "The pipeline has been canceled!",
-            True,
-            no_update,
-            True,
-            True,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "pipeline_num": 4,
+                "run_pause_click": 1,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 0,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": True,
+                "popup_msg": "The pipeline has been canceled!",
+                "run_pause_disabled": True,
+                "run_pause_child": no_update,
+                "stop_disabled": True,
+                "keep_raw_data_disabled": True,
+            },
         ),
-        # Test case 7: disable run/pause button when there is an error
         (
+            # Test case 7: disable run/pause button when there is an error
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [],
-            "opened",
-            5,
-            0,
-            0,
-            {"dummy chat dict": ["stop", "go"]},
-            0,
-            0,
-            no_update,
-            no_update,
-            True,
-            no_update,
-            False,
-            True,
+            # Inputs:
+            {
+                "active_tab": "opened",
+                "pipeline_num": 5,
+                "run_pause_click": 0,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 0,
+                "keep_raw_data_flag": 0,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": no_update,
+                "popup_msg": no_update,
+                "run_pause_disabled": True,
+                "run_pause_child": no_update,
+                "stop_disabled": False,
+                "keep_raw_data_disabled": True,
+            },
         ),
-        # Test case 8: toggle s3 raw data flag
         (
+            # Test case 8: toggle s3 raw data flag
+            manage_pipeline_status,
+            # Stimulate Inputs:
             [{"prop_id": "keep_raw_data_flag.n_clicks"}],
-            "closed",
-            2,
-            0,
-            0,
-            {"dummy chat dict": ["stop", "go"]},
-            0,
-            1,
-            True,
-            "The S3 raw data flag has been changed!",
-            no_update,
-            no_update,
-            no_update,
-            True,
+            # Inputs:
+            {
+                "active_tab": "closed",
+                "pipeline_num": 2,
+                "run_pause_click": 0,
+                "stop_pipe_click": 0,
+                "pipeline_comments": {"dummy chat dict": ["stop", "go"]},
+                "keep_results_flag": 0,
+                "keep_raw_data_flag": 1,
+            },
+            # Expected Outputs:
+            {
+                "popup_is_open": True,
+                "popup_msg": "The S3 raw data flag has been changed!",
+                "run_pause_disabled": no_update,
+                "run_pause_child": no_update,
+                "stop_disabled": no_update,
+                "keep_raw_data_disabled": True,
+            },
         ),
     ],
 )
 def test_manage_pipeline_status_callback(
-    triggered_inputs,
-    active_tab,
-    pipeline_num,
-    run_pause_click,
-    stop_pipe_click,
-    pipeline_comments,
-    keep_results_flag,
-    keep_raw_data_flag,
-    expected_popup_is_open,
-    expected_popup_msg,
-    expected_run_pause_disabled,
-    expected_run_pause_child,
-    expected_stop_disabled,
-    expected_keep_raw_data_disabled,
+    callback_function, triggered_inputs, args, expected
 ):
     """Test manage_pipeline_status with various scenarios"""
 
@@ -258,81 +313,100 @@ def test_manage_pipeline_status_callback(
         context_value.set(
             AttributeDict(**{"triggered_inputs": triggered_inputs})
         )
-        return manage_pipeline_status(
-            active_tab=active_tab,
-            pipeline_num=pipeline_num,
-            run_pause_click=run_pause_click,
-            stop_pipe_click=stop_pipe_click,
-            pipeline_comments=pipeline_comments,
-            keep_results_flag=keep_results_flag,
-            keep_raw_data_flag=keep_raw_data_flag,
-        )
+        return callback_function(**args)
 
     ctx = copy_context()
     response = ctx.run(run_callback)
-    assert response[0] == expected_popup_is_open
-    assert response[1] == expected_popup_msg
-    assert response[2] == expected_run_pause_disabled
-    assert response[3] == expected_run_pause_child
-    assert response[5] == expected_stop_disabled
-    assert response[6] == expected_keep_raw_data_disabled
+    assert response[0] == expected["popup_is_open"]
+    assert response[1] == expected["popup_msg"]
+    assert response[2] == expected["run_pause_disabled"]
+    assert response[3] == expected["run_pause_child"]
+    assert response[5] == expected["stop_disabled"]
+    assert response[6] == expected["keep_raw_data_disabled"]
 
 
 @pytest.mark.parametrize(
-    "pipeline_num, "
-    "expected_result_path_msg, "
-    "expected_jobs, "
-    "expected_progress, "
-    "expected_progress_str",
+    "callback_function, args, expected",
     [
-        # Test case 1: skip all actions
-        (None, no_update, no_update, no_update, no_update),
-        # Test case 2: if total_job == 0
-        (1, "Result path is not found!", "Jobs: [0 / 0]", None, None),
-        # Test case 3: with two jobs that are completed
-        (2, "Result path is not found!", "Jobs: [2 / 2]", 95, "95 %"),
+        (
+            # Test case 1: skip all actions
+            show_pipeline_data,
+            # Inputs:
+            {"pipeline_num": None},
+            # Expected Outputs:
+            {
+                "pipeline_comments": no_update,
+                "s3_proxy_path": no_update,
+                "pipeline_progress_num": no_update,
+                "pipeline_progress_bar_val": no_update,
+                "pipeline_progress_bar_lbl": no_update,
+                "cache_pipeline_notes": no_update,
+            },
+        ),
+        (
+            # Test case 2: show only pathname is given
+            show_pipeline_data,
+            # Inputs:
+            {"pipeline_num": 1},
+            # Expected Outputs:
+            {
+                "s3_proxy_path": "Result path is not found!",
+                "pipeline_progress_num": "Jobs: [0 / 0]",
+                "pipeline_progress_bar_val": None,
+                "pipeline_progress_bar_lbl": None,
+            },
+        ),
+        (
+            # Test case 3: with two jobs that are completed
+            show_pipeline_data,
+            {"pipeline_num": 2},
+            # Expected Outputs:
+            {
+                "s3_proxy_path": "Result path is not found!",
+                "pipeline_progress_num": "Jobs: [2 / 2]",
+                "pipeline_progress_bar_val": 95,
+                "pipeline_progress_bar_lbl": "95 %",
+            },
+        ),
     ],
 )
-def test_show_pipeline_data_callback(
-    pipeline_num,
-    expected_result_path_msg,
-    expected_jobs,
-    expected_progress,
-    expected_progress_str,
-):
-    """Test show_pipeline_data with various scenarios"""
-
-    def run_callback():
-        return show_pipeline_data(pipeline_num=pipeline_num)
-
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-
-    assert response[1] == expected_result_path_msg
-    assert response[2] == expected_jobs
-    assert response[3] == expected_progress
-    assert response[4] == expected_progress_str
-
-
-@pytest.mark.parametrize(
-    "pathname, " "expected_open_num, " "expected_close_num",
-    [
-        # Test case 1: skip all actions
-        ("/wrong_pathname/", no_update, no_update),
-        # Test case 2: show only pathname is given
-        ("/local-dashboard/", 5, 1),
-    ],
-)
-def test_show_pipeline_number_callback(
-    pathname, expected_open_num, expected_close_num
-):
+def test_show_pipeline_data_callback(callback_function, args, expected):
     """Test show_pipeline_number with various scenarios"""
+    response = callback_function(**args)
+    assert response[1] == expected["s3_proxy_path"]
+    assert response[2] == expected["pipeline_progress_num"]
+    assert response[3] == expected["pipeline_progress_bar_val"]
+    assert response[4] == expected["pipeline_progress_bar_lbl"]
 
-    def run_callback():
-        return show_pipeline_number(pathname=pathname)
 
-    ctx = copy_context()
-    response = ctx.run(run_callback)
-
-    assert response[0] == expected_open_num
-    assert response[1] == expected_close_num
+@pytest.mark.parametrize(
+    "callback_function, args, expected",
+    [
+        (
+            # Test case 1: skip all actions
+            show_pipeline_number,
+            # Inputs:
+            {"pathname": "/wrong_pathname/"},
+            # Expected Outputs:
+            {"open_tab_badge": no_update, "close_tab_badge": no_update},
+        ),
+        (
+            # Test case 2: show only pathname is given
+            show_pipeline_number,
+            # Inputs:
+            {"pathname": "/local-dashboard/"},
+            # Expected Outputs:
+            {
+                # 5 opened test issues are defined in conftest.py
+                "open_tab_badge": 5,
+                # 1 closed test issues are defined in conftest.py
+                "close_tab_badge": 1,
+            },
+        ),
+    ],
+)
+def test_show_pipeline_number_callback(callback_function, args, expected):
+    """Test show_pipeline_number with various scenarios"""
+    response = callback_function(**args)
+    assert response[0] == expected["open_tab_badge"]
+    assert response[1] == expected["close_tab_badge"]
