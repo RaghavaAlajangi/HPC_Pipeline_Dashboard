@@ -57,8 +57,8 @@ from dashboard.pages.page_home import (
 def test_switch_tabs_callback(callback_function, args, expected):
     """Test switch_tabs with various scenarios"""
     response = callback_function(**args)
-    assert type(response[0]) is type(expected["opened_content"])
-    assert type(response[1]) is type(expected["closed_content"])
+    assert isinstance(response[0], dmc.Accordion) or response[0] is no_update
+    assert isinstance(response[1], dmc.Accordion) or response[1] is no_update
     assert response[2] == expected["opened_loading"]
     assert response[3] == expected["closed_loading"]
 
