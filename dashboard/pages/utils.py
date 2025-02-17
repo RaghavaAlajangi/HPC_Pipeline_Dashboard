@@ -30,6 +30,7 @@ def update_simple_template(
         template_options = [
             "mlunet: UNET",
             "legacy: Legacy thresholding with OpenCV",
+            "--num-frames",
         ]
 
         for temp_opt in template_options:
@@ -38,9 +39,11 @@ def update_simple_template(
                 # Find the position of the segmentation option in the template
                 word_index = template.find(temp_opt)
 
+                temp_opt_len = word_index + len(temp_opt)
+
                 # Split the string at the position of the specific word
-                first_part = template[: word_index + len(temp_opt)]
-                second_part = template[word_index + len(temp_opt):]
+                first_part = template[:temp_opt_len]
+                second_part = template[temp_opt_len:]
 
                 # Get the segmentation kwarg from the segment_options dict
                 segm_kwarg = next(iter(segment_options[seg].items()))
@@ -126,6 +129,7 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
             },
             "Further Options": {
                 "--reproduce": {},
+                "--num-frames": {"--num-frames": 1000},
             },
         },
         "Prediction": {

@@ -11,7 +11,6 @@ from dashboard.pages.page_advanced import (
     advanced_segmentation_section,
     background_correction_section,
     collect_advanced_pipeline_params,
-    further_options_section,
     gating_options_section,
     show_and_cache_unet_model_meta,
     toggle_advanced_create_pipeline_button,
@@ -32,7 +31,6 @@ from dashboard.pages.page_advanced import (
         (advanced_segmentation_section, dbc.AccordionItem),
         (background_correction_section, dbc.AccordionItem),
         (gating_options_section, dbc.AccordionItem),
-        (further_options_section, dbc.AccordionItem),
     ],
 )
 def test_section_types(section_function, expected_type):
@@ -703,13 +701,30 @@ def test_toggle_advanced_create_pipeline_button_callback(
                         "size_thresh_mask": 0,
                     }
                 },
+                "cache_num_frames": {},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
             {
                 "cache_advanced_template": {
                     "title": "test_title",
-                    "description": "updated advanced template",
+                    "description": """
+                    **Segmentation**
+                        - [x] mlunet: UNET
+                          - [x] model_file=test_checkpoint
+                        - [x] sparsemed:
+                          - [x] kernel_size=200
+                          - [x] split_time=1
+                          - [x] thresh_cleansing=0
+                          - [x] frac_cleansing=0.8
+                        - [x] norm gating
+                          - [x] online_gates=False
+                          - [x] size_thresh_mask=0
+                    **Data to Process**
+                    - [x] HSMFS: test.rtdc
+                    __Author_name__
+                    [x] username=test_username
+                    """,
                 }
             },
         ),
@@ -744,10 +759,73 @@ def test_toggle_advanced_create_pipeline_button_callback(
                         "size_thresh_mask": 0,
                     }
                 },
+                "cache_num_frames": {"--num-frames": {"--num-frames": 200}},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
             {"cache_advanced_template": None},
+        ),
+        (
+            # Test case 3: check for num-frames and reproduce flag options
+            collect_advanced_pipeline_params,
+            # Inputs:
+            {
+                "author_name": "test_username",
+                "advanced_title": "test_title",
+                "reproduce_flag": ["--reproduce"],
+                "classifier_name": [],
+                "cache_unet_model_path": {
+                    "mlunet: UNET": {"model_file": "test_checkpoint"}
+                },
+                "cache_legacy_params": {},
+                "cache_thresh_seg_params": {},
+                "cache_watershed_params": {},
+                "cache_std_params": {},
+                "cache_rollmed_params": {},
+                "cache_sparsemed_params": {
+                    "sparsemed: Sparse median background correction with "
+                    "cleansing": {
+                        "kernel_size": 200,
+                        "split_time": 1,
+                        "thresh_cleansing": 0,
+                        "frac_cleansing": 0.8,
+                    }
+                },
+                "cache_norm_gate_params": {
+                    "norm gating": {
+                        "online_gates": False,
+                        "size_thresh_mask": 0,
+                    }
+                },
+                "cache_num_frames": {"--num-frames": {"--num-frames": 200}},
+                "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
+            },
+            # Expected Outputs:
+            {
+                "cache_advanced_template": {
+                    "title": "test_title",
+                    "description": """
+                    **Segmentation**
+                        - [x] mlunet: UNET
+                          - [x] model_file=test_checkpoint
+                        - [x] sparsemed:
+                          - [x] kernel_size=200
+                          - [x] split_time=1
+                          - [x] thresh_cleansing=0
+                          - [x] frac_cleansing=0.8
+                        - [x] norm gating
+                          - [x] online_gates=False
+                          - [x] size_thresh_mask=0
+                        - [x] --reproduce
+                        - [x] --num-frames
+                          - [x] --num-frames=200
+                    **Data to Process**
+                    - [x] HSMFS: test.rtdc
+                    __Author_name__
+                    [x] username=test_username
+                    """,
+                }
+            },
         ),
     ],
 )
@@ -764,23 +842,5 @@ def test_collect_advanced_pipeline_params_callback(
         red_desc = response["description"]
         exp_desc = expected["cache_advanced_template"]["description"]
 
-        # Expected description (updated template) should be a string
-        assert isinstance(exp_desc, str)
-
-        assert "[x] mlunet: UNET" in red_desc
-        assert "[x] model_file=test_checkpoint" in red_desc
-
-        # Check sparsemed params
-        assert "[x] sparsemed: " in red_desc
-        assert "[x] kernel_size=200" in red_desc
-        assert "[x] split_time=1" in red_desc
-        assert "[x] thresh_cleansing=0" in red_desc
-        assert "[x] frac_cleansing=0.8" in red_desc
-        # Check norm gating  params
-        assert "[x] norm gating" in red_desc
-        assert "[x] online_gates=False" in red_desc
-        assert "[x] size_thresh_mask=0" in red_desc
-        # Check datapath
-        assert "[x] HSMFS: test.rtdc" in red_desc
-        # Check username
-        assert "[x] username=test_username" in red_desc
+        for line in exp_desc:
+            assert line in red_desc

@@ -40,6 +40,7 @@ For example, when the job(s) is finished, a comment with "Finished" will appear.
       <!-- option end -->
   - Further Options:
     - [ ] --reproduce
+    - [ ] --num-frames
     <!-- option end -->
 
 - **Prediction**

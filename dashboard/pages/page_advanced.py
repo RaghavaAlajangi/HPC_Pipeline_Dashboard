@@ -19,6 +19,7 @@ from .common_components import (
 )
 from .common_sections import (
     cell_classifier_section,
+    further_options_section,
     input_data_display_section,
     input_data_selection_section,
     title_section,
@@ -454,30 +455,6 @@ def gating_options_section():
     )
 
 
-def further_options_section():
-    # Get the default parameters from request repo
-    request_gitlab, _ = get_gitlab_instances()
-    dcevent_params = request_gitlab.get_defaults()
-    reproduce = dcevent_params["reproduce"]["default"]
-    reproduce_flag = True if reproduce.lower() == "true" else False
-    return dbc.AccordionItem(
-        title="Further Options",
-        children=[
-            checklist_comp(
-                comp_id="reproduce_flag",
-                options=[
-                    {
-                        "label": "--reproduce",
-                        "value": "--reproduce",
-                        "disabled": False,
-                    }
-                ],
-                defaults=["--reproduce"] if reproduce_flag else [],
-            )
-        ],
-    )
-
-
 def advanced_page_layout(refresh_path):
     """Creates advanced request page"""
     return dbc.Toast(
@@ -541,7 +518,12 @@ def advanced_page_layout(refresh_path):
                     advanced_segmentation_section(),
                     background_correction_section(),
                     gating_options_section(),
-                    further_options_section(),
+                    further_options_section(
+                        reproduce_flag_id="advanced_reproduce_flag",
+                        num_frames_id="advanced_num_frames_switch",
+                        num_frames_toggle_id="advanced_num_frames_options",
+                        num_frames_value="advanced_num_frames_value",
+                    ),
                     cell_classifier_section(classifier_id="classifier_name"),
                     input_data_selection_section(),
                 ],
@@ -564,6 +546,7 @@ def advanced_page_layout(refresh_path):
             dcc.Store(id="cache_rollmed_params", storage_type="local"),
             dcc.Store(id="cache_sparsemed_params", storage_type="local"),
             dcc.Store(id="cache_norm_gate_params", storage_type="local"),
+            dcc.Store(id="cache_advanced_num_frames", storage_type="local"),
         ],
     )
 
@@ -720,11 +703,29 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
 
 
 @callback(
+    Output("cache_advanced_num_frames", "data"),
+    Output("advanced_num_frames_options", "style"),
+    Input("advanced_num_frames_switch", "value"),
+    Input("advanced_num_frames_value", "key"),
+    Input("advanced_num_frames_value", "value"),
+)
+def toggle_simple_num_frames_options(
+    num_frames_click, num_frames_key, num_frames_value
+):
+    """Toggle num_frames options with num_frames switch"""
+    if num_frames_click:
+        return {num_frames_key: {num_frames_key: num_frames_value}}, {
+            "display": "block"
+        }
+    return None, {"display": "none"}
+
+
+@callback(
     Output("cache_advanced_template", "data"),
     Input("advanced_title_drop", "value"),
     Input("advanced_title_text", "value"),
     # Direct options
-    Input("reproduce_flag", "value"),
+    Input("advanced_reproduce_flag", "value"),
     Input("classifier_name", "value"),
     # Cached options
     Input("cache_advanced_unet_model_path", "data"),
@@ -735,6 +736,7 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     Input("cache_rollmed_params", "data"),
     Input("cache_sparsemed_params", "data"),
     Input("cache_norm_gate_params", "data"),
+    Input("cache_advanced_num_frames", "data"),
     # Data to process
     Input("show_grid", "selectedRows"),
 )
@@ -751,6 +753,7 @@ def collect_advanced_pipeline_params(
     cache_rollmed_params,
     cache_sparsemed_params,
     cache_norm_gate_params,
+    cache_num_frames,
     selected_rows,
 ):
     """
@@ -770,6 +773,7 @@ def collect_advanced_pipeline_params(
         cache_rollmed_params,
         cache_sparsemed_params,
         cache_norm_gate_params,
+        cache_num_frames,
     ]
 
     # Update params_dict with non-empty cached params

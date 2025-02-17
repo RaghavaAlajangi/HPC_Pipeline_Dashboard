@@ -7,6 +7,8 @@ from ..gitlab import get_gitlab_instances
 from .common_components import (
     button_comp,
     checklist_comp,
+    divider_line_comp,
+    form_group_input,
     hover_card,
     line_breaks,
 )
@@ -267,4 +269,66 @@ def input_data_display_section(show_grid_id, button_id):
             ),
             line_breaks(times=3),
         ]
+    )
+
+
+def further_options_section(
+    reproduce_flag_id, num_frames_id, num_frames_toggle_id, num_frames_value
+):
+    """Creates the further option section of the pipeline."""
+    # Get the default parameters from request repo
+    request_gitlab, _ = get_gitlab_instances()
+    dcevent_params = request_gitlab.get_defaults()
+    foptions = dcevent_params["further_options"]
+    reproduce_def = foptions["reproduce"]["default"]
+    reproduce_flag = True if reproduce_def.lower() == "true" else False
+    return dbc.AccordionItem(
+        title="Further Options",
+        children=[
+            # --reproduce checkbox (switch)
+            checklist_comp(
+                comp_id=reproduce_flag_id,
+                options=[
+                    {
+                        "label": "--reproduce",
+                        "value": "--reproduce",
+                        "disabled": False,
+                    }
+                ],
+                defaults=["--reproduce"] if reproduce_flag else [],
+            ),
+            divider_line_comp(),
+            html.P(
+                "- If you want to run the analysis with a fixed number of "
+                "frames, use this option.",
+                style={"color": "red"},
+            ),
+            # --num-frames checkbox (switch)
+            checklist_comp(
+                comp_id=num_frames_id,
+                options=[
+                    {
+                        "label": "--num-frames",
+                        "value": "--num-frames",
+                        "disabled": False,
+                    }
+                ],
+                defaults=["--num-frames"] if reproduce_flag else [],
+            ),
+            # --num-frames option (input box to enter a number)
+            html.Ul(
+                id=num_frames_toggle_id,
+                children=[
+                    form_group_input(
+                        comp_id=num_frames_value,
+                        label="frames",
+                        label_key="--num-frames",
+                        min=foptions["num_frames"]["min"],
+                        max=foptions["num_frames"]["max"],
+                        step=foptions["num_frames"]["step"],
+                        default=foptions["num_frames"]["default"],
+                    ),
+                ],
+            ),
+        ],
     )
