@@ -128,5 +128,12 @@ norm_gate:
     min: 0
     max: 10
 
-reproduce:
-  default: "False"
+further_options:
+  reproduce:
+    default: "False"
+  num_frames:
+    default: 10000
+    step: 100
+    min: 0
+    max: 500000
+

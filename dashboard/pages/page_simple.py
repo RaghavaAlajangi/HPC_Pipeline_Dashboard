@@ -17,6 +17,7 @@ from .common_components import (
 )
 from .common_sections import (
     cell_classifier_section,
+    further_options_section,
     input_data_display_section,
     input_data_selection_section,
     title_section,
@@ -138,6 +139,12 @@ def simple_page_layout(refresh_path):
                     cell_classifier_section(
                         classifier_id="simple_classifier_name"
                     ),
+                    further_options_section(
+                        reproduce_flag_id="simple_reproduce_flag",
+                        num_frames_id="simple_num_frames_switch",
+                        num_frames_toggle_id="simple_num_frames_options",
+                        num_frames_value="simple_num_frames_value",
+                    ),
                     input_data_selection_section(),
                 ],
                 middle=True,
@@ -150,6 +157,7 @@ def simple_page_layout(refresh_path):
             ),
             dcc.Store(id="cache_simple_template", storage_type="local"),
             dcc.Store(id="cache_simple_seg_options", storage_type="local"),
+            dcc.Store(id="cache_simple_num_frames", storage_type="local"),
         ],
     )
 
@@ -207,23 +215,52 @@ def toggle_legacy_options(legacy_click):
 
 
 @callback(
+    Output("cache_simple_num_frames", "data"),
+    Output("simple_num_frames_options", "style"),
+    Input("simple_num_frames_switch", "value"),
+    Input("simple_num_frames_value", "key"),
+    Input("simple_num_frames_value", "value"),
+)
+def toggle_simple_num_frames_options(
+    num_frames_click, num_frames_key, num_frames_value
+):
+    """Toggle num_frames options with num_frames switch"""
+    if num_frames_click:
+        return {num_frames_key: {num_frames_key: num_frames_value}}, {
+            "display": "block"
+        }
+    return {}, {"display": "none"}
+
+
+@callback(
     Output("cache_simple_template", "data"),
     Input("simple_title_drop", "value"),
     Input("simple_title_text", "value"),
     Input("cache_simple_seg_options", "data"),
+    Input("cache_simple_num_frames", "data"),
     Input("simple_classifier_name", "value"),
+    Input("simple_reproduce_flag", "value"),
     Input("show_grid", "selectedRows"),
 )
 def collect_simple_pipeline_params(
     author_name,
     simple_title,
     cached_seg_options,
+    cached_num_frames,
     simple_classifier,
+    reproduce_flag,
     selected_files,
 ):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    params = list(cached_seg_options.keys()) + simple_classifier
+    params = (
+        list(cached_seg_options.keys())
+        + list(cached_num_frames.keys())
+        + simple_classifier
+        + reproduce_flag
+    )
+
+    cached_seg_options.update(cached_num_frames)
 
     # Update the template, only when author name, title, and data files
     # to process are entered

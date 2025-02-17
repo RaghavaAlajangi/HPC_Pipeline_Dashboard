@@ -1,4 +1,5 @@
 0.2.7
+ - enh: add num_frames option to the simple and advanced requests
  - ref: clean code and improve docstrings for clarity and consistency
  - ref: enhance sidebar layout with hover cards and improved links
  - ref: eliminate code duplication, rename module, and cleanup code

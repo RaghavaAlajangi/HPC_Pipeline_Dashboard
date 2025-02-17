@@ -244,7 +244,9 @@ def test_simple_request_submission_popup_callback(
                     "legacy": {"thresh": -6},
                     "mlunet": {"model_file": "model_checkpoint"},
                 },
+                "cached_num_frames": {},
                 "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "reproduce_flag": [],
                 "selected_files": [
                     {"filepath": "HSMFS: test1.rtdc"},
                     {"filepath": "HSMFS: test2.rtdc"},
@@ -254,7 +256,18 @@ def test_simple_request_submission_popup_callback(
             {
                 "cache_simple_template": {
                     "title": "test_title",
-                    "description": "updated simple template",
+                    "description": """
+                    **Segmentation**
+                        - [x] mlunet
+                        - [x] model_file=model_checkpoint
+                    **Classification Model
+                        - [x] bloody-bunny_g1_bacae
+                    **Data to Process
+                        - [x] HSMFS: test1.rtdc"
+                        - [x] HSMFS: test2.rtdc
+                    __Author_name__
+                        - [x] username=test_username
+                    """,
                 }
             },
         ),
@@ -270,7 +283,9 @@ def test_simple_request_submission_popup_callback(
                     "legacy": {"thresh": -6},
                     "mlunet": {"model_file": "model_checkpoint"},
                 },
+                "cached_num_frames": {},
                 "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "reproduce_flag": [],
                 "selected_files": [
                     {"filepath": "HSMFS: test1.rtdc"},
                     {"filepath": "HSMFS: test2.rtdc"},
@@ -278,6 +293,47 @@ def test_simple_request_submission_popup_callback(
             },
             # Expected Outputs:
             {"cache_simple_template": no_update},
+        ),
+        (
+            # Test case 3: check for num-frames and reproduce flag options
+            collect_simple_pipeline_params,
+            # Inputs:
+            {
+                "author_name": "test user",  # No user is provided
+                "simple_title": "test_title",
+                "cached_seg_options": {
+                    "legacy": {"thresh": -6},
+                    "mlunet": {"model_file": "model_checkpoint"},
+                },
+                "cached_num_frames": {"--num-frames": {"--num-frames": 500}},
+                "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "reproduce_flag": ["--reproduce"],
+                "selected_files": [
+                    {"filepath": "HSMFS: test1.rtdc"},
+                    {"filepath": "HSMFS: test2.rtdc"},
+                ],
+            },
+            # Expected Outputs:
+            {
+                "cache_simple_template": {
+                    "title": "test_title",
+                    "description": """
+                    **Segmentation**
+                        - [x] mlunet
+                        - [x] model_file=model_checkpoint
+                        - [x] --reproduce
+                        - [x] --num-frames
+                          - [x] --nume-frames=500
+                    **Classification Model
+                        - [x] bloody-bunny_g1_bacae
+                    **Data to Process
+                        - [x] HSMFS: test1.rtdc"
+                        - [x] HSMFS: test2.rtdc
+                    __Author_name__
+                        - [x] username=test_username
+                    """,
+                }
+            },
         ),
     ],
 )
@@ -294,17 +350,5 @@ def test_collect_simple_pipeline_params_callback(
         red_desc = response["description"]
         exp_desc = expected["cache_simple_template"]["description"]
 
-        # Expected description (updated template) should be a string
-        assert isinstance(exp_desc, str)
-
-        assert "[x] mlunet" in red_desc
-        assert "[x] model_file=model_checkpoint" in red_desc
-
-        # Check sparsemed params
-        # assert "[x] legacy " in red_desc
-        assert "[x] bloody-bunny_g1_bacae" in red_desc
-        # Check datapath
-        assert "[x] HSMFS: test1.rtdc" in red_desc
-        assert "[x] HSMFS: test2.rtdc" in red_desc
-        # Check username
-        assert "[x] username=test_username" in red_desc
+        for line in exp_desc:
+            assert line in red_desc
