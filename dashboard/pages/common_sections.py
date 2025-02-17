@@ -300,7 +300,8 @@ def further_options_section(
             divider_line_comp(),
             html.P(
                 "- If you want to run the analysis with a fixed number of "
-                "frames, use this option.",
+                "frames, use this option. (by default, all the frames are "
+                "used)",
                 style={"color": "red"},
             ),
             # --num-frames checkbox (switch)
