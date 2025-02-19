@@ -629,6 +629,7 @@ def test_advanced_request_submission_popup_callback(
                     "mlunet: UNET": {"model_file": "test_checkpoint"}
                 },
                 "cached_legacy_params": {},
+                "cache_thresh_seg_params": {},
                 "cache_watershed_params": {},
                 "cache_std_params": {},
             },
@@ -648,6 +649,7 @@ def test_advanced_request_submission_popup_callback(
                     "mlunet: UNET": {"model_file": "test_checkpoint"}
                 },
                 "cached_legacy_params": {},
+                "cache_thresh_seg_params": {},
                 "cache_watershed_params": {},
                 "cache_std_params": {},
             },
@@ -797,7 +799,7 @@ def test_toggle_advanced_create_pipeline_button_callback(
                         "size_thresh_mask": 0,
                     }
                 },
-                "cache_num_frames": {"--num-frames": {"--num-frames": 200}},
+                "cache_num_frames": {"--num-frames": 200},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
@@ -817,8 +819,7 @@ def test_toggle_advanced_create_pipeline_button_callback(
                           - [x] online_gates=False
                           - [x] size_thresh_mask=0
                         - [x] --reproduce
-                        - [x] --num-frames
-                          - [x] --num-frames=200
+                        - [x] --num-frames 200
                     **Data to Process**
                     - [x] HSMFS: test.rtdc
                     __Author_name__

@@ -1,3 +1,5 @@
+0.2.8
+ - fix: enable create_pipeline button for thresh segmentation (shada)
 0.2.7
  - enh: add num_frames option to the simple and advanced requests
  - ref: clean code and improve docstrings for clarity and consistency

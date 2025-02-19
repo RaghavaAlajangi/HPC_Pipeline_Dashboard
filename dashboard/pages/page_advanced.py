@@ -825,6 +825,7 @@ def advanced_request_submission_popup(_, cached_adv_temp, close_popup, popup):
     Input("show_grid", "selectedRows"),
     Input("cache_advanced_unet_model_path", "data"),
     Input("cache_legacy_params", "data"),
+    Input("cache_thresh_seg_params", "data"),
     Input("cache_watershed_params", "data"),
     Input("cache_std_params", "data"),
 )
@@ -834,6 +835,7 @@ def toggle_advanced_create_pipeline_button(
     selected_files,
     cached_unet_model_path,
     cached_legacy_params,
+    cache_thresh_seg_params,
     cache_watershed_params,
     cache_std_params,
 ):
@@ -843,6 +845,7 @@ def toggle_advanced_create_pipeline_button(
         if (
             cached_unet_model_path
             or cached_legacy_params
+            or cache_thresh_seg_params
             or cache_watershed_params
             or cache_std_params
         ):
