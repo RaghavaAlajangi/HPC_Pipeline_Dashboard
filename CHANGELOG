@@ -1,4 +1,5 @@
 0.2.8
+ - fix: copy CHANGELOG to app container
  - feat: add version display to sidebar using latest version from CHANGELOG
  - fix: improve user input handling and streamline template update process
  - fix: enable create_pipeline button for thresh segmentation (shada)
