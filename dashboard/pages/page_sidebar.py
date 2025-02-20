@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
@@ -6,6 +7,8 @@ from dash import html
 from dash_iconify import DashIconify
 
 from .common_components import hover_card, line_breaks
+
+CHANGELOG_PATH = Path(__file__).parents[2] / "CHANGELOG"
 
 # BDA GitHub URL
 bda_gitlab_url = "https://gitlab.gwdg.de/blood_data_analysis"
@@ -21,6 +24,12 @@ imp_urls = {
 
 # Get the BASENAME_PREFIX from environment variables if not default
 BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
+
+
+def get_latest_version():
+    """Read the latest version from the CHANGELOG"""
+    with open(CHANGELOG_PATH, "r", encoding="utf-8") as file:
+        return file.readline().strip()
 
 
 def wrong_page(pathname):
@@ -122,7 +131,9 @@ def sidebar_layout():
     return html.Div(
         children=[
             # Title for the dashboard
-            dmc.Title("HPC Pipelines", order=1, align="center"),
+            dmc.Title("HPC Pipeline Dashboard", order=2),
+            # Dashboard version (from changelog)
+            dmc.Code(f"v{get_latest_version()}", fz=15),
             line_breaks(times=1),
             # Alert for the users
             dbc.Alert(

@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 RUN pip install setuptools
 
 COPY dashboard /app/dashboard
+COPY CHANGELOG /app/CHANGELOG
 COPY resources /app/resources
 
 ENV PATHNAME_PREFIX="/"
