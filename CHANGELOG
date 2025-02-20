@@ -1,4 +1,5 @@
 0.2.8
+ - fix: improve user input handling and streamline template update process
  - fix: enable create_pipeline button for thresh segmentation (shada)
 0.2.7
  - enh: add num_frames option to the simple and advanced requests

@@ -54,8 +54,10 @@ def simple_segmentation_section():
                     dbc.Checklist(
                         options=[
                             {
-                                "label": "Legacy Thresholding Segmentation",
-                                "value": "legacy",
+                                "label": "legacy: Legacy thresholding "
+                                "with OpenCV",
+                                "value": "legacy: Legacy thresholding "
+                                "with OpenCV",
                             },
                         ],
                         id="simple_legacy_switch",
@@ -226,9 +228,7 @@ def toggle_simple_num_frames_options(
 ):
     """Toggle num_frames options with num_frames switch"""
     if num_frames_click:
-        return {num_frames_key: {num_frames_key: num_frames_value}}, {
-            "display": "block"
-        }
+        return {num_frames_key: num_frames_value}, {"display": "block"}
     return {}, {"display": "none"}
 
 
@@ -253,25 +253,28 @@ def collect_simple_pipeline_params(
 ):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    params = (
-        list(cached_seg_options.keys())
-        + list(cached_num_frames.keys())
-        + simple_classifier
-        + reproduce_flag
-    )
+    # Initialize the params dictionary with empty dictionaries
 
-    cached_seg_options.update(cached_num_frames)
+    params_dict = {
+        param: None for param in [*simple_classifier, *reproduce_flag]
+    }
+
+    # Merge parameter dicts
+    params_dict = {
+        **params_dict,
+        **cached_seg_options,
+        **cached_num_frames,
+    }
 
     # Update the template, only when author name, title, and data files
     # to process are entered
-    if author_name and simple_title and selected_files and cached_seg_options:
+    if author_name and simple_title and selected_files:
         rtdc_files = [s["filepath"] for s in selected_files]
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
         description = update_simple_template(
-            params,
-            cached_seg_options,
+            params_dict,
             author_name,
             rtdc_files,
             get_simple_template(),

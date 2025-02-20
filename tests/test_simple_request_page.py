@@ -241,11 +241,11 @@ def test_simple_request_submission_popup_callback(
                 "author_name": "test_username",
                 "simple_title": "test_title",
                 "cached_seg_options": {
-                    "legacy": {"thresh": -6},
-                    "mlunet": {"model_file": "model_checkpoint"},
+                    "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
+                    "mlunet: UNET": {"model_file": "model_checkpoint"},
                 },
                 "cached_num_frames": {},
-                "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "simple_classifier": ["bloody-bunny_g1_bacae: Bloody Bunny"],
                 "reproduce_flag": [],
                 "selected_files": [
                     {"filepath": "HSMFS: test1.rtdc"},
@@ -257,16 +257,31 @@ def test_simple_request_submission_popup_callback(
                 "cache_simple_template": {
                     "title": "test_title",
                     "description": """
-                    **Segmentation**
-                        - [x] mlunet
-                        - [x] model_file=model_checkpoint
-                    **Classification Model
-                        - [x] bloody-bunny_g1_bacae
-                    **Data to Process
-                        - [x] HSMFS: test1.rtdc"
-                        - [x] HSMFS: test2.rtdc
-                    __Author_name__
-                        - [x] username=test_username
+                    - **Segmentation**\n
+                        - dcevent version\n
+                            - [ ] dcevent version=latest\n
+                        - Segmentation Algorithm\n
+                            - [x] mlunet: UNET\n
+                                - [x] model_file=model_checkpoint\n
+                            - [x] legacy: Legacy thresholding with OpenCV\n
+                                - [x] thresh=-6\n
+                            - [ ] thresh: thresholding segmentation\n
+                            - [ ] watershed: Watershed algorithm\n
+                            - [ ] std: Standard-deviation-based thresholding\n
+                            - Further Options\n
+                                - [ ] --reproduce\n
+                                - [ ] --num-frames\n
+                    - **Prediction**\n
+                        - Classification Model\n
+                            - [x] bloody-bunny_g1_bacae: Bloody Bunny\n
+                    - **Post Analysis**\n
+                      - [ ] Benchmarking\n
+                      - [ ] Scatter Plot\n
+                    - **Data to Process**\n
+                      - [x] HSMFS: test1.rtdc\n
+                      - [x] HSMFS: test2.rtdc\n
+                    - __Author__\n
+                       - [x] username=test_username
                     """,
                 }
             },
@@ -277,14 +292,14 @@ def test_simple_request_submission_popup_callback(
             collect_simple_pipeline_params,
             # Inputs:
             {
-                "author_name": "",  # No user is provided
+                "author_name": "",  # No username
                 "simple_title": "test_title",
                 "cached_seg_options": {
-                    "legacy": {"thresh": -6},
-                    "mlunet": {"model_file": "model_checkpoint"},
+                    "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
+                    "mlunet: UNET": {"model_file": "model_checkpoint"},
                 },
                 "cached_num_frames": {},
-                "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "simple_classifier": ["bloody-bunny_g1_bacae: Bloody Bunny"],
                 "reproduce_flag": [],
                 "selected_files": [
                     {"filepath": "HSMFS: test1.rtdc"},
@@ -299,14 +314,14 @@ def test_simple_request_submission_popup_callback(
             collect_simple_pipeline_params,
             # Inputs:
             {
-                "author_name": "test user",  # No user is provided
+                "author_name": "test_username",
                 "simple_title": "test_title",
                 "cached_seg_options": {
-                    "legacy": {"thresh": -6},
-                    "mlunet": {"model_file": "model_checkpoint"},
+                    "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
+                    "mlunet: UNET": {"model_file": "model_checkpoint"},
                 },
-                "cached_num_frames": {"--num-frames": {"--num-frames": 500}},
-                "simple_classifier": ["bloody-bunny_g1_bacae"],
+                "cached_num_frames": {"--num-frames": 12000},
+                "simple_classifier": ["bloody-bunny_g1_bacae: Bloody Bunny"],
                 "reproduce_flag": ["--reproduce"],
                 "selected_files": [
                     {"filepath": "HSMFS: test1.rtdc"},
@@ -318,19 +333,31 @@ def test_simple_request_submission_popup_callback(
                 "cache_simple_template": {
                     "title": "test_title",
                     "description": """
-                    **Segmentation**
-                        - [x] mlunet
-                        - [x] model_file=model_checkpoint
-                        - [x] --reproduce
-                        - [x] --num-frames
-                          - [x] --nume-frames=500
-                    **Classification Model
-                        - [x] bloody-bunny_g1_bacae
-                    **Data to Process
-                        - [x] HSMFS: test1.rtdc"
-                        - [x] HSMFS: test2.rtdc
-                    __Author_name__
-                        - [x] username=test_username
+                    - **Segmentation**\n
+                        - dcevent version\n
+                            - [ ] dcevent version=latest\n
+                        - Segmentation Algorithm\n
+                            - [x] mlunet: UNET\n
+                                - [x] model_file=model_checkpoint\n
+                            - [x] legacy: Legacy thresholding with OpenCV\n
+                                - [x] thresh=-6\n
+                            - [ ] thresh: thresholding segmentation\n
+                            - [ ] watershed: Watershed algorithm\n
+                            - [ ] std: Standard-deviation-based thresholding\n
+                            - Further Options\n
+                                - [x] --reproduce\n
+                                - [x] --num-frames 12000\n
+                    - **Prediction**\n
+                        - Classification Model\n
+                            - [x] bloody-bunny_g1_bacae: Bloody Bunny\n
+                    - **Post Analysis**\n
+                      - [ ] Benchmarking\n
+                      - [ ] Scatter Plot\n
+                    - **Data to Process**\n
+                      - [x] HSMFS: test1.rtdc\n
+                      - [x] HSMFS: test2.rtdc\n
+                    - __Author__\n
+                       - [x] username=test_username
                     """,
                 }
             },
@@ -347,8 +374,18 @@ def test_collect_simple_pipeline_params_callback(
     if response is not no_update:
         assert "description" in response.keys()
         assert "title" in response.keys()
-        red_desc = response["description"]
-        exp_desc = expected["cache_simple_template"]["description"]
+        res_desc_str = response["description"]
+        exp_desc_str = expected["cache_simple_template"]["description"]
 
-        for line in exp_desc:
-            assert line in red_desc
+        # Normalize and split lines
+        res_desc_lines = [
+            line.strip() for line in res_desc_str.split("\n") if line.strip()
+        ]
+        exp_desc_lines = [
+            line.strip() for line in exp_desc_str.split("\n") if line.strip()
+        ]
+        # Check each expected line
+        for line in exp_desc_lines:
+            assert any(
+                line in res_line for res_line in res_desc_lines
+            ), f"Missing: {line}"

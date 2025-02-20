@@ -598,7 +598,7 @@ def toggle_legacy_options(legacy_opt, leg_keys, leg_values):
 
     if legacy_opt:
         return {legacy_opt[0]: legacy_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -619,7 +619,7 @@ def toggle_thresh_seg_options(
 
     if thresh_seg_opt:
         return {thresh_seg_opt[0]: thresh_seg_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -635,7 +635,7 @@ def toggle_watershed_options(watershed_opt, water_keys, water_values):
     water_params = {k: v for k, v in zip(water_keys, water_values)}
     if watershed_opt:
         return {watershed_opt[0]: water_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -651,7 +651,7 @@ def toggle_std_options(std_opt, std_keys, std_values):
     std_params = {k: v for k, v in zip(std_keys, std_values)}
     if std_opt:
         return {std_opt[0]: std_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -667,7 +667,7 @@ def toggle_rollmed_options(rollmed_opt, rollmed_keys, rollmed_values):
     rollmed_params = {k: v for k, v in zip(rollmed_keys, rollmed_values)}
     if rollmed_opt:
         return {rollmed_opt[0]: rollmed_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -683,7 +683,7 @@ def toggle_sparsemed_options(sparsemed_opt, sparsemed_keys, sparsemed_values):
     sparsemed_params = {k: v for k, v in zip(sparsemed_keys, sparsemed_values)}
     if sparsemed_opt:
         return {sparsemed_opt[0]: sparsemed_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -699,7 +699,7 @@ def toggle_norm_gate_options(ngate_opt, ngate_keys, ngate_values):
     norm_gate_params = {k: v for k, v in zip(ngate_keys, ngate_values)}
     if ngate_opt:
         return {ngate_opt[0]: norm_gate_params}, {"display": "block"}
-    return None, {"display": "none"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -714,10 +714,8 @@ def toggle_simple_num_frames_options(
 ):
     """Toggle num_frames options with num_frames switch"""
     if num_frames_click:
-        return {num_frames_key: {num_frames_key: num_frames_value}}, {
-            "display": "block"
-        }
-    return None, {"display": "none"}
+        return {num_frames_key: num_frames_value}, {"display": "block"}
+    return {}, {"display": "none"}
 
 
 @callback(
@@ -761,25 +759,41 @@ def collect_advanced_pipeline_params(
     the advanced issue template. The updated template will be cached.
     """
     # Initialize the params dictionary with empty dictionaries
-    params_dict = {param: {} for param in [*reproduce_flag, *classifier_name]}
+    params_dict = {
+        param: None for param in [*classifier_name, *reproduce_flag]
+    }
 
     # Combine params from cached options
-    cached_params = [
-        cache_unet_model_path,
-        cache_legacy_params,
-        cache_thresh_seg_params,
-        cache_watershed_params,
-        cache_std_params,
-        cache_rollmed_params,
-        cache_sparsemed_params,
-        cache_norm_gate_params,
-        cache_num_frames,
-    ]
+    # cached_params = [
+    #     cache_unet_model_path,
+    #     cache_legacy_params,
+    #     cache_thresh_seg_params,
+    #     cache_watershed_params,
+    #     cache_std_params,
+    #     cache_rollmed_params,
+    #     cache_sparsemed_params,
+    #     cache_norm_gate_params,
+    #     cache_num_frames,
+    # ]
 
     # Update params_dict with non-empty cached params
-    params_dict.update(
-        {k: v for param in cached_params if param for k, v in param.items()}
-    )
+    # params_dict.update(
+    #     {k: v for param in cached_params if param for k, v in param.items()}
+    # )
+
+    # Merge parameter dicts
+    params_dict = {
+        **params_dict,
+        **cache_unet_model_path,
+        **cache_legacy_params,
+        **cache_thresh_seg_params,
+        **cache_watershed_params,
+        **cache_std_params,
+        **cache_rollmed_params,
+        **cache_sparsemed_params,
+        **cache_norm_gate_params,
+        **cache_num_frames,
+    }
 
     # Extract file paths from selected rows
     rtdc_files = (
@@ -793,6 +807,9 @@ def collect_advanced_pipeline_params(
             params_dict, author_name, rtdc_files, get_advanced_template()
         )
         pipeline_template["description"] = description
+        import pprint
+
+        pprint.pprint(pipeline_template)
         return pipeline_template
 
     return None

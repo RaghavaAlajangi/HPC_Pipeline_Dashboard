@@ -711,22 +711,60 @@ def test_toggle_advanced_create_pipeline_button_callback(
                 "cache_advanced_template": {
                     "title": "test_title",
                     "description": """
-                    **Segmentation**
-                        - [x] mlunet: UNET
-                          - [x] model_file=test_checkpoint
-                        - [x] sparsemed:
-                          - [x] kernel_size=200
-                          - [x] split_time=1
-                          - [x] thresh_cleansing=0
-                          - [x] frac_cleansing=0.8
-                        - [x] norm gating
-                          - [x] online_gates=False
-                          - [x] size_thresh_mask=0
-                    **Data to Process**
-                    - [x] HSMFS: test.rtdc
-                    __Author_name__
-                    [x] username=test_username
-                    """,
+- **Segmentation**\n
+    - dcevent version\n
+        - [ ] dcevent version=latest\n
+    - Segmentation Algorithm\n
+        - [x] mlunet: UNET\n
+            - [x] model_file=test_checkpoint\n
+        - [ ] legacy: Legacy thresholding with OpenCV\n
+            - [ ] thresh=-6\n
+            - [ ] blur=0\n
+            - [ ] binaryops=5\n
+            - [ ] diff_method=1\n
+            - [ ] clear_border=True\n
+            - [ ] fill_holes=True\n
+            - [ ] closing_disk=5\n
+        - [ ] thresh: thresholding segmentation\n
+            - [ ] clear_border=True\n
+            - [ ] closing_disk=2\n
+            - [ ] fill_holes=True\n
+            - [ ] thresh=-6\n
+        - [ ] watershed: Watershed algorithm\n
+            - [ ] clear_border=True\n
+            - [ ] fill_holes=True\n
+            - [ ] closing_disk=5\n
+        - [ ] std: Standard-deviation-based thresholding\n
+            - [ ] clear_border=True\n
+            - [ ] fill_holes=True\n
+            - [ ] closing_disk=5\n
+    - Background Correction/Subtraction Method\n
+        - [ ] rollmed: Rolling median RT-DC background image computation\n
+            - [ ] kernel_size=100\n
+            - [ ] batch_size=10000\n
+        - [x] sparsemed: Sparse median background correction with cleansing\n
+            - [x] kernel_size=200\n
+            - [x] split_time=1\n
+            - [x] thresh_cleansing=0\n
+            - [x] frac_cleansing=0.8\n
+    - Available gating options\n
+        - [x] norm gating\n
+        - [x] online_gates=False\n
+            - [x] size_thresh_mask=0\n
+    - Further Options\n
+        - [ ] --reproduce\n
+        - [ ] --num-frames\n
+- **Prediction**\n
+    - Classification Model\n
+        - [ ] bloody-bunny_g1_bacae: Bloody Bunny\n
+- **Post Analysis**\n
+    - [ ] Benchmarking\n
+    - [ ] Scatter Plot\n
+- **Data to Process**\n
+    - [x] HSMFS: test.rtdc\n
+- __Author__\n
+    - [x] username=test_user
+        """,
                 }
             },
         ),
@@ -761,7 +799,7 @@ def test_toggle_advanced_create_pipeline_button_callback(
                         "size_thresh_mask": 0,
                     }
                 },
-                "cache_num_frames": {"--num-frames": {"--num-frames": 200}},
+                "cache_num_frames": {"--num-frames": 200},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
@@ -807,24 +845,60 @@ def test_toggle_advanced_create_pipeline_button_callback(
                 "cache_advanced_template": {
                     "title": "test_title",
                     "description": """
-                    **Segmentation**
-                        - [x] mlunet: UNET
-                          - [x] model_file=test_checkpoint
-                        - [x] sparsemed:
-                          - [x] kernel_size=200
-                          - [x] split_time=1
-                          - [x] thresh_cleansing=0
-                          - [x] frac_cleansing=0.8
-                        - [x] norm gating
-                          - [x] online_gates=False
-                          - [x] size_thresh_mask=0
-                        - [x] --reproduce
-                        - [x] --num-frames 200
-                    **Data to Process**
-                    - [x] HSMFS: test.rtdc
-                    __Author_name__
-                    [x] username=test_username
-                    """,
+- **Segmentation**\n
+    - dcevent version\n
+        - [ ] dcevent version=latest\n
+    - Segmentation Algorithm\n
+        - [x] mlunet: UNET\n
+            - [x] model_file=test_checkpoint\n
+        - [ ] legacy: Legacy thresholding with OpenCV\n
+            - [ ] thresh=-6\n
+            - [ ] blur=0\n
+            - [ ] binaryops=5\n
+            - [ ] diff_method=1\n
+            - [ ] clear_border=True\n
+            - [ ] fill_holes=True\n
+            - [ ] closing_disk=5\n
+        - [ ] thresh: thresholding segmentation\n
+            - [ ] clear_border=True\n
+            - [ ] closing_disk=2\n
+            - [ ] fill_holes=True\n
+            - [ ] thresh=-6\n
+        - [ ] watershed: Watershed algorithm\n
+            - [ ] clear_border=True\n
+            - [ ] fill_holes=True\n
+            - [ ] closing_disk=5\n
+        - [ ] std: Standard-deviation-based thresholding\n
+            - [ ] clear_border=True\n
+            - [ ] fill_holes=True\n
+            - [ ] closing_disk=5\n
+    - Background Correction/Subtraction Method\n
+        - [ ] rollmed: Rolling median RT-DC background image computation\n
+            - [ ] kernel_size=100\n
+            - [ ] batch_size=10000\n
+        - [x] sparsemed: Sparse median background correction with cleansing\n
+            - [x] kernel_size=200\n
+            - [x] split_time=1\n
+            - [x] thresh_cleansing=0\n
+            - [x] frac_cleansing=0.8\n
+    - Available gating options\n
+        - [x] norm gating\n
+        - [x] online_gates=False\n
+            - [x] size_thresh_mask=0\n
+    - Further Options\n
+        - [x] --reproduce\n
+        - [x] --num-frames 200\n
+- **Prediction**\n
+    - Classification Model\n
+        - [ ] bloody-bunny_g1_bacae: Bloody Bunny\n
+- **Post Analysis**\n
+    - [ ] Benchmarking\n
+    - [ ] Scatter Plot\n
+- **Data to Process**\n
+    - [x] HSMFS: test.rtdc\n
+- __Author__\n
+    - [x] username=test_user
+        """,
                 }
             },
         ),
@@ -840,8 +914,18 @@ def test_collect_advanced_pipeline_params_callback(
     if response:
         assert "description" in response.keys()
         assert "title" in response.keys()
-        red_desc = response["description"]
-        exp_desc = expected["cache_advanced_template"]["description"]
+        res_desc_str = response["description"]
+        exp_desc_str = expected["cache_advanced_template"]["description"]
 
-        for line in exp_desc:
-            assert line in red_desc
+        # Normalize and split lines
+        res_desc_lines = [
+            line.strip() for line in res_desc_str.split("\n") if line.strip()
+        ]
+        exp_desc_lines = [
+            line.strip() for line in exp_desc_str.split("\n") if line.strip()
+        ]
+        # Check each expected line
+        for line in exp_desc_lines:
+            assert any(
+                line in res_line for res_line in res_desc_lines
+            ), f"Missing: {line}"
