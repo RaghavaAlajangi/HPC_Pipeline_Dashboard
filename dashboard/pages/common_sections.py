@@ -333,3 +333,12 @@ def further_options_section(
             ),
         ],
     )
+
+
+def format_params(switch, values, keys=None):
+    """Helper function to format given parameters"""
+    if keys and isinstance(values, list):
+        params = {k: v for k, v in zip(keys, values)}
+        return {switch[0]: params} if switch else {}
+    else:
+        return {switch[0]: values} if switch else {}
