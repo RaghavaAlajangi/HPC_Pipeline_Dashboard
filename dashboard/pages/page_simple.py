@@ -17,6 +17,7 @@ from .common_components import (
 )
 from .common_sections import (
     cell_classifier_section,
+    format_params,
     further_options_section,
     input_data_display_section,
     input_data_selection_section,
@@ -39,14 +40,15 @@ def simple_segmentation_section():
     request_gitlab, _ = get_gitlab_instances()
     dcevent_params = request_gitlab.get_defaults()
     legacy_seg = dcevent_params["legacy"]
+
     return dbc.AccordionItem(
         title="Segmentation",
         children=[
             # MLUNet segmentor section
             unet_segmentation_section(
-                unet_switch_id="simple_unet_switch",
-                unet_toggle_id="simple_unet_options",
-                unet_options_id="simple_measure_type",
+                unet_switch_id="simple_unet_click",
+                unet_toggle_id="simple_unet_toggle",
+                unet_options_id="simple_unet_model",
             ),
             divider_line_comp(),
             dmc.Group(
@@ -60,7 +62,7 @@ def simple_segmentation_section():
                                 "with OpenCV",
                             },
                         ],
-                        id="simple_legacy_switch",
+                        id="simple_legacy_click",
                         switch=True,
                         value=[],
                         labelCheckedClassName="text-success",
@@ -82,10 +84,10 @@ def simple_segmentation_section():
                 spacing=5,
             ),
             html.Ul(
-                id="simple_legacy_options",
+                id="simple_legacy_toggle",
                 children=[
                     form_group_input(
-                        comp_id="simple_legacy_thresh_value",
+                        comp_id="simple_legacy_param",
                         label="Threshold Value:",
                         label_key="thresh",
                         min=legacy_seg["thresh"]["min"],
@@ -134,18 +136,16 @@ def simple_page_layout(refresh_path):
             group_accordion(
                 children=[
                     title_section(
-                        dropdown_id="simple_title_drop",
-                        text_id="simple_title_text",
+                        dropdown_id="title_drop",
+                        text_id="titel_text",
                     ),
                     simple_segmentation_section(),
-                    cell_classifier_section(
-                        classifier_id="simple_classifier_name"
-                    ),
+                    cell_classifier_section(classifier_id="classifier_click"),
                     further_options_section(
-                        reproduce_flag_id="simple_reproduce_flag",
-                        num_frames_id="simple_num_frames_switch",
-                        num_frames_toggle_id="simple_num_frames_options",
-                        num_frames_value="simple_num_frames_value",
+                        reproduce_flag_id="reproduce_click",
+                        num_frames_id="simple_nframe_click",
+                        num_frames_toggle_id="simple_nframe_toggle",
+                        num_frames_value="simple_nframe_value",
                     ),
                     input_data_selection_section(),
                 ],
@@ -155,126 +155,112 @@ def simple_page_layout(refresh_path):
             ),
             input_data_display_section(
                 show_grid_id="show_grid",
-                button_id="create_simple_pipeline_button",
+                button_id="simple_create_pipeline_click",
             ),
-            dcc.Store(id="cache_simple_template", storage_type="local"),
-            dcc.Store(id="cache_simple_seg_options", storage_type="local"),
-            dcc.Store(id="cache_simple_num_frames", storage_type="local"),
+            dcc.Store(id="cache_simple_template"),
+            dcc.Store(id="cache_simple_params", data={}),
         ],
     )
 
 
 @callback(
-    Output("simple_measure_type", "children"),
-    Output("cache_simple_seg_options", "data"),
-    Input("simple_unet_switch", "value"),
-    Input("simple_measure_type", "value"),
-    Input("simple_legacy_switch", "value"),
-    Input("simple_legacy_thresh_value", "value"),
+    Output("simple_unet_model", "children"),
+    Input("simple_unet_click", "value"),
 )
-def show_and_cache_segment_options(
-    unet_click, measurement_type, legacy_click, legacy_thresh
-):
-    """This circular callback fetches unet model metadata from the DVC repo
-    and shows it as dmc.RadioGroup options, enable the user to select the
-    appropriate options from the same dmc.RadioItem options."""
+def fetch_and_show_unet_models(unet_click):
+    """This circular callback fetches unet model metadata from the
+    DVC repo and shows it as dmc.RadioGroup options, enable the user
+    to select the appropriate options from the same dmc.RadioItem
+    options."""
 
     _, dvc_gitlab = get_gitlab_instances()
 
     model_dict = dvc_gitlab.get_model_metadata()
     check_boxes = unet_segmentation_options(model_dict)
 
-    segm_options = {}
-    if unet_click and measurement_type:
-        segm_options[unet_click[0]] = {"model_file": measurement_type}
-
-    if legacy_click and legacy_thresh:
-        segm_options[legacy_click[0]] = {"thresh": legacy_thresh}
-
-    return check_boxes, segm_options
+    return check_boxes
 
 
 @callback(
-    Output("simple_unet_options", "style"),
-    Input("simple_unet_switch", "value"),
+    # Outputs
+    Output("cache_simple_params", "data"),
+    Output("simple_unet_toggle", "style"),
+    Output("simple_legacy_toggle", "style"),
+    Output("simple_nframe_toggle", "style"),
+    # Unet inputs
+    Input("simple_unet_click", "value"),
+    Input("simple_unet_model", "value"),
+    # Legacy inputs
+    Input("simple_legacy_click", "value"),
+    Input("simple_legacy_param", "key"),
+    Input("simple_legacy_param", "value"),
+    # bloody bunny input
+    Input("classifier_click", "value"),
+    # reproduce flag input
+    Input("reproduce_click", "value"),
+    # num frames inputs
+    Input("simple_nframe_click", "value"),
+    Input("simple_nframe_value", "value"),
 )
-def toggle_unet_options(unet_click):
-    """Toggle mlunet segmentation options with unet switch"""
-    if unet_click:
-        return {"display": "block"}
-    return {"display": "none"}
-
-
-@callback(
-    Output("simple_legacy_options", "style"),
-    Input("simple_legacy_switch", "value"),
-)
-def toggle_legacy_options(legacy_click):
-    """Toggle legacy segmentation options with legacy switch"""
-    if legacy_click:
-        return {"display": "block"}
-    return {"display": "none"}
-
-
-@callback(
-    Output("cache_simple_num_frames", "data"),
-    Output("simple_num_frames_options", "style"),
-    Input("simple_num_frames_switch", "value"),
-    Input("simple_num_frames_value", "key"),
-    Input("simple_num_frames_value", "value"),
-)
-def toggle_simple_num_frames_options(
-    num_frames_click, num_frames_key, num_frames_value
+def toggle_and_cache_params(
+    unet_click,
+    unet_value,
+    legacy_click,
+    legacy_key,
+    legacy_value,
+    classifier_click,
+    reproduce_click,
+    nframe_click,
+    nframe_value,
 ):
-    """Toggle num_frames options with num_frames switch"""
-    if num_frames_click:
-        return {num_frames_key: num_frames_value}, {"display": "block"}
-    return {}, {"display": "none"}
+    """Consolidated callback for toggling options and caching parameters"""
+    print(
+        legacy_click,
+        legacy_key,
+        legacy_value,
+    )
+    cache_data = {
+        **format_params(
+            unet_click, [unet_value if unet_value else ""], ["model_file"]
+        ),
+        **format_params(legacy_click, [legacy_value], [legacy_key]),
+        **format_params(nframe_click, nframe_value),
+        **format_params(classifier_click, None),
+        **format_params(reproduce_click, None),
+    }
+
+    return (
+        cache_data,
+        {"display": "block"} if unet_click else {"display": "none"},
+        {"display": "block"} if legacy_click else {"display": "none"},
+        {"display": "block"} if nframe_click else {"display": "none"},
+    )
 
 
 @callback(
     Output("cache_simple_template", "data"),
-    Input("simple_title_drop", "value"),
-    Input("simple_title_text", "value"),
-    Input("cache_simple_seg_options", "data"),
-    Input("cache_simple_num_frames", "data"),
-    Input("simple_classifier_name", "value"),
-    Input("simple_reproduce_flag", "value"),
+    Input("title_drop", "value"),
+    Input("titel_text", "value"),
+    Input("cache_simple_params", "data"),
     Input("show_grid", "selectedRows"),
 )
 def collect_simple_pipeline_params(
     author_name,
     simple_title,
-    cached_seg_options,
-    cached_num_frames,
-    simple_classifier,
-    reproduce_flag,
-    selected_files,
+    cached_params,
+    selected_rows,
 ):
     """Collect all the user selected parameters. Then, it updates the simple
     issue template. Updated template will be cached"""
-    # Initialize the params dictionary with empty dictionaries
-
-    params_dict = {
-        param: None for param in [*simple_classifier, *reproduce_flag]
-    }
-
-    # Merge parameter dicts
-    params_dict = {
-        **params_dict,
-        **cached_seg_options,
-        **cached_num_frames,
-    }
-
     # Update the template, only when author name, title, and data files
     # to process are entered
-    if author_name and simple_title and selected_files:
-        rtdc_files = [s["filepath"] for s in selected_files]
+    if author_name and simple_title and selected_rows:
+        rtdc_files = [s["filepath"] for s in selected_rows]
         # Create a template dict with title
         pipeline_template = {"title": simple_title}
         # Update the simple template from request repo
         description = update_simple_template(
-            params_dict,
+            cached_params,
             author_name,
             rtdc_files,
             get_simple_template(),
@@ -285,14 +271,14 @@ def collect_simple_pipeline_params(
 
 
 @callback(
-    Output("create_simple_pipeline_button", "disabled"),
-    Input("simple_title_drop", "value"),
-    Input("simple_title_text", "value"),
+    Output("simple_create_pipeline_click", "disabled"),
+    Input("title_drop", "value"),
+    Input("titel_text", "value"),
     Input("show_grid", "selectedRows"),
-    Input("cache_simple_seg_options", "data"),
+    Input("cache_simple_params", "data"),
 )
 def toggle_simple_create_pipeline_button(
-    author_name, title, selected_files, cached_seg_options
+    author_name, title, selected_rows, cached_params
 ):
     """Activates create pipeline button only when author name, title,
     data files, and segmentation method are entered"""
@@ -300,8 +286,8 @@ def toggle_simple_create_pipeline_button(
         author_name
         and title
         and title.strip()
-        and selected_files
-        and cached_seg_options
+        and selected_rows
+        and cached_params
     ):
         return False
     return True
@@ -309,7 +295,7 @@ def toggle_simple_create_pipeline_button(
 
 @callback(
     Output("simple_popup", "is_open"),
-    Input("create_simple_pipeline_button", "n_clicks"),
+    Input("simple_create_pipeline_click", "n_clicks"),
     Input("cache_simple_template", "data"),
     Input("simple_popup_close", "n_clicks"),
     State("simple_popup", "is_open"),
@@ -321,7 +307,7 @@ def simple_request_submission_popup(_, cached_template, close_popup, popup):
     request_gitlab, _ = get_gitlab_instances()
 
     button_trigger = [p["prop_id"] for p in ctx.triggered][0]
-    if "create_simple_pipeline_button" in button_trigger:
+    if "simple_create_pipeline_click" in button_trigger:
         request_gitlab.run_pipeline(cached_template)
         return not popup
     if close_popup:

@@ -8,13 +8,12 @@ from dash._utils import AttributeDict
 
 from dashboard.pages.page_simple import (
     collect_simple_pipeline_params,
-    show_and_cache_segment_options,
+    fetch_and_show_unet_models,
     simple_page_layout,
     simple_request_submission_popup,
     simple_segmentation_section,
-    toggle_legacy_options,
+    toggle_and_cache_params,
     toggle_simple_create_pipeline_button,
-    toggle_unet_options,
 )
 
 
@@ -32,80 +31,82 @@ def test_show_and_cache_segment_options_callback():
     """Test segmentation method selection"""
 
     def run_callback():
-        return show_and_cache_segment_options(
+        return fetch_and_show_unet_models(
             unet_click=["mlunet"],
-            measurement_type="model_checkpoint",
-            legacy_click=["legacy"],
-            legacy_thresh="-2",
         )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
-    check_boxes, segm_opt = ctx.run(run_callback)
+    check_boxes = ctx.run(run_callback)
 
     assert isinstance(check_boxes, dbc.Row)
-    assert isinstance(segm_opt, dict)
-    assert "mlunet" in segm_opt.keys()
 
 
 @pytest.mark.parametrize(
     "callback_function, args, expected",
     [
         (
-            # Test case 1: unet options expansion
-            toggle_unet_options,
+            # Test case 1: expand togglable components with relevant click
+            # and cache user selected parameters.
+            toggle_and_cache_params,
             # Inputs:
-            {"unet_click": ["mlunet"]},
+            {
+                "unet_click": ["mlunet"],
+                "unet_value": "test_model_file",
+                "legacy_click": ["legacy: Legacy thresholding with OpenCV"],
+                "legacy_key": "thresh",
+                "legacy_value": -5,
+                "classifier_click": [],
+                "reproduce_click": [],
+                "nframe_click": [],
+                "nframe_value": 10000,
+            },
             # Expected Outputs:
-            {"simple_unet_options": {"display": "block"}},
+            {
+                "cache_simple_params": {
+                    "mlunet": {"model_file": "test_model_file"},
+                    "legacy: Legacy thresholding with OpenCV": {"thresh": -5},
+                },
+                "simple_unet_toggle": {"display": "block"},
+                "simple_legacy_toggle": {"display": "block"},
+                "simple_nframe_toggle": {"display": "block"},
+            },
         ),
         (
-            # Test case 2: unet options contraction
-            toggle_unet_options,
+            # Test case 2: no action when togglable components are not clicked
+            # and dont cache any parameters
+            toggle_and_cache_params,
             # Inputs:
-            {"unet_click": []},
+            {
+                "unet_click": [],
+                "unet_value": None,
+                "legacy_click": [],
+                "legacy_key": "thresh",
+                "legacy_value": -5,
+                "classifier_click": [],
+                "reproduce_click": [],
+                "nframe_click": [],
+                "nframe_value": 10000,
+            },
             # Expected Outputs:
-            {"simple_unet_options": {"display": "none"}},
+            {
+                "cache_simple_params": {},
+                "simple_unet_toggle": {"display": "none"},
+                "simple_legacy_toggle": {"display": "none"},
+                "simple_nframe_toggle": {"display": "none"},
+                "simple_legacy_options": {"display": "none"},
+            },
         ),
     ],
 )
-def test_toggle_unet_options_callback(callback_function, args, expected):
-    """Test unet options expansion and contraction when a user clicks on unet
-    switch"""
+def test_toggle_and_cache_params_callback(callback_function, args, expected):
+    """Test togglable options expansion, contraction, and caching user
+    selected parameters when a user clicks on respective switches switchs."""
     response = callback_function(**args)
-    assert type(response) is type(expected)
-    assert response["display"] == expected["simple_unet_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: legacy options expansion only when legacy switch is
-            # clicked
-            toggle_legacy_options,
-            # Inputs:
-            {"legacy_click": ["legacy"]},
-            # Expected Outputs:
-            {"simple_legacy_options": {"display": "block"}},
-        ),
-        (
-            # Test case 2: legacy options contraction when legacy switch is
-            # not clicked
-            toggle_legacy_options,
-            # Inputs:
-            {"legacy_click": []},
-            # Expected Outputs:
-            {"simple_legacy_options": {"display": "none"}},
-        ),
-    ],
-)
-def test_toggle_legacy_options_callback(callback_function, args, expected):
-    """Test legacy options expansion and contraction when a user clicks on
-    legacy switch"""
-    response = callback_function(**args)
-    assert type(response) is type(expected)
-    assert response["display"] == expected["simple_legacy_options"]["display"]
+    print(response[0])
+    print("-" * 50)
+    print(expected["cache_simple_params"])
+    assert response[0] == expected["cache_simple_params"]
 
 
 @pytest.mark.parametrize(
@@ -120,8 +121,8 @@ def test_toggle_legacy_options_callback(callback_function, args, expected):
             {
                 "author_name": "test_username",
                 "title": "test_title",
-                "selected_files": [{"filepath": "test1.rtdc"}],
-                "cached_seg_options": {"legacy": {"thresh": "-6"}},
+                "selected_rows": [{"filepath": "test1.rtdc"}],
+                "cached_params": {"legacy": {"thresh": "-6"}},
             },
             # Expected Outputs:
             {"create_simple_pipeline_button": False},
@@ -134,8 +135,8 @@ def test_toggle_legacy_options_callback(callback_function, args, expected):
             {
                 "author_name": "test_username",
                 "title": "",  # No title is given
-                "selected_files": [{"filepath": "test1.rtdc"}],
-                "cached_seg_options": {},  # No segmentation is provided
+                "selected_rows": [{"filepath": "test1.rtdc"}],
+                "cached_params": {},  # No segmentation is provided
             },
             # Expected Outputs:
             {"create_simple_pipeline_button": True},
@@ -158,7 +159,7 @@ def test_toggle_simple_create_pipeline_button_callback(
             # popup message box will be opened.
             simple_request_submission_popup,
             # Stimulate Inputs
-            [{"prop_id": "create_simple_pipeline_button.n_clicks"}],
+            [{"prop_id": "simple_create_pipeline_click.n_clicks"}],
             # Inputs:
             {
                 "_": 1,
@@ -240,14 +241,12 @@ def test_simple_request_submission_popup_callback(
             {
                 "author_name": "test_username",
                 "simple_title": "test_title",
-                "cached_seg_options": {
+                "cached_params": {
                     "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
                     "mlunet: UNET": {"model_file": "model_checkpoint"},
+                    "bloody-bunny_g1_bacae: Bloody Bunny": None,
                 },
-                "cached_num_frames": {},
-                "simple_classifier": ["bloody-bunny_g1_bacae: Bloody Bunny"],
-                "reproduce_flag": [],
-                "selected_files": [
+                "selected_rows": [
                     {"filepath": "HSMFS: test1.rtdc"},
                     {"filepath": "HSMFS: test2.rtdc"},
                 ],
@@ -294,14 +293,12 @@ def test_simple_request_submission_popup_callback(
             {
                 "author_name": "",  # No username
                 "simple_title": "test_title",
-                "cached_seg_options": {
+                "cached_params": {
                     "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
                     "mlunet: UNET": {"model_file": "model_checkpoint"},
+                    "bloody-bunny_g1_bacae: Bloody Bunny": None,
                 },
-                "cached_num_frames": {},
-                "simple_classifier": ["bloody-bunny_g1_bacae: Bloody Bunny"],
-                "reproduce_flag": [],
-                "selected_files": [
+                "selected_rows": [
                     {"filepath": "HSMFS: test1.rtdc"},
                     {"filepath": "HSMFS: test2.rtdc"},
                 ],
@@ -316,14 +313,14 @@ def test_simple_request_submission_popup_callback(
             {
                 "author_name": "test_username",
                 "simple_title": "test_title",
-                "cached_seg_options": {
+                "cached_params": {
                     "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
                     "mlunet: UNET": {"model_file": "model_checkpoint"},
+                    "bloody-bunny_g1_bacae: Bloody Bunny": None,
+                    "--reproduce": None,
+                    "--num-frames": 12000,
                 },
-                "cached_num_frames": {"--num-frames": 12000},
-                "simple_classifier": ["bloody-bunny_g1_bacae: Bloody Bunny"],
-                "reproduce_flag": ["--reproduce"],
-                "selected_files": [
+                "selected_rows": [
                     {"filepath": "HSMFS: test1.rtdc"},
                     {"filepath": "HSMFS: test2.rtdc"},
                 ],

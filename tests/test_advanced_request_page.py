@@ -11,17 +11,10 @@ from dashboard.pages.page_advanced import (
     advanced_segmentation_section,
     background_correction_section,
     collect_advanced_pipeline_params,
+    fetch_and_show_unet_models,
     gating_options_section,
-    show_and_cache_unet_model_meta,
     toggle_advanced_create_pipeline_button,
-    toggle_legacy_options,
-    toggle_norm_gate_options,
-    toggle_rollmed_options,
-    toggle_sparsemed_options,
-    toggle_std_options,
-    toggle_thresh_seg_options,
-    toggle_unet_options,
-    toggle_watershed_options,
+    toggle_and_cache_params,
 )
 
 
@@ -47,59 +40,29 @@ def test_show_and_cache_unet_model_meta_callback():
     """Test unet segmentation method selection"""
 
     def run_callback():
-        return show_and_cache_unet_model_meta(
+        return fetch_and_show_unet_models(
             unet_click=["mlunet"],
-            measure_option="model_checkpoint",
         )
 
     # Run the callback within the appropriate context
     ctx = copy_context()
-    check_boxes, segm_opt = ctx.run(run_callback)
+    check_boxes = ctx.run(run_callback)
 
     assert isinstance(check_boxes, dbc.Row)
-    assert isinstance(segm_opt, dict)
-    assert "mlunet" in segm_opt.keys()
 
 
 @pytest.mark.parametrize(
     "callback_function, args, expected",
     [
         (
-            # Test case 1: unet options expansion
-            toggle_unet_options,
-            # Inputs:
-            {"unet_click": ["mlunet"]},
-            # Expected Outputs:
-            {"advanced_unet_options": {"display": "block"}},
-        ),
-        (
-            # Test case 2: unet options contraction
-            toggle_unet_options,
-            # Inputs:
-            {"unet_click": []},
-            # Expected Outputs:
-            {"advanced_unet_options": {"display": "none"}},
-        ),
-    ],
-)
-def test_toggle_unet_options_callback(callback_function, args, expected):
-    """Test unet options expansion and contraction when a user clicks on unet
-    switch"""
-    response = callback_function(**args)
-    assert type(response) is type(expected)
-    assert response["display"] == expected["advanced_unet_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: legacy options expansion only when legacy switch is
-            # clicked
-            toggle_legacy_options,
+            # Test case 1: expand togglable components with relevant click
+            # and cache user selected parameters.
+            toggle_and_cache_params,
             # Inputs:
             {
-                "legacy_opt": ["legacy: Legacy thresholding with OpenCV"],
+                "unet_click": ["mlunet"],
+                "unet_value": "test_model_file",
+                "legacy_click": ["legacy: Legacy thresholding with OpenCV"],
                 "leg_keys": [
                     "thresh",
                     "blur",
@@ -110,10 +73,50 @@ def test_toggle_unet_options_callback(callback_function, args, expected):
                     "closing_disk",
                 ],
                 "leg_values": ["-6", "0", "5", "1", True, True, "5"],
+                "thresh_click": ["thresh: thresholding segmentation"],
+                "thresh_keys": [
+                    "thresh",
+                    "clear_border",
+                    "fill_holes",
+                    "closing_disk",
+                ],
+                "thresh_values": ["-6", True, True, "5"],
+                "water_click": ["watershed: Watershed algorithm"],
+                "water_keys": ["clear_border", "fill_holes", "closing_disk"],
+                "water_values": [True, True, "5"],
+                "std_click": ["std: Standard-deviation-based thresholding"],
+                "std_keys": ["clear_border", "fill_holes", "closing_disk"],
+                "std_values": [True, True, "5"],
+                "romed_click": [
+                    "rollmed: Rolling median RT-DC background image "
+                    "computation"
+                ],
+                "romed_keys": ["clear_border", "fill_holes", "closing_disk"],
+                "romed_values": [True, True, "5"],
+                "spmed_click": [
+                    "sparsemed: Sparse median background correction "
+                    "with cleansing"
+                ],
+                "spmed_keys": [
+                    "kernel_size",
+                    "split_time",
+                    "thresh_cleansing",
+                    "frac_cleansing",
+                    "offset_correction",
+                ],
+                "spmed_values": [200, 1, 0, 0.8, True],
+                "ngate_click": ["norm gating"],
+                "ngate_keys": ["online_gates", "size_thresh_mask"],
+                "ngate_values": [False, 0],
+                "classifier_click": [],
+                "reproduce_click": [],
+                "nframe_click": [],
+                "nframe_value": 10000,
             },
             # Expected Outputs:
             {
-                "cache_legacy_params": {
+                "cache_advance_params": {
+                    "mlunet": {"model_file": "test_model_file"},
                     "legacy: Legacy thresholding with OpenCV": {
                         "thresh": "-6",
                         "blur": "0",
@@ -122,18 +125,63 @@ def test_toggle_unet_options_callback(callback_function, args, expected):
                         "clear_border": True,
                         "fill_holes": True,
                         "closing_disk": "5",
-                    }
+                    },
+                    "thresh: thresholding segmentation": {
+                        "thresh": "-6",
+                        "clear_border": True,
+                        "fill_holes": True,
+                        "closing_disk": "5",
+                    },
+                    "watershed: Watershed algorithm": {
+                        "clear_border": True,
+                        "fill_holes": True,
+                        "closing_disk": "5",
+                    },
+                    "std: Standard-deviation-based thresholding": {
+                        "clear_border": True,
+                        "fill_holes": True,
+                        "closing_disk": "5",
+                    },
+                    "rollmed: Rolling median RT-DC background image "
+                    "computation": {
+                        "clear_border": True,
+                        "fill_holes": True,
+                        "closing_disk": "5",
+                    },
+                    "sparsemed: Sparse median background correction "
+                    "with cleansing": {
+                        "kernel_size": 200,
+                        "split_time": 1,
+                        "thresh_cleansing": 0,
+                        "frac_cleansing": 0.8,
+                        "offset_correction": True,
+                    },
+                    "norm gating": {
+                        "online_gates": False,
+                        "size_thresh_mask": 0,
+                    },
                 },
-                "legacy_options": {"display": "block"},
+                "advance_unet_toggle": {"display": "block"},
+                "legacy_toggle": {"display": "block"},
+                "thresh_toggle": {"display": "block"},
+                "water_toggle": {"display": "block"},
+                "std_toggle": {"display": "block"},
+                "romed_toggle": {"display": "block"},
+                "spmed_toggle": {"display": "block"},
+                "ngate_toggle": {"display": "block"},
+                "advance_nframe_toggle": {"display": "block"},
             },
         ),
         (
-            # Test case 2: legacy options contraction when legacy switch is
-            # not clicked
-            toggle_legacy_options,
+            # Test case 2: no action when togglable components are not clicked
+            # and dont cache any parameters
+            # is not clicked
+            toggle_and_cache_params,
             # Inputs:
             {
-                "legacy_opt": [],  # No legacy switch is clicked
+                "unet_click": [],  # No click on unet switch
+                "unet_value": None,
+                "legacy_click": [],  # No click on legacy switch
                 "leg_keys": [
                     "thresh",
                     "blur",
@@ -144,292 +192,46 @@ def test_toggle_unet_options_callback(callback_function, args, expected):
                     "closing_disk",
                 ],
                 "leg_values": ["-6", "0", "5", "1", True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_legacy_params": None,  # No legacy options are returned
-                "legacy_options": {"display": "none"},
-            },
-        ),
-    ],
-)
-def test_toggle_legacy_options_callback(callback_function, args, expected):
-    """Test legacy options expansion and contraction when a user clicks on
-    legacy switch"""
-    response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_legacy_params"]
-            for k, v in value.items():
-                assert k in expected["cache_legacy_params"][key]
-                assert v == expected["cache_legacy_params"][key][k]
-    assert response[1]["display"] == expected["legacy_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: thresh options expansion only when thresh switch is
-            # clicked
-            toggle_thresh_seg_options,
-            # Inputs:
-            {
-                "thresh_seg_opt": ["thresh: thresholding segmentation"],
-                "thresh_seg_keys": [
+                "thresh_click": [],  # No click on thresh switch
+                "thresh_keys": [
                     "thresh",
                     "clear_border",
                     "fill_holes",
                     "closing_disk",
                 ],
-                "thresh_seg_values": ["-6", True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_thresh_seg_params": {
-                    "thresh: thresholding segmentation": {
-                        "thresh": "-6",
-                        "clear_border": True,
-                        "fill_holes": True,
-                        "closing_disk": "5",
-                    }
-                },
-                "thresh_seg_options": {"display": "block"},
-            },
-        ),
-        (
-            # Test case 2: thresh options contraction when thresh switch is
-            # not clicked
-            toggle_thresh_seg_options,
-            # Inputs:
-            {
-                "thresh_seg_opt": [],  # No thresh switch is clicked
-                "thresh_seg_keys": [
-                    "thresh",
-                    "clear_border",
-                    "fill_holes",
-                    "closing_disk",
-                ],
-                "thresh_seg_values": ["-6", True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_thresh_seg_params": None,  # No thresh options
-                "thresh_seg_options": {"display": "none"},
-            },
-        ),
-    ],
-)
-def test_toggle_thresh_seg_options(callback_function, args, expected):
-    """Test thresh options expansion and contraction when a user clicks on
-    thresh switch"""
-    response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_thresh_seg_params"]
-            for k, v in value.items():
-                assert k in expected["cache_thresh_seg_params"][key]
-                assert v == expected["cache_thresh_seg_params"][key][k]
-    assert response[1]["display"] == expected["thresh_seg_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: watershed options expansion only when watershed
-            # switch is clicked
-            toggle_watershed_options,
-            # Inputs:
-            {
-                "watershed_opt": ["watershed: Watershed algorithm"],
+                "thresh_values": ["-6", True, True, "5"],
+                "water_click": [],  # No click on watershed switch
                 "water_keys": ["clear_border", "fill_holes", "closing_disk"],
                 "water_values": [True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_watershed_params": {
-                    "watershed: Watershed algorithm": {
-                        "clear_border": True,
-                        "fill_holes": True,
-                        "closing_disk": "5",
-                    }
-                },
-                "watershed_options": {"display": "block"},
-            },
-        ),
-        (
-            # Test case 2: watershed options contraction when watershed switch
-            # is not clicked
-            toggle_watershed_options,
-            # Inputs:
-            {
-                "watershed_opt": [],  # No watershed switch is clicked
-                "water_keys": ["clear_border", "fill_holes", "closing_disk"],
-                "water_values": [True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_watershed_params": None,  # No watershed options
-                "watershed_options": {"display": "none"},
-            },
-        ),
-    ],
-)
-def test_toggle_watershed_options_callback(callback_function, args, expected):
-    """Test watershed options expansion and contraction when a user clicks on
-    watershed switch"""
-    response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_watershed_params"]
-            for k, v in value.items():
-                assert k in expected["cache_watershed_params"][key]
-                assert v == expected["cache_watershed_params"][key][k]
-    assert response[1]["display"] == expected["watershed_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: std options expansion only when std
-            # switch is clicked
-            toggle_std_options,
-            # Inputs:
-            {
-                "std_opt": ["std: Standard-deviation-based thresholding"],
+                "std_click": [],  # No click on std switch
                 "std_keys": ["clear_border", "fill_holes", "closing_disk"],
                 "std_values": [True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_std_params": {
-                    "std: Standard-deviation-based thresholding": {
-                        "clear_border": True,
-                        "fill_holes": True,
-                        "closing_disk": "5",
-                    }
-                },
-                "std_options": {"display": "block"},
-            },
-        ),
-        (
-            # Test case 2: std options contraction when std switch
-            # is not clicked
-            toggle_std_options,
-            # Inputs:
-            {
-                "std_opt": [],  # No std switch is clicked
-                "std_keys": ["clear_border", "fill_holes", "closing_disk"],
-                "std_values": [True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_std_params": None,  # No std options are returned,
-                "std_options": {"display": "none"},
-            },
-        ),
-    ],
-)
-def test_toggle_std_options_callback(callback_function, args, expected):
-    """Test std options expansion and contraction when a user clicks on
-    std switch"""
-    response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_std_params"]
-            for k, v in value.items():
-                assert k in expected["cache_std_params"][key]
-                assert v == expected["cache_std_params"][key][k]
-    assert response[1]["display"] == expected["std_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: rollmed options expansion only when rollmed
-            # switch is clicked
-            toggle_rollmed_options,
-            # Inputs:
-            {
-                "rollmed_opt": [
-                    "rollmed: Rolling median RT-DC background image "
-                    "computation"
-                ],
-                "rollmed_keys": ["clear_border", "fill_holes", "closing_disk"],
-                "rollmed_values": [True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_rollmed_params": {
-                    "rollmed: Rolling median RT-DC background image "
-                    "computation": {
-                        "clear_border": True,
-                        "fill_holes": True,
-                        "closing_disk": "5",
-                    }
-                },
-                "rollmed_options": {"display": "block"},
-            },
-        ),
-        (
-            # Test case 2: rollmed options contraction when rollmed switch
-            # is not clicked
-            toggle_rollmed_options,
-            # Inputs:
-            {
-                "rollmed_opt": [],  # No rollmed switch is clicked
-                "rollmed_keys": ["clear_border", "fill_holes", "closing_disk"],
-                "rollmed_values": [True, True, "5"],
-            },
-            # Expected Outputs:
-            {
-                "cache_rollmed_params": None,  # No rollmed options
-                "rollmed_options": {"display": "none"},
-            },
-        ),
-    ],
-)
-def test_toggle_rollmed_options_callback(callback_function, args, expected):
-    """Test rollmed options expansion and contraction when a user clicks on
-    rollmed switch"""
-    response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_rollmed_params"]
-            for k, v in value.items():
-                assert k in expected["cache_rollmed_params"][key]
-                assert v == expected["cache_rollmed_params"][key][k]
-    assert response[1]["display"] == expected["rollmed_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: sparsemed options expansion only when sparsemed
-            # switch is clicked
-            toggle_sparsemed_options,
-            # Inputs:
-            {
-                "sparsemed_opt": [
+                "romed_click": [],  # No click on rollmed switch
+                "romed_keys": ["clear_border", "fill_holes", "closing_disk"],
+                "romed_values": [True, True, "5"],
+                "spmed_click": [
                     "sparsemed: Sparse median background correction "
                     "with cleansing"
-                ],
-                "sparsemed_keys": [
+                ],  # Default click on sparsemed switch
+                "spmed_keys": [
                     "kernel_size",
                     "split_time",
                     "thresh_cleansing",
                     "frac_cleansing",
                     "offset_correction",
                 ],
-                "sparsemed_values": [200, 1, 0, 0.8, True],
+                "spmed_values": [200, 1, 0, 0.8, True],
+                "ngate_click": [],  # No click on norm gate switch
+                "ngate_keys": ["online_gates", "size_thresh_mask"],
+                "ngate_values": [False, 0],
+                "classifier_click": [],  # No click on bloodybunny switch
+                "reproduce_click": [],  # No click on reproduce switch
+                "nframe_click": [],  # No click on num_frames switch
+                "nframe_value": 10000,
             },
             # Expected Outputs:
             {
-                "cache_sparsemed_params": {
+                "cache_advance_params": {
                     "sparsemed: Sparse median background correction "
                     "with cleansing": {
                         "kernel_size": 200,
@@ -437,101 +239,26 @@ def test_toggle_rollmed_options_callback(callback_function, args, expected):
                         "thresh_cleansing": 0,
                         "frac_cleansing": 0.8,
                         "offset_correction": True,
-                    }
+                    },
                 },
-                "sparsemed_options": {"display": "block"},
-            },
-        ),
-        (
-            # Test case 2: sparsemed options contraction when sparsemed switch
-            # is not clicked
-            toggle_sparsemed_options,
-            # Inputs:
-            {
-                "sparsemed_opt": [],  # No sparsemed switch is clicked
-                "sparsemed_keys": [
-                    "kernel_size",
-                    "split_time",
-                    "thresh_cleansing",
-                    "frac_cleansing",
-                    "offset_correction",
-                ],
-                "sparsemed_values": [200, 1, 0, 0.8, True],
-            },
-            # Expected Outputs:
-            {
-                "cache_sparsemed_params": None,  # No sparsemed options
-                "sparsemed_options": {"display": "none"},
+                "advance_unet_toggle": {"display": "none"},
+                "legacy_toggle": {"display": "none"},
+                "thresh_toggle": {"display": "none"},
+                "water_toggle": {"display": "none"},
+                "std_toggle": {"display": "none"},
+                "romed_toggle": {"display": "none"},
+                "spmed_toggle": {"display": "block"},  # only spasremed is open
+                "ngate_toggle": {"display": "none"},
+                "advance_nframe_toggle": {"display": "none"},
             },
         ),
     ],
 )
-def test_toggle_sparsemed_options_callback(callback_function, args, expected):
-    """Test sparsemed options expansion and contraction when a user clicks on
-    sparsemed switch"""
+def test_toggle_and_cache_params_callback(callback_function, args, expected):
+    """Test togglable options expansion, contraction, and caching user
+    selected parameters when a user clicks on respective switches switchs."""
     response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_sparsemed_params"]
-            for k, v in value.items():
-                assert k in expected["cache_sparsemed_params"][key]
-                assert v == expected["cache_sparsemed_params"][key][k]
-    assert response[1]["display"] == expected["sparsemed_options"]["display"]
-
-
-@pytest.mark.parametrize(
-    "callback_function, args, expected",
-    [
-        (
-            # Test case 1: norm gate options expansion only when norm gate
-            # switch is clicked
-            toggle_norm_gate_options,
-            # Inputs:
-            {
-                "ngate_opt": ["norm gating"],
-                "ngate_keys": ["online_gates", "size_thresh_mask"],
-                "ngate_values": [False, 0],
-            },
-            # Expected Outputs:
-            {
-                "cache_norm_gate_params": {
-                    "norm gating": {
-                        "online_gates": False,
-                        "size_thresh_mask": 0,
-                    }
-                },
-                "norm_gate_options": {"display": "block"},
-            },
-        ),
-        (
-            # Test case 2: norm gate options contraction when norm gate switch
-            # is not clicked
-            toggle_norm_gate_options,
-            # Inputs:
-            {
-                "ngate_opt": [],  # No norm gate switch is clicked
-                "ngate_keys": ["online_gates", "size_thresh_mask"],
-                "ngate_values": [False, 0],
-            },
-            # Expected Outputs:
-            {
-                "cache_norm_gate_params": None,  # No norm gate options
-                "norm_gate_options": {"display": "none"},
-            },
-        ),
-    ],
-)
-def test_toggle_norm_gate_options_callback(callback_function, args, expected):
-    """Test norm gate options expansion and contraction when a user clicks on
-    norm gate switch"""
-    response = callback_function(**args)
-    if response[0]:
-        for key, value in response[0].items():
-            assert key in expected["cache_norm_gate_params"]
-            for k, v in value.items():
-                assert k in expected["cache_norm_gate_params"][key]
-                assert v == expected["cache_norm_gate_params"][key][k]
-    assert response[1]["display"] == expected["norm_gate_options"]["display"]
+    assert response[0] == expected["cache_advance_params"]
 
 
 @pytest.mark.parametrize(
@@ -542,7 +269,7 @@ def test_toggle_norm_gate_options_callback(callback_function, args, expected):
             # popup message box will be opened.
             advanced_request_submission_popup,
             # Stimulate Inputs
-            [{"prop_id": "create_advanced_pipeline_button.n_clicks"}],
+            [{"prop_id": "advance_create_pipeline_click.n_clicks"}],
             # Inputs:
             {
                 "_": 1,
@@ -554,14 +281,14 @@ def test_toggle_norm_gate_options_callback(callback_function, args, expected):
                 "popup": False,
             },
             # Expected Outputs:
-            {"advanced_popup": True},
+            {"advance_popup": True},
         ),
         (
             # Test case 2: After the popup message is opened up, user clicks
             # on the 'close' button inside the popup message box.
             advanced_request_submission_popup,
             # Stimulate Inputs
-            [{"prop_id": "advanced_popup_close.n_clicks"}],
+            [{"prop_id": "advance_popup_close.n_clicks"}],
             # Inputs:
             {
                 "_": 0,
@@ -573,7 +300,7 @@ def test_toggle_norm_gate_options_callback(callback_function, args, expected):
                 "popup": True,
             },
             # Expected Outputs:
-            {"advanced_popup": False},
+            {"advance_popup": False},
         ),
         (
             # Test case 3: No clcik on 'create pipeline' button and 'close'
@@ -592,7 +319,7 @@ def test_toggle_norm_gate_options_callback(callback_function, args, expected):
                 "popup": False,
             },
             # Expected Outputs:
-            {"advanced_popup": False},
+            {"advance_popup": False},
         ),
     ],
 )
@@ -609,7 +336,7 @@ def test_advanced_request_submission_popup_callback(
 
     ctx = copy_context()
     response = ctx.run(run_callback)
-    assert response == expected["advanced_popup"]
+    assert response == expected["advance_popup"]
 
 
 @pytest.mark.parametrize(
@@ -624,14 +351,10 @@ def test_advanced_request_submission_popup_callback(
             {
                 "author_name": "test_username",
                 "title": "test_title",
-                "selected_files": [{"filepath": "test1.rtdc"}],
-                "cached_unet_model_path": {
+                "selected_rows": [{"filepath": "test1.rtdc"}],
+                "cached_params": {
                     "mlunet: UNET": {"model_file": "test_checkpoint"}
                 },
-                "cached_legacy_params": {},
-                "cache_thresh_seg_params": {},
-                "cache_watershed_params": {},
-                "cache_std_params": {},
             },
             # Expected Outputs:
             {"create_advanced_pipeline_button": False},
@@ -644,14 +367,10 @@ def test_advanced_request_submission_popup_callback(
             {
                 "author_name": "test_username",
                 "title": "",  # No title is given
-                "selected_files": [{"filepath": "test1.rtdc"}],
-                "cached_unet_model_path": {
+                "selected_rows": [{"filepath": "test1.rtdc"}],
+                "cached_params": {
                     "mlunet: UNET": {"model_file": "test_checkpoint"}
                 },
-                "cached_legacy_params": {},
-                "cache_thresh_seg_params": {},
-                "cache_watershed_params": {},
-                "cache_std_params": {},
             },
             # Expected Outputs:
             {"create_advanced_pipeline_button": True},
@@ -677,33 +396,21 @@ def test_toggle_advanced_create_pipeline_button_callback(
             # Inputs:
             {
                 "author_name": "test_username",
-                "advanced_title": "test_title",
-                "reproduce_flag": [],
-                "classifier_name": [],
-                "cache_unet_model_path": {
-                    "mlunet: UNET": {"model_file": "test_checkpoint"}
-                },
-                "cache_legacy_params": {},
-                "cache_thresh_seg_params": {},
-                "cache_watershed_params": {},
-                "cache_std_params": {},
-                "cache_rollmed_params": {},
-                "cache_sparsemed_params": {
+                "advance_title": "test_title",
+                "cache_params": {
+                    "mlunet: UNET": {"model_file": "test_checkpoint"},
+                    "norm gating": {
+                        "online_gates": False,
+                        "size_thresh_mask": 0,
+                    },
                     "sparsemed: Sparse median background correction with "
                     "cleansing": {
                         "kernel_size": 200,
                         "split_time": 1,
                         "thresh_cleansing": 0,
                         "frac_cleansing": 0.8,
-                    }
+                    },
                 },
-                "cache_norm_gate_params": {
-                    "norm gating": {
-                        "online_gates": False,
-                        "size_thresh_mask": 0,
-                    }
-                },
-                "cache_num_frames": {},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
@@ -775,31 +482,22 @@ def test_toggle_advanced_create_pipeline_button_callback(
             # Inputs:
             {
                 "author_name": "test_username",
-                "advanced_title": "",  # No title is provided ()
-                "reproduce_flag": [],
-                "classifier_name": [],
-                "cache_unet_model_path": {},
-                "cache_legacy_params": {},
-                "cache_thresh_seg_params": {},
-                "cache_watershed_params": {},
-                "cache_std_params": {},
-                "cache_rollmed_params": {},
-                "cache_sparsemed_params": {
+                "advance_title": "",  # No title is provided ()
+                "cache_params": {
+                    "--num-frames": 200,
+                    "--reproduce": None,
                     "sparsemed: Sparse median background correction with "
                     "cleansing": {
                         "kernel_size": 200,
                         "split_time": 1,
                         "thresh_cleansing": 0,
                         "frac_cleansing": 0.8,
-                    }
-                },
-                "cache_norm_gate_params": {
+                    },
                     "norm gating": {
                         "online_gates": False,
                         "size_thresh_mask": 0,
-                    }
+                    },
                 },
-                "cache_num_frames": {"--num-frames": 200},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
@@ -811,33 +509,23 @@ def test_toggle_advanced_create_pipeline_button_callback(
             # Inputs:
             {
                 "author_name": "test_username",
-                "advanced_title": "test_title",
-                "reproduce_flag": ["--reproduce"],
-                "classifier_name": [],
-                "cache_unet_model_path": {
-                    "mlunet: UNET": {"model_file": "test_checkpoint"}
-                },
-                "cache_legacy_params": {},
-                "cache_thresh_seg_params": {},
-                "cache_watershed_params": {},
-                "cache_std_params": {},
-                "cache_rollmed_params": {},
-                "cache_sparsemed_params": {
+                "advance_title": "test_title",
+                "cache_params": {
+                    "mlunet: UNET": {"model_file": "test_checkpoint"},
+                    "--num-frames": 200,
+                    "--reproduce": None,
                     "sparsemed: Sparse median background correction with "
                     "cleansing": {
                         "kernel_size": 200,
                         "split_time": 1,
                         "thresh_cleansing": 0,
                         "frac_cleansing": 0.8,
-                    }
-                },
-                "cache_norm_gate_params": {
+                    },
                     "norm gating": {
                         "online_gates": False,
                         "size_thresh_mask": 0,
-                    }
+                    },
                 },
-                "cache_num_frames": {"--num-frames": 200},
                 "selected_rows": [{"filepath": "HSMFS: test.rtdc"}],
             },
             # Expected Outputs:
