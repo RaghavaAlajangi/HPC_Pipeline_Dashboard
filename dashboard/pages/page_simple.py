@@ -214,11 +214,6 @@ def toggle_and_cache_params(
     nframe_value,
 ):
     """Consolidated callback for toggling options and caching parameters"""
-    print(
-        legacy_click,
-        legacy_key,
-        legacy_value,
-    )
     cache_data = {
         **format_params(
             unet_click, [unet_value if unet_value else ""], ["model_file"]
