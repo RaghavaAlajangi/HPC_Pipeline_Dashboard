@@ -830,7 +830,9 @@ def manage_pipeline_status(
         return [no_update] * 7
 
     pipe_text = request_gitlab.parse_description(pipeline_num)
-    keep_raw_data_flag = not pipe_text["has_hsm_data"]
+
+    # If pipeline has [x] HSMFS data to be processed, dont disable the flag
+    disable_raw_flag = not pipe_text["has_hsm_data"]
 
     # Handle S3 results flag click, work in both opened and closed tabs
     if "keep_results_flag" in triggered_id:
@@ -843,7 +845,7 @@ def manage_pipeline_status(
             no_update,
             no_update,
             no_update,
-            keep_raw_data_flag,
+            disable_raw_flag,
         )
 
     # Handle S3 raw data flag click, work in both opened and closed tabs
@@ -857,7 +859,7 @@ def manage_pipeline_status(
             no_update,
             no_update,
             no_update,
-            keep_raw_data_flag,
+            disable_raw_flag,
         )
 
     # If the tab is not "opened", skip run/pause and stop actions
@@ -869,7 +871,7 @@ def manage_pipeline_status(
             no_update,
             no_update,
             no_update,
-            keep_raw_data_flag,
+            disable_raw_flag,
         )
 
     # Get pipeline state
@@ -896,7 +898,7 @@ def manage_pipeline_status(
             run_pause_name,
             run_pause_icon,
             no_update,
-            keep_raw_data_flag,
+            disable_raw_flag,
         )
 
     # Handle Stop click
@@ -910,7 +912,7 @@ def manage_pipeline_status(
             run_pause_name,
             run_pause_icon,
             True,
-            keep_raw_data_flag,
+            disable_raw_flag,
         )
 
     # Set button states based on pipeline state
@@ -924,5 +926,5 @@ def manage_pipeline_status(
         run_pause_name,
         run_pause_icon,
         stop_disabled,
-        keep_raw_data_flag,
+        disable_raw_flag,
     )

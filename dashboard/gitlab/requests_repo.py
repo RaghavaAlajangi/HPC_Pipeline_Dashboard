@@ -189,7 +189,7 @@ class RequestRepoAPI(BaseAPI):
         # Split the string at the position of the specific word
         first_part = issue_template[: title_idx + len(issue_titles[temp_type])]
         second_part = issue_template[
-            title_idx + len(issue_titles[temp_type]):
+            title_idx + len(issue_titles[temp_type]) :
         ]
         # Add new iid to the issue description
         return first_part + f"\n#{latest_issue_iid + 1}" + second_part
@@ -212,6 +212,9 @@ class RequestRepoAPI(BaseAPI):
 
         if "[x] keep_raw_data" in lower_text:
             data["s3_raw_data_flag"] = "keep raw data"
+
+        if "[x] hsmfs:/data" in lower_text:
+            data["has_hsm_data"] = True
 
         # Search for the username in reverse order
         for line in reversed(lower_text.split("\n")):

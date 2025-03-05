@@ -199,7 +199,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": no_update,
                 "run_pause_child": no_update,
                 "stop_disabled": no_update,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
         (
@@ -224,7 +224,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": no_update,
                 "run_pause_child": no_update,
                 "stop_disabled": no_update,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
         (
@@ -249,7 +249,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": no_update,
                 "run_pause_child": "Run Pipeline",
                 "stop_disabled": no_update,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
         (
@@ -274,7 +274,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": no_update,
                 "run_pause_child": no_update,
                 "stop_disabled": no_update,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
         (
@@ -299,7 +299,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": True,
                 "run_pause_child": no_update,
                 "stop_disabled": True,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
         (
@@ -324,7 +324,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": True,
                 "run_pause_child": no_update,
                 "stop_disabled": False,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
         (
@@ -349,7 +349,7 @@ def test_change_page_callback(callback_function, args, expected):
                 "run_pause_disabled": no_update,
                 "run_pause_child": no_update,
                 "stop_disabled": no_update,
-                "keep_raw_data_disabled": True,
+                "keep_raw_data_disabled": False,
             },
         ),
     ],
