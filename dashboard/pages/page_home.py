@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
@@ -16,7 +17,6 @@ from .common_components import (
     header_comp,
     hover_card,
     line_breaks,
-    paragraph_comp,
     progressbar_comp,
     web_link,
 )
@@ -26,6 +26,9 @@ BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
 
 # dcevent documentation URL
 DCEVENT_DOCS = "https://blood_data_analysis.pages.gwdg.de/dcevent/"
+
+CHANGELOG_PATH = Path(__file__).parents[2] / "CHANGELOG"
+
 PIPELINES_PER_PAGE = 10
 
 
@@ -34,56 +37,30 @@ def welcome_tab_content():
     return dbc.ListGroup(
         children=dbc.ListGroupItem(
             children=[
-                line_breaks(2),
-                html.Img(
-                    src="assets/pipeline_logo.jfif",
-                    style={
-                        "width": "800px",
-                        "height": "700px",
-                        "marginLeft": "40px",
-                    },
-                ),
-                line_breaks(2),
-                dbc.Alert(
-                    children=[
-                        # Warning icon
-                        html.I(className="bi bi-info-circle-fill me-2"),
-                        paragraph_comp(
-                            text="If you want to segment or/and classify "
-                            "your data, use the Simple Request on "
-                            "the left.",
-                            comp_id="dummy2",
+                line_breaks(1),
+                html.H4(
+                    [
+                        "What's New   ",
+                        DashIconify(
+                            icon="ion:rocket", width=30, color="#14d740"
                         ),
                     ],
-                    className="d-flex align-items-inline",
-                    color="info",
-                    style={
-                        "color": "black",
-                        "width": "fit-content",
-                        "marginLeft": "40px",
-                        "height": "60px",
-                    },
+                    className="card-title",
                 ),
-                dbc.Alert(
-                    children=[
-                        # Warning icon
-                        html.I(className="bi bi-info-circle-fill me-2"),
-                        dcc.Markdown(
-                            f"If you are an advanced user use the Advanced "
-                            f"Request. More information at [dcevent pages]"
-                            f"({DCEVENT_DOCS})."
+                dbc.ListGroup(
+                    [
+                        dmc.Prism(
+                            language="python",
+                            children=CHANGELOG_PATH.read_text(),
                         ),
                     ],
-                    className="d-flex align-items-inline",
-                    color="info",
                     style={
-                        "color": "black",
-                        "width": "fit-content",
-                        "marginLeft": "40px",
-                        "height": "60px",
+                        "max-height": "40rem",
+                        "width": "70%",
+                        "overflow-y": "scroll",
+                        "overflowX": "hidden",
                     },
                 ),
-                line_breaks(2),
             ]
         )
     )
