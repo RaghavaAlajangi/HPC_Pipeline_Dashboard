@@ -69,7 +69,11 @@ def update_simple_template(params_dict, author_name, rtdc_files, template):
                 "watershed: Watershed algorithm": {},
                 "std: Standard-deviation-based thresholding": {},
             },
-            "Further Options": {"--reproduce": None, "--num-frames": 1000},
+            "Further Options": {
+                "--reproduce": None,
+                "--transfer-fluorescence": None,
+                "--num-frames": 1000,
+            },
         },
         "Prediction": {
             "Classification Model": {
@@ -134,7 +138,11 @@ def update_advanced_template(params_dict, author_name, rtdc_files, template):
             "Available gating options": {
                 "norm gating": {"online_gates": False, "size_thresh_mask": 0}
             },
-            "Further Options": {"--reproduce": None, "--num-frames": 1000},
+            "Further Options": {
+                "--reproduce": None,
+                "--transfer-fluorescence": None,
+                "--num-frames": 1000,
+            },
         },
         "Prediction": {
             "Classification Model": {

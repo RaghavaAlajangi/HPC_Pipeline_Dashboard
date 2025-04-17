@@ -143,6 +143,7 @@ def simple_page_layout(refresh_path):
                     cell_classifier_section(classifier_id="classifier_click"),
                     further_options_section(
                         reproduce_flag_id="reproduce_click",
+                        fluorescence_flag_id="fluorescence_click",
                         num_frames_id="simple_nframe_click",
                         num_frames_toggle_id="simple_nframe_toggle",
                         num_frames_value="simple_nframe_value",
@@ -198,6 +199,8 @@ def fetch_and_show_unet_models(unet_click):
     Input("classifier_click", "value"),
     # reproduce flag input
     Input("reproduce_click", "value"),
+    # fluorescence flag input
+    Input("fluorescence_click", "value"),
     # num frames inputs
     Input("simple_nframe_click", "value"),
     Input("simple_nframe_value", "value"),
@@ -210,6 +213,7 @@ def toggle_and_cache_params(
     legacy_value,
     classifier_click,
     reproduce_click,
+    fluorescence_click,
     nframe_click,
     nframe_value,
 ):
@@ -222,6 +226,7 @@ def toggle_and_cache_params(
         **format_params(nframe_click, nframe_value),
         **format_params(classifier_click, None),
         **format_params(reproduce_click, None),
+        **format_params(fluorescence_click, None),
     }
 
     return (

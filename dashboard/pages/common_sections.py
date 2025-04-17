@@ -273,7 +273,11 @@ def input_data_display_section(show_grid_id, button_id):
 
 
 def further_options_section(
-    reproduce_flag_id, num_frames_id, num_frames_toggle_id, num_frames_value
+    reproduce_flag_id,
+    fluorescence_flag_id,
+    num_frames_id,
+    num_frames_toggle_id,
+    num_frames_value,
 ):
     """Creates the further option section of the pipeline."""
     # Get the default parameters from request repo
@@ -282,6 +286,8 @@ def further_options_section(
     foptions = dcevent_params["further_options"]
     reproduce_def = foptions["reproduce"]["default"]
     reproduce_flag = True if reproduce_def.lower() == "true" else False
+    fluorescence_flag = foptions["fluorescence"]["default"]
+    fluorescence_flag = True if fluorescence_flag.lower() == "true" else False
     return dbc.AccordionItem(
         title="Further Options",
         children=[
@@ -296,6 +302,21 @@ def further_options_section(
                     }
                 ],
                 defaults=["--reproduce"] if reproduce_flag else [],
+            ),
+            divider_line_comp(),
+            # --transfer-fluorescence checkbox (switch)
+            checklist_comp(
+                comp_id=fluorescence_flag_id,
+                options=[
+                    {
+                        "label": "--transfer-fluorescence",
+                        "value": "--transfer-fluorescence",
+                        "disabled": False,
+                    }
+                ],
+                defaults=(
+                    ["--transfer-fluorescence"] if fluorescence_flag else []
+                ),
             ),
             divider_line_comp(),
             html.P(

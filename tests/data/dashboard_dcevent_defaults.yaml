@@ -131,6 +131,8 @@ norm_gate:
 further_options:
   reproduce:
     default: "False"
+  fluorescence:
+    default: "False"
   num_frames:
     default: 10000
     step: 100

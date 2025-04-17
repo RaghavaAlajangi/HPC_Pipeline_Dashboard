@@ -110,6 +110,7 @@ def test_show_and_cache_unet_model_meta_callback():
                 "ngate_values": [False, 0],
                 "classifier_click": [],
                 "reproduce_click": [],
+                "fluorescence_click": [],
                 "nframe_click": [],
                 "nframe_value": 10000,
             },
@@ -226,6 +227,7 @@ def test_show_and_cache_unet_model_meta_callback():
                 "ngate_values": [False, 0],
                 "classifier_click": [],  # No click on bloodybunny switch
                 "reproduce_click": [],  # No click on reproduce switch
+                "fluorescence_click": [],  # No click on fluorescence switch
                 "nframe_click": [],  # No click on num_frames switch
                 "nframe_value": 10000,
             },

@@ -521,6 +521,7 @@ def advanced_page_layout(refresh_path):
                     gating_options_section(),
                     further_options_section(
                         reproduce_flag_id="reproduce_click",
+                        fluorescence_flag_id="fluorescence_click",
                         num_frames_id="advance_nframe_click",
                         num_frames_toggle_id="advance_nframe_toggle",
                         num_frames_value="advance_nframe_value",
@@ -606,6 +607,8 @@ def fetch_and_show_unet_models(unet_click):
     Input("classifier_click", "value"),
     # reproduce flag input
     Input("reproduce_click", "value"),
+    # fluorescence flag input
+    Input("fluorescence_click", "value"),
     # num frames inputs
     Input("advance_nframe_click", "value"),
     Input("advance_nframe_value", "value"),
@@ -636,6 +639,7 @@ def toggle_and_cache_params(
     ngate_values,
     classifier_click,
     reproduce_click,
+    fluorescence_click,
     nframe_click,
     nframe_value,
 ):
@@ -655,6 +659,7 @@ def toggle_and_cache_params(
         **format_params(nframe_click, nframe_value),
         **format_params(classifier_click, None),
         **format_params(reproduce_click, None),
+        **format_params(fluorescence_click, None),
     }
 
     return (
