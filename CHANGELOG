@@ -1,3 +1,6 @@
+0.2.10
+ - feat: add fluorescence flag to further options
+ - feat: update welcome tab to display changelog
 0.2.9
  - fix: toggle raw data flag gets disabled for all pipleines (#21)
  - ref: handle toggle options with single callback for clean parameter caching
