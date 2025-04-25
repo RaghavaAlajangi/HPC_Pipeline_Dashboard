@@ -309,7 +309,8 @@ def test_simple_request_submission_popup_callback(
             {"cache_simple_template": no_update},
         ),
         (
-            # Test case 3: check for num-frames and reproduce flag options
+            # Test case 3: check for num-frames, reproduce, and
+            # transfer-fluorescence flag options
             collect_simple_pipeline_params,
             # Inputs:
             {
@@ -318,9 +319,11 @@ def test_simple_request_submission_popup_callback(
                 "cached_params": {
                     "legacy: Legacy thresholding with OpenCV": {"thresh": -6},
                     "mlunet: UNET": {"model_file": "model_checkpoint"},
-                    "bloody-bunny_g1_bacae: Bloody Bunny": None,
-                    "--reproduce": None,
+                    "bloody-bunny_g1_bacae: Bloody Bunny": "",
+                    "--reproduce": "",
                     "--num-frames": 12000,
+                    "--transfer-fluorescence": "",
+
                 },
                 "selected_rows": [
                     {"filepath": "HSMFS: test1.rtdc"},
@@ -345,6 +348,7 @@ def test_simple_request_submission_popup_callback(
                             - [ ] std: Standard-deviation-based thresholding\n
                             - Further Options\n
                                 - [x] --reproduce\n
+                                - [x] --transfer-fluorescence\n
                                 - [x] --num-frames 12000\n
                     - **Prediction**\n
                         - Classification Model\n

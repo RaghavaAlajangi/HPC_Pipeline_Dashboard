@@ -657,9 +657,9 @@ def toggle_and_cache_params(
         **format_params(spmed_click, spmed_values, spmed_keys),
         **format_params(ngate_click, ngate_values, ngate_keys),
         **format_params(nframe_click, nframe_value),
-        **format_params(classifier_click, None),
-        **format_params(reproduce_click, None),
-        **format_params(fluorescence_click, None),
+        **format_params(classifier_click, ""),
+        **format_params(reproduce_click, ""),
+        **format_params(fluorescence_click, ""),
     }
 
     return (

@@ -1,3 +1,5 @@
+0.2.11
+ - fix: remove none as default param in further options
 0.2.10
  - feat: add fluorescence flag to further options
  - feat: update welcome tab to display changelog
