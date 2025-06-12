@@ -556,7 +556,7 @@ def fetch_and_show_unet_models(unet_click):
     _, dvc_gitlab = get_gitlab_instances()
 
     model_dict = dvc_gitlab.get_model_metadata()
-    check_boxes = unet_segmentation_options(model_dict)
+    check_boxes = unet_segmentation_options(model_dict, testing=True)
 
     return check_boxes
 

@@ -1,6 +1,7 @@
 0.2.11
- - fix: remove none as default param in further options
+ - enh: include testing models section only for advanced request
  - enh: add testing models section to U-Net segmentation options
+ - fix: remove none as default param in further options
 0.2.10
  - feat: add fluorescence flag to further options
  - feat: update welcome tab to display changelog

@@ -125,13 +125,16 @@ def unet_segmentation_section(unet_switch_id, unet_toggle_id, unet_options_id):
     )
 
 
-def unet_segmentation_options(unet_options):
+def unet_segmentation_options(unet_options, testing=False):
     """Creates radio group options for U-Net segmentation.
 
     Parameters
     ----------
     unet_options: dict
         A dictionary containing the U-Net segmentation options.
+    testing: bool, optional
+        If True, includes testing models in the options.
+        Defaults to False.
 
     Returns
     -------
@@ -206,8 +209,8 @@ def unet_segmentation_options(unet_options):
                     ]
                 )
                 # The testing card is only included if there are testing models
-                # in the unet_options dictionary
-                if radio_groups["testing"]
+                # in the unet_options dictionary and testing is True.
+                if radio_groups["testing"] and testing
                 else None
             ),
         ]
