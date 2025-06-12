@@ -137,7 +137,7 @@ def unet_segmentation_options(unet_options):
     -------
     A list of Radio components for U-Net segmentation options.
     """
-    radio_groups = {"naiad": [], "accelerator": []}
+    radio_groups = {"naiad": [], "accelerator": [], "testing": []}
 
     for model_ckp, meta in unet_options.items():
         if meta["device"] in radio_groups:
@@ -174,10 +174,42 @@ def unet_segmentation_options(unet_options):
         outline=True,
     )
 
-    cards = dbc.Row(
+    # This card is only shown if there are testing models
+    # in the unet_options dictionary. This is useful for testing purposes,
+    # so users can select models that are not yet available in production
+    # but still want to test them
+    testing_card = dbc.Card(
+        dbc.CardBody(
+            [
+                html.H5("Model Testing:", className="card-title"),
+                html.P("- These models are for testing purposes only."),
+                *radio_groups["testing"],
+            ]
+        ),
+        color="danger",
+        outline=True,
+    )
+
+    cards = html.Div(
         [
-            dbc.Col(accelerator_card, width=5),
-            dbc.Col(naiad_card, width=5),
+            dbc.Row(
+                [
+                    dbc.Col(accelerator_card, width=5),
+                    dbc.Col(naiad_card, width=5),
+                ]
+            ),
+            line_breaks(1),
+            (
+                dbc.Row(
+                    [
+                        (dbc.Col(testing_card, width=5)),
+                    ]
+                )
+                # The testing card is only included if there are testing models
+                # in the unet_options dictionary
+                if radio_groups["testing"]
+                else None
+            ),
         ]
     )
 
