@@ -2,6 +2,7 @@ from contextvars import copy_context
 
 import dash_bootstrap_components as dbc
 import pytest
+from dash import html
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 
@@ -48,7 +49,7 @@ def test_show_and_cache_unet_model_meta_callback():
     ctx = copy_context()
     check_boxes = ctx.run(run_callback)
 
-    assert isinstance(check_boxes, dbc.Row)
+    assert isinstance(check_boxes, html.Div)
 
 
 @pytest.mark.parametrize(

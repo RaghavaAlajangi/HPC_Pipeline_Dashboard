@@ -2,7 +2,7 @@ from contextvars import copy_context
 
 import dash_bootstrap_components as dbc
 import pytest
-from dash import no_update
+from dash import html, no_update
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 
@@ -39,7 +39,7 @@ def test_show_and_cache_segment_options_callback():
     ctx = copy_context()
     check_boxes = ctx.run(run_callback)
 
-    assert isinstance(check_boxes, dbc.Row)
+    assert isinstance(check_boxes, html.Div)
 
 
 @pytest.mark.parametrize(
@@ -323,7 +323,6 @@ def test_simple_request_submission_popup_callback(
                     "--reproduce": "",
                     "--num-frames": 12000,
                     "--transfer-fluorescence": "",
-
                 },
                 "selected_rows": [
                     {"filepath": "HSMFS: test1.rtdc"},
