@@ -292,16 +292,6 @@ def create_pipeline_accordion_item(pipeline):
                         backdrop="static",
                         style={"color": "white"},
                     ),
-                    # Store component to cache pipeline notes. It allows us
-                    # to use the same notes across multiple callbacks without
-                    # computing twice.
-                    dcc.Store(
-                        {
-                            "type": "cache_pipeline_notes",
-                            "index": pipeline["iid"],
-                        },
-                        data={},
-                    ),
                     html.Strong("Pipeline Details:"),
                     create_list_group(
                         children=[
@@ -713,7 +703,6 @@ def switch_tabs(active_tab, cache_page, search_term):
     Output({"type": "pipeline_progress_num", "index": MATCH}, "children"),
     Output({"type": "pipeline_progress_bar", "index": MATCH}, "value"),
     Output({"type": "pipeline_progress_bar", "index": MATCH}, "label"),
-    Output({"type": "cache_pipeline_notes", "index": MATCH}, "data"),
     Input("pipeline_accordion", "value"),
     prevent_initial_call=True,
 )
@@ -722,13 +711,10 @@ def show_pipeline_data(pipeline_num):
 
     request_gitlab, _ = get_gitlab_instances()
 
-    progress_comments = ["STATE: setup", "STATE: queued", "STATE: done"]
-
     # Check if there is an active_item selected
     if not pipeline_num:
-        return [no_update] * 6
+        return [no_update] * 5
 
-    # Get the processed pipeline notes from GitLab
     pipeline_notes = request_gitlab.get_processed_issue_notes(pipeline_num)
 
     # Create dash chat box from the notes
@@ -737,18 +723,11 @@ def show_pipeline_data(pipeline_num):
     finished_jobs = pipeline_notes["finished_jobs"]
     total_jobs = pipeline_notes["total_jobs"]
     result_path = pipeline_notes["results_path"]
+    progress = pipeline_notes["progress"]
 
     # Show only comments if total jobs equal to zero
     if total_jobs == 0:
-        return chat, result_path, "Jobs: [0 / 0]", None, None, pipeline_notes
-
-    # Calculate the progress percentage
-    progress = (finished_jobs / total_jobs) * 85
-
-    # Add 5% progress for specific state comments
-    for state_comment in progress_comments:
-        if state_comment in pipeline_notes["comments"]:
-            progress += 5
+        return chat, result_path, "Jobs: [0 / 0]", None, None
 
     result = [
         chat,
@@ -756,7 +735,6 @@ def show_pipeline_data(pipeline_num):
         f"Jobs: [{finished_jobs} / {total_jobs}]",
         progress,
         f"{progress:.0f} %",
-        pipeline_notes,
     ]
 
     return result

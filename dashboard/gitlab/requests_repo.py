@@ -85,6 +85,9 @@ class RequestRepoAPI(BaseAPI):
             re.compile(r"about this particular job at:\s*(https?://\S+)"),
         ]
 
+        # Comments that indicate the progress of the pipeline
+        progress_comments = ["state: setup", "state: queued", "state: done"]
+
         issue_object = self.get_issue_object(issue_iid)
         issue_notes = issue_object.notes.list(all=True)
 
@@ -96,6 +99,7 @@ class RequestRepoAPI(BaseAPI):
             "comment_authors": [],
             "dates": [],
             "pipe_state": "run",
+            "progress": 0,
         }
 
         for note in issue_notes:
@@ -160,12 +164,25 @@ class RequestRepoAPI(BaseAPI):
             total_match = job_comments[1].match(note.body)
             if total_match:
                 data["total_jobs"] = int(total_match.group(1))
+
             # Check for results path
             results_match = job_comments[2].search(note.body)
             if results_match:
                 data["results_path"] = (
                     f"P:/{results_match.group(1).split('main/')[1]}"
                 )
+
+            # Check for progress state comments. If found, increment progress
+            # by 5%
+            for comment in progress_comments:
+                if comment in note_body_lower:
+                    data["progress"] += 5
+
+        # Calculate the total progress percentage
+        if data["total_jobs"] != 0:
+            data["progress"] += (
+                data["finished_jobs"] / data["total_jobs"]
+            ) * 85
 
         return data
 
