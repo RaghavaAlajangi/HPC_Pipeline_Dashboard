@@ -1,13 +1,37 @@
+import pickle
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 import yaml
 
 from .base import BaseAPI
 
+GIT_ISSUE_DIR = Path(__file__).parents[2] / "resources" / "gitlab_issues"
+
 
 class RequestRepoAPI(BaseAPI):
     """HPC Pipeline Request repository API inherited from BaseAPI"""
+
+    @staticmethod
+    def read_cached_issue_data(issue_iid):
+        """Load gitlab issue meta data"""
+        issue_cache_path = GIT_ISSUE_DIR / f"git_{issue_iid}.pkl"
+
+        if issue_cache_path.exists():
+            with open(issue_cache_path, "rb") as file:
+                return pickle.load(file)
+        else:
+            return None
+
+    @staticmethod
+    def write_cached_issue_data(data, issue_iid):
+        """Save extracted paths as a pickle file in resources dir."""
+        issue_cache_path = GIT_ISSUE_DIR / f"git_{issue_iid}.pkl"
+        if not issue_cache_path.parent.is_dir():
+            issue_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(issue_cache_path, "wb") as f:
+            pickle.dump(data, f)
 
     def get_issues_meta(self, state, page, per_page=10, search_term=None):
         """Filter issues based on the state and search term if it exists and
@@ -89,9 +113,17 @@ class RequestRepoAPI(BaseAPI):
         progress_comments = ["state: setup", "state: queued", "state: done"]
 
         issue_object = self.get_issue_object(issue_iid)
-        issue_notes = issue_object.notes.list(all=True)
+
+        # Read the cached issue data
+        issue_cache = self.read_cached_issue_data(issue_iid)
+
+        # If cached issue data exists and it's not outdated, return it
+        if issue_cache:
+            if issue_object.updated_at <= issue_cache["updated_at"]:
+                return issue_cache
 
         data = {
+            "updated_at": issue_object.updated_at,
             "total_jobs": 0,
             "finished_jobs": 0,
             "results_path": "Result path is not found!",
@@ -101,6 +133,9 @@ class RequestRepoAPI(BaseAPI):
             "pipe_state": "run",
             "progress": 0,
         }
+
+        # Fetch comments of the issue
+        issue_notes = issue_object.notes.list(all=True)
 
         for note in issue_notes:
             note_body_lower = note.body.lower()
@@ -183,6 +218,8 @@ class RequestRepoAPI(BaseAPI):
             data["progress"] += (
                 data["finished_jobs"] / data["total_jobs"]
             ) * 85
+
+        self.write_cached_issue_data(data, issue_iid)
 
         return data
 
