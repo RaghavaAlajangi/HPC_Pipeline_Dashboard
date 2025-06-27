@@ -752,7 +752,6 @@ def show_pipeline_data(pipeline_num):
     Input("pipeline_accordion", "value"),
     Input({"type": "run_pause_click", "index": MATCH}, "n_clicks"),
     Input({"type": "stop_pipe_click", "index": MATCH}, "n_clicks"),
-    Input({"type": "pipeline_comments", "index": MATCH}, "children"),
     Input({"type": "keep_results_flag", "index": MATCH}, "n_clicks"),
     Input({"type": "keep_raw_data_flag", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True,
@@ -762,7 +761,6 @@ def manage_pipeline_status(
     pipeline_num,
     run_pause_click,
     stop_pipe_click,
-    pipeline_comments,
     keep_results_flag,
     keep_raw_data_flag,
 ):

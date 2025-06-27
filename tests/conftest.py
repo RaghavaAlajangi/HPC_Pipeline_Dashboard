@@ -30,6 +30,7 @@ def mock_gitlab_issue(iid, state, description, comment_list):
         web_url=f"https://mock_issue_url{iid}",
         description=description,
         created_at=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+        updated_at=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
     )
     mock_issue.notes.list.return_value = [
         mock_comment(msg) for msg in comment_list
@@ -222,3 +223,61 @@ def mock_gitlab_instances(mocker):
     )
 
     return mock_request_repo_instance, mock_dvc_repo_instance
+
+
+@pytest.fixture(autouse=True)
+def patch_read_cached_issue_data(monkeypatch):
+    """Creates patch for read_cached_issue_data method"""
+    from dashboard.gitlab import get_gitlab_instances
+
+    request_repo, _ = get_gitlab_instances()
+
+    def mock_read_cached_issue_data(issue_iid):
+
+        if issue_iid == 1:
+            return {
+                "updated_at": datetime.utcnow().strftime(
+                    "%Y-%m-%dT%H:%M:%S.%fZ"
+                ),
+                "total_jobs": 0,
+                "finished_jobs": 0,
+                "results_path": "Result path is not found!",
+                "comments": [],
+                "comment_authors": [],
+                "dates": [],
+                "pipe_state": "run",
+                "progress": 0,
+            }
+        if issue_iid == 2:
+            return {
+                "updated_at": datetime.utcnow().strftime(
+                    "%Y-%m-%dT%H:%M:%S.%fZ"
+                ),
+                "total_jobs": 2,
+                "finished_jobs": 2,
+                "results_path": "Result path is not found!",
+                "comments": [],
+                "comment_authors": [],
+                "dates": [],
+                "pipe_state": "run",
+                "progress": 95,
+            }
+
+    monkeypatch.setattr(
+        request_repo, "read_cached_issue_data", mock_read_cached_issue_data
+    )
+
+
+@pytest.fixture(autouse=True)
+def patch_write_cached_issue_data(monkeypatch):
+    """Creates patch for write_cached_issue_data method"""
+    from dashboard.gitlab import get_gitlab_instances
+
+    request_repo, _ = get_gitlab_instances()
+
+    def mock_write_cached_issue_data(data, issue_iid):
+        pass
+
+    monkeypatch.setattr(
+        request_repo, "write_cached_issue_data", mock_write_cached_issue_data
+    )

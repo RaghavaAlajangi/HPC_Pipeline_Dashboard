@@ -1,3 +1,5 @@
+0.4.2
+ - enh: cache gitlab issues as pickle files to speedup the loading
 0.4.1
  - enh: include testing models section only for advanced request
  - enh: add testing models section to U-Net segmentation options
