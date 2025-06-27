@@ -18,10 +18,19 @@ class RequestRepoAPI(BaseAPI):
         """Load gitlab issue meta data"""
         issue_cache_path = GIT_ISSUE_DIR / f"git_{issue_iid}.pkl"
 
-        if issue_cache_path.exists():
-            with open(issue_cache_path, "rb") as file:
-                return pickle.load(file)
-        else:
+        if not issue_cache_path.exists():
+            return None
+
+        if issue_cache_path.stat().st_size == 0:
+            return None
+
+        try:
+            with issue_cache_path.open("rb") as f:
+                data = pickle.load(f)
+            return data
+        except EOFError:
+            return None
+        except Exception:
             return None
 
     @staticmethod
