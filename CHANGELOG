@@ -1,14 +1,14 @@
-0.2.11
+0.4.1
  - enh: include testing models section only for advanced request
  - enh: add testing models section to U-Net segmentation options
  - fix: remove none as default param in further options
-0.2.10
+0.4.0
  - feat: add fluorescence flag to further options
  - feat: update welcome tab to display changelog
-0.2.9
+0.3.1
  - fix: toggle raw data flag gets disabled for all pipleines (#21)
  - ref: handle toggle options with single callback for clean parameter caching
-0.2.8
+0.3.0
  - fix: copy CHANGELOG to app container
  - feat: add version display to sidebar using latest version from CHANGELOG
  - fix: improve user input handling and streamline template update process
