@@ -756,14 +756,7 @@ def show_pipeline_data(pipeline_num):
     Input({"type": "keep_raw_data_flag", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True,
 )
-def manage_pipeline_status(
-    active_tab,
-    pipeline_num,
-    run_pause_click,
-    stop_pipe_click,
-    keep_results_flag,
-    keep_raw_data_flag,
-):
+def manage_pipeline_status(active_tab, pipeline_num, *args):
     """Toggle the pipeline control buttons and display popup messages based
     on user interaction.
 

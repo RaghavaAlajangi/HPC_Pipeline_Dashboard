@@ -161,10 +161,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "closed",
                 "pipeline_num": None,
-                "run_pause_click": 0,
-                "stop_pipe_click": 0,
-                "keep_results_flag": None,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -185,10 +181,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "closed",
                 "pipeline_num": 2,
-                "run_pause_click": 0,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 0,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -209,10 +201,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "closed",
                 "pipeline_num": 2,
-                "run_pause_click": 0,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 1,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -233,10 +221,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "opened",
                 "pipeline_num": 3,
-                "run_pause_click": 1,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 0,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -257,10 +241,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "opened",
                 "pipeline_num": 4,
-                "run_pause_click": 1,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 0,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -281,10 +261,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "opened",
                 "pipeline_num": 4,
-                "run_pause_click": 1,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 0,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -305,10 +281,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "opened",
                 "pipeline_num": 5,
-                "run_pause_click": 0,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 0,
-                "keep_raw_data_flag": 0,
             },
             # Expected Outputs:
             {
@@ -329,10 +301,6 @@ def test_change_page_callback(callback_function, args, expected):
             {
                 "active_tab": "closed",
                 "pipeline_num": 2,
-                "run_pause_click": 0,
-                "stop_pipe_click": 0,
-                "keep_results_flag": 0,
-                "keep_raw_data_flag": 1,
             },
             # Expected Outputs:
             {
