@@ -1,14 +1,10 @@
 # HPC Pipeline Dashboard  
-
-> A web interface to create and manage data processing pipelines on HPC clusters.  
-
----
-
-## 📊 Project Status  
+  
 [![CI](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard/branch/main/graph/badge.svg?token=Z4FAPNDJWN)](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard)
 
----
+A web interface to create and manage data processing pipelines on HPC clusters.  
+
 
 ## ✨ Features  
 
