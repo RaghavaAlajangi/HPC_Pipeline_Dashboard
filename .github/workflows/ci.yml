@@ -46,18 +46,12 @@ jobs:
           python -m pip install --upgrade pip wheel
           pip install -r requirements.txt
           pip install -r tests/requirements.txt
-          pip install coverage codecov
 
-      - name: Run pytest with coverage
-        run: |
-          pip freeze
-          coverage run -m pytest
-          coverage report
-          coverage xml
+      - name: Run tests
+        run: pytest --cov --cov-branch --cov-report=xml
 
-      - name: Upload coverage to Codecov
+      - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: ./coverage.xml
-          flags: unittests
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: RaghavaAlajangi/HPC_Pipeline_Dashboard
