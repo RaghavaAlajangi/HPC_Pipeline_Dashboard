@@ -1,25 +1,63 @@
-# HPC_Pipeline_Dashboard
+# HPC Pipeline Dashboard  
 
-A web interface to create data processing pipelines on HPC.
+> A web interface to create and manage data processing pipelines on HPC clusters.  
 
+---
 
-## Main
-
-[![Pipeline](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml)_
+## 📊 Project Status  
+[![CI](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard/branch/main/graph/badge.svg?token=Z4FAPNDJWN)](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard)
 
+---
 
-## Overview:
+## ✨ Features  
 
-<img src="overview.png" width="800" height="550">
+### 📂 Pipeline Data  
+The dashboard provides a centralized view of all pipelines. For each pipeline, users can see:  
+- **User Information** – track who created and owns the pipeline.  
+- **Pipeline ID** – a unique identifier for quick referencing and debugging.  
+- **Parameters** – the configuration details used to run the pipeline.  
+- **Status Monitoring** – live updates on progress with percentage completion and action logs.  
+- **Output Links** – direct access to pipeline outputs and artifacts.  
+- **Search & Filtering** – easily find pipelines by user, ID, or keywords.  
+- **Badges & Labels** – categorize pipelines with tags such as *Important*, *Simple*, *Advanced*, etc. for quick prioritization.  
 
-## 1. Local usage:
-### Clone the repo
+### ⚙️ Pipeline Parameters  
+Pipelines can be customized before execution with a flexible set of parameters:  
+- **Deep Learning Model Selection** – choose from a list of supported DL models.  
+- **Image Classification Options** – switch between available classification architectures.  
+- **Custom Parameters** – adjust hyperparameters, thresholds, and other pipeline-specific configurations.  
 
+### 📑 Data Selection  
+Users can define input data sources seamlessly from within the dashboard:  
+- **S3 Integration** – fetch and process datasets stored in S3 buckets.  
+- **Local File Explorer** – upload and use data directly from the HPC’s file system.  
+
+### 🚀 Pipeline Creation  
+The dashboard offers an intuitive interface to design and launch pipelines without needing command-line interaction:  
+- Configure models, parameters, and datasets in just a few clicks.  
+- Validate inputs and settings before execution.  
+- Launch pipelines and track their progress from a single unified view.  
+
+
+---
+
+## 🖥 Interface  
+
+### Dashboard  
+![Dashboard](https://github.com/user-attachments/assets/719c8c9a-459c-4f1d-abce-2b59b7e9d153)   
+
+
+## 🚀 Getting Started  
+
+Clone the repo:  
 ```bash
 git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
+cd hpc_pipeline_dashboard
 ```
-### Create a `.env` file with the following (GIT ignores this file)
+
+Create a .env file (not committed to git):
+
 ```bash
 # GWDG GitLab URL
 REPO_URL="https://gitlab.gwdg.de"
@@ -31,47 +69,42 @@ PROJECT_NUM=<paste your project number>
 # DVC repo creds
 DVC_REPO_TOKEN=<paste your DVC repo token>
 DVC_REPO_PROJECT_NUM=<paste your project number>
+
 ```
-### Run the below command (develop/debug)
+
+Run locally (development/debug):
+
 ```bash
 python -m dashboard --local
 
-# Then open the http://127.0.0.1:8050/local-dashboard
 ```
+Open in browser: 
 
-## 2. Deployment:
-
-### I. Prerequisites
-
-- Make sure you have `Docker Desktop` installed on your computer.
-- To install, go to [Official Docker page](https://docs.docker.com/get-docker/).
-  This step might require administrative rights.
-- Contact IT to have a developer account
-  on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
-- Since `.env` file is local, we have to provide IT with all the credentials 
-  that are mentioned in the `.env` file.
+- http://127.0.0.1:8050/local-dashboard
 
 
-### II. Build ``Dashboard`` and ``Cron`` docker images:
+## 📦 Deployment
 
-- Open `command prompt` in administrative mode
-- Check weather you have ``Docker`` installed or not
-- Change directory: ``cd <path/to/repo>``<br><br>
-- Run the below command to create a Docker image for the ``dashboard`` 
+Prerequisites:
+
+- [Docker Desktop](https://docs.docker.com/get-docker/) installed
+- Developer account on [MPL harbor](https://harbor.intranet.mpl.mpg.de/)
+- .env credentials shared with IT for deployment
+
+
+Build Docker Images:
+
 ```bash
-docker build -t hpc-pipeline-dashboard.
-```
-- Run the below command to create a Docker image for the ``cron job`` 
-```bash
+# Dashboard image
+docker build -t hpc-pipeline-dashboard .
+
+# Cron job image
 docker build -t hpc-pipeline-dashboard-cron --target cron .
 ```
 
-### III. Test Docker images locally
-- Open the command prompt in administrative mode, run the command below.
+Test Images Locally:
 
 ```bash
-# Replace `GITLAB_URL`, `REPO_TOKEN`, `PROJECT_NUMNER`, `DVC_REPO_TOKEN`, and
-# `DVC_REPO_PROJECT_NUM` with actual secrets
 
 # Windows command prompt:
 
@@ -95,80 +128,68 @@ docker run -p 8050:8050 ^
 -e BASENAME_PREFIX="/hpc-pipeline-dashboard/" \
  hpc-pipeline-dashboard
 ```
+Access app:
 
-- Open the browser and try reaching the following
-  address. http://localhost:8050/hpc-pipeline-dashboard/. This should start the
-  app.
-- If the container runs properly, the changes can be pushed to the MPL harbour for deployment.
-- Look up for running container ID and stop it.
+- http://localhost:8050/hpc-pipeline-dashboard/
+
+Stop container:
 
 ```bash
 docker ps -a
 
 docker stop <containerID>
 ```
-### IV. Make sure you set the environment variables on the MPL server:
+Environment Variables on MPL Server:
 
-- Hand over the environment variables to the IT to set them up as environment variables 
-variables on the MPL server (this is already done)
-- You don't have to do this every time, but keep in mind that if the dashboard crashes 
-Because of access tokens, create new tokens and hand them over to the IT.
+- Ensure IT sets all required tokens & environment variables on the server.
 
+- Refresh tokens if the dashboard crashes due to expired access.
 
-### V. Get Git latest commit ID:
-- Git last commit ID (sort form)
+Get Latest Commit ID: 
+
 ```bash
 git rev-parse --short HEAD
 ```
 
-
-
-### VI. Log in to MPL Harbor Intranet using your developer credentials:
+Log in to MPL Harbor:
 
 ```bash
 docker login harbor.intranet.mpl.mpg.de
 ```
+Tag & Push Images:
 
-### VII. Tag & Push new Docker images to the MPL server:
+Dashboard Image
 
-#### a. Dashboard Image (tag & push)
-- Tag both your commit and latest versions:
 ```bash
 # Tag commit
-docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcommitID
+docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:<commitID>
 
 # Tag latest
 docker tag hpc-pipeline-dashboard harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
-```
-- Push both your commit and latest versions:
 
-```bash
-# Tag commit
-docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:yourcommitID
-
-# Tag latest
+# Push
+docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:<commitID>
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard:latest
+
 ```
 
-#### b. Cron Image (tag & push)
-- Tag both your commit and latest versions:
+Cron Image
+
 ```bash
 # Tag commit
-docker tag hpc-pipeline-dashboard-cron harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:yourcommitID
+docker tag hpc-pipeline-dashboard-cron harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:<commitID>
 
 # Tag latest
 docker tag hpc-pipeline-dashboard-cron harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:latest
-```
-- Push both your commit and latest versions:
-```bash
-# Tag commit
-docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:yourcommitID
 
-# Tag latest
+# Push
+docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:<commitID>
 docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:latest
+
 ```
 
-## Useful Docker commands
+
+## 🛠 Useful Docker Commands
 
 ```bash
 # To see the created Docker images
