@@ -1,17 +1,13 @@
 # HPC_Pipeline_Dashboard
 
-A web interface to create a data processing pipelines (issues) on
-HPC_Pipeline_requests repo
+A web interface to create data processing pipelines on HPC.
 
 
 ## Main
 
-[![pipeline status](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/badges/main/pipeline.svg)](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/-/commits/main)
-[![coverage report](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/badges/main/coverage.svg)](https://gitlab.gwdg.de/blood_data_analysis/hpc_pipeline_dashboard/-/commits/main)
+[![Pipeline](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/cicd.yml/badge.svg)](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml)_
+[![codecov](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard/branch/main/graph/badge.svg?token=Z4FAPNDJWN)](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard)_
 
-## Dashboard Link:
-
-https://guck-tools.intranet.mpl.mpg.de/hpc-pipeline-dashboard/
 
 ## Overview:
 
@@ -23,20 +19,20 @@ https://guck-tools.intranet.mpl.mpg.de/hpc-pipeline-dashboard/
 ```bash
 git clone git@gitlab.gwdg.de:blood_data_analysis/hpc_pipeline_dashboard.git
 ```
-### Create a `.env` file with following (GIT ignores this file)
+### Create a `.env` file with the following (GIT ignores this file)
 ```bash
 # GWDG GitLab URL
 REPO_URL="https://gitlab.gwdg.de"
 
 # Request repo creds
 REPO_TOKEN=<paste your request repo token>
-PROJECT_NUM="28692"
+PROJECT_NUM=<paste your project number>
 
 # DVC repo creds
 DVC_REPO_TOKEN=<paste your DVC repo token>
-DVC_REPO_PROJECT_NUM="29135"
+DVC_REPO_PROJECT_NUM=<paste your project number>
 ```
-### Run the below command (develop / debug)
+### Run the below command (develop/debug)
 ```bash
 python -m dashboard --local
 
@@ -49,10 +45,10 @@ python -m dashboard --local
 
 - Make sure you have `Docker Desktop` installed on your computer.
 - To install, go to [Official Docker page](https://docs.docker.com/get-docker/).
-  This step might require administration rights.
+  This step might require administrative rights.
 - Contact IT to have a developer account
   on [MPL harbor](https://harbor.intranet.mpl.mpg.de/) for deployment
-- Since `.env` file is local, we have to provide the IT all the credentials 
+- Since `.env` file is local, we have to provide IT with all the credentials 
   that are mentioned in the `.env` file.
 
 
@@ -61,17 +57,17 @@ python -m dashboard --local
 - Open `command prompt` in administrative mode
 - Check weather you have ``Docker`` installed or not
 - Change directory: ``cd <path/to/repo>``<br><br>
-- Run below command to create docker image for the``dashboard`` 
+- Run the below command to create a Docker image for the ``dashboard`` 
 ```bash
-docker build -t hpc-pipeline-dashboard .
+docker build -t hpc-pipeline-dashboard.
 ```
-- Run below command to create docker image for the``cron job`` 
+- Run the below command to create a Docker image for the ``cron job`` 
 ```bash
 docker build -t hpc-pipeline-dashboard-cron --target cron .
 ```
 
-### III. Test docker images locally
-- Open command prompt in administrative mode, run the below command.
+### III. Test Docker images locally
+- Open the command prompt in administrative mode, run the command below.
 
 ```bash
 # Replace `GITLAB_URL`, `REPO_TOKEN`, `PROJECT_NUMNER`, `DVC_REPO_TOKEN`, and
@@ -103,7 +99,7 @@ docker run -p 8050:8050 ^
 - Open the browser and try reaching the following
   address. http://localhost:8050/hpc-pipeline-dashboard/. This should start the
   app.
-- If container runs properly, the changes can be pushed to the MPL harbour for deployment.
+- If the container runs properly, the changes can be pushed to the MPL harbour for deployment.
 - Look up for running container ID and stop it.
 
 ```bash
@@ -113,10 +109,10 @@ docker stop <containerID>
 ```
 ### IV. Make sure you set the environment variables on the MPL server:
 
-- Handover environment variables to the IT to set them up as environment 
+- Hand over the environment variables to the IT to set them up as environment variables 
 variables on the MPL server (this is already done)
-- you don't have to do this everytime but keep in mind that if the dashboard crashes 
-because of access tokens, create new tokens and handover to the IT (`benjamin.klier@mpl.mpg.de`) 
+- You don't have to do this every time, but keep in mind that if the dashboard crashes 
+Because of access tokens, create new tokens and hand them over to the IT.
 
 
 ### V. Get Git latest commit ID:
@@ -127,13 +123,13 @@ git rev-parse --short HEAD
 
 
 
-### VI. Login to MPL harbor-intranet using your developer credentials:
+### VI. Log in to MPL Harbor Intranet using your developer credentials:
 
 ```bash
 docker login harbor.intranet.mpl.mpg.de
 ```
 
-### VII. Tag & Push new docker images to the MPL server:
+### VII. Tag & Push new Docker images to the MPL server:
 
 #### a. Dashboard Image (tag & push)
 - Tag both your commit and latest versions:
@@ -175,7 +171,7 @@ docker push harbor.intranet.mpl.mpg.de/guck-tools/hpc-pipeline-dashboard-cron:la
 ## Useful Docker commands
 
 ```bash
-# To see created docker images
+# To see the created Docker images
 docker images
 
 # To see running containers
@@ -187,9 +183,9 @@ docker run <image_name>
 #Stop container
 docker stop <container_ID>
 
-# Get into the image and test weather it is created properly.
+# Get into the image and test whether it is created properly.
 docker run -it <image_name> /bin/bash
 
-# Get into the running container and test weather it is running properly.
+# Get into the running container and test whether it is running properly.
 docker exec -it <container_ID> /bin/bash
 ```
