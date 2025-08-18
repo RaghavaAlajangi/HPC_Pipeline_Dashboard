@@ -6,7 +6,7 @@ A web interface to create data processing pipelines on HPC.
 ## Main
 
 [![Pipeline](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml)_
-[![codecov](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard/branch/main/graph/badge.svg?token=Z4FAPNDJWN)](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard)_
+[![codecov](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard/branch/main/graph/badge.svg?token=Z4FAPNDJWN)](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard)
 
 
 ## Overview:
