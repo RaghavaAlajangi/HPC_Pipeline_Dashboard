@@ -1,6 +1,0 @@
-# Configuration file for pytest. This file can specify options like test
-# discovery paths like below. This configuration tells pytest to include
-# the dashboard directory in the Python path, making it easier to import
-# modules.
-[pytest]
-pythonpath = .
