@@ -3,7 +3,7 @@
 [![CI](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/RaghavaAlajangi/hpc_pipeline_dashboard/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard/branch/main/graph/badge.svg?token=Z4FAPNDJWN)](https://codecov.io/gh/RaghavaAlajangi/hpc_pipeline_dashboard)
 
-A web interface to create and manage data processing pipelines on HPC clusters.  
+A web interface to create and manage data processing pipelines (ML model inference) on HPC clusters.  
 
 
 ## ✨ Features  
