@@ -252,7 +252,7 @@ class RequestRepoAPI(BaseAPI):
         # Split the string at the position of the specific word
         first_part = issue_template[: title_idx + len(issue_titles[temp_type])]
         second_part = issue_template[
-            title_idx + len(issue_titles[temp_type]) :
+            title_idx + len(issue_titles[temp_type]) :  # noqa E2023
         ]
         # Add new iid to the issue description
         return first_part + f"\n#{latest_issue_iid + 1}" + second_part
