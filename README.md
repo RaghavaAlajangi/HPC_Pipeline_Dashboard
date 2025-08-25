@@ -5,10 +5,19 @@
 
 A web interface to create and manage data processing pipelines (ML model inference) on HPC clusters.  
 
+## 🖥 Interface  
+
+![Dashboard](https://github.com/user-attachments/assets/719c8c9a-459c-4f1d-abce-2b59b7e9d153)   
 
 ## ✨ Features  
 
-### 📂 Pipeline Data  
+### ⚙️ Pipeline Parameters  
+Pipelines can be customized before execution with a flexible set of parameters:  
+- **Deep Learning Model Selection** – choose from a list of supported DL models.  
+- **Image Classification Options** – switch between available classification architectures.  
+- **Custom Parameters** – adjust hyperparameters, thresholds, and other pipeline-specific configurations.  
+
+### 📂 Pipeline Metadata  
 The dashboard provides a centralized view of all pipelines. For each pipeline, users can see:  
 - **User Information** – track who created and owns the pipeline.  
 - **Pipeline ID** – a unique identifier for quick referencing and debugging.  
@@ -18,13 +27,7 @@ The dashboard provides a centralized view of all pipelines. For each pipeline, u
 - **Search & Filtering** – easily find pipelines by user, ID, or keywords.  
 - **Badges & Labels** – categorize pipelines with tags such as *Important*, *Simple*, *Advanced*, etc. for quick prioritization.  
 
-### ⚙️ Pipeline Parameters  
-Pipelines can be customized before execution with a flexible set of parameters:  
-- **Deep Learning Model Selection** – choose from a list of supported DL models.  
-- **Image Classification Options** – switch between available classification architectures.  
-- **Custom Parameters** – adjust hyperparameters, thresholds, and other pipeline-specific configurations.  
-
-### 📑 Data Selection  
+### 📑 Data Selection for Processing  
 Users can define input data sources seamlessly from within the dashboard:  
 - **S3 Integration** – fetch and process datasets stored in S3 buckets.  
 - **Local File Explorer** – upload and use data directly from the HPC’s file system.  
@@ -37,12 +40,6 @@ The dashboard offers an intuitive interface to design and launch pipelines witho
 
 
 ---
-
-## 🖥 Interface  
-
-### Dashboard  
-![Dashboard](https://github.com/user-attachments/assets/719c8c9a-459c-4f1d-abce-2b59b7e9d153)   
-
 
 ## 🚀 Getting Started  
 
