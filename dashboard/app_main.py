@@ -18,15 +18,20 @@ DBC_CSS = (
 )
 
 # Get the BASENAME_PREFIX from environment variables if not default
-BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
+BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/hpc-pipeline-dashboard/")
+
+if not BASENAME_PREFIX.startswith("/"):
+    BASENAME_PREFIX = "/" + BASENAME_PREFIX
+if not BASENAME_PREFIX.endswith("/"):
+    BASENAME_PREFIX = BASENAME_PREFIX + "/"
+
 
 
 # Initialise the app
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.DARKLY, DBC_CSS, dbc.icons.BOOTSTRAP],
-    requests_pathname_prefix=BASENAME_PREFIX,
-    routes_pathname_prefix=BASENAME_PREFIX,
+    url_base_pathname=BASENAME_PREFIX,
     suppress_callback_exceptions=True,
 )
 

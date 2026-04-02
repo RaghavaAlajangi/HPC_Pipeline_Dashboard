@@ -31,5 +31,8 @@ ENV PROJECT_NUM=None
 ENV DVC_REPO_TOKEN=None
 ENV DVC_REPO_PROJECT_NUM=None
 
+# Set BASENAME_PREFIX to match what the app expects
+ENV BASENAME_PREFIX="/hpc-pipeline-dashboard/"
+
 ENTRYPOINT ["python3"]
 CMD ["-m", "dashboard"]

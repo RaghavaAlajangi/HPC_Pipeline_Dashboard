@@ -22,7 +22,13 @@ from .common_components import (
 )
 
 # Get the BASENAME_PREFIX from environment variables if not default
-BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
+BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/hpc-pipeline-dashboard/")
+
+if not BASENAME_PREFIX.startswith("/"):
+    BASENAME_PREFIX = "/" + BASENAME_PREFIX
+if not BASENAME_PREFIX.endswith("/"):
+    BASENAME_PREFIX = BASENAME_PREFIX + "/"
+
 
 # dcevent documentation URL
 DCEVENT_DOCS = "https://blood_data_analysis.pages.gwdg.de/dcevent/"

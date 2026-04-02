@@ -23,7 +23,14 @@ imp_urls = {
 
 
 # Get the BASENAME_PREFIX from environment variables if not default
-BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/local-dashboard/")
+BASENAME_PREFIX = os.environ.get("BASENAME_PREFIX", "/hpc-pipeline-dashboard/")
+
+
+if not BASENAME_PREFIX.startswith("/"):
+    BASENAME_PREFIX = "/" + BASENAME_PREFIX
+if not BASENAME_PREFIX.endswith("/"):
+    BASENAME_PREFIX = BASENAME_PREFIX + "/"
+
 
 
 def get_latest_version():
