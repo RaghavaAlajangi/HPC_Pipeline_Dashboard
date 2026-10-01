@@ -1,18 +1,70 @@
 import pickle
+import re
+from datetime import datetime
 from pathlib import Path
 
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
-from dash import Input, Output, State, callback
+from dash import Input, Output, State, callback, dcc, html
 from dash import callback_context as cc
-from dash import dcc, html
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 from .common_components import hover_card, line_breaks
 
 HSM_DATA_FILE = Path(__file__).parents[2] / "resources" / "hsm_drive.pkl"
+
+# Optional time (HH MM [SS]) that may follow a date in a file name
+_TIME = (
+    r"(?:[-_T ]?(?P<H>[01]\d|2[0-3])[-_.:h]?(?P<M>[0-5]\d)"
+    r"(?:[-_.:m]?(?P<S>[0-5]\d))?)?"
+)
+# Supported date formats in file names: YYYY-MM-DD, YYYY_MM_DD, YYYY.MM.DD,
+# YYYYMMDD, and DD-MM-YYYY / DD.MM.YYYY / DD_MM_YYYY
+DATE_PATTERNS = [
+    re.compile(
+        r"(?<!\d)(?P<y>(?:19|20)\d{2})(?P<sep>[-_.]?)(?P<m>0[1-9]|1[0-2])"
+        r"(?P=sep)(?P<d>0[1-9]|[12]\d|3[01])" + _TIME + r"(?!\d)"
+    ),
+    re.compile(
+        r"(?<!\d)(?P<d>0[1-9]|[12]\d|3[01])(?P<sep>[-_.])"
+        r"(?P<m>0[1-9]|1[0-2])(?P=sep)(?P<y>(?:19|20)\d{2})" + _TIME + r"(?!\d)"
+    ),
+]
+
+
+def extract_date_from_path(filepath):
+    """Extract the date (and time, if present) from a file path. The file
+    name is searched first, then the rest of the path (e.g. dated folders).
+    Returns None when no valid date is found."""
+    for text in (filepath.rsplit("/", 1)[-1], filepath):
+        for pattern in DATE_PATTERNS:
+            for match in pattern.finditer(text):
+                try:
+                    return datetime(
+                        int(match["y"]),
+                        int(match["m"]),
+                        int(match["d"]),
+                        int(match["H"] or 0),
+                        int(match["M"] or 0),
+                        int(match["S"] or 0),
+                    )
+                except ValueError:
+                    # e.g. 31st of February
+                    continue
+    return None
+
+
+def sort_rows_by_date(rows, descending=False):
+    """Sort grid rows by the date in their file path. Rows without a date
+    are kept at the end in their original order"""
+    dated, undated = [], []
+    for row in rows:
+        date = extract_date_from_path(row["filepath"])
+        (dated if date else undated).append((date, row))
+    dated.sort(key=lambda x: x[0], reverse=descending)
+    return [row for _, row in dated] + [row for _, row in undated]
 
 
 def load_hsm_data():
@@ -189,6 +241,21 @@ def create_show_grid(show_grid_id):
         color="info",
         style={"margin-right": "10px"},
     )
+    # Sort selected files by the date in their file names
+    sort_button = dbc.Button(
+        [
+            DashIconify(
+                id="sort_by_date_icon",
+                icon="mdi:sort-calendar-ascending",
+                width=20,
+                style={"margin-right": "5px"},
+            ),
+            "Sort by file date",
+        ],
+        id="sort_by_date_button",
+        color="secondary",
+        n_clicks=0,
+    )
     # Show grid section
     show_grid = dag.AgGrid(
         id=show_grid_id,
@@ -228,7 +295,12 @@ def create_show_grid(show_grid_id):
     )
 
     return dmc.Stack(
-        children=[show_button, show_grid], align="center", spacing=1
+        children=[
+            dmc.Group(children=[show_button, sort_button], spacing=5),
+            show_grid,
+        ],
+        align="center",
+        spacing=1,
     )
 
 
@@ -250,15 +322,38 @@ def load_hms_grid_data(pipeline_active_accord):
 @callback(
     Output("show_grid", "rowData"),
     Output("show_grid", "selectedRows"),
+    Output("sort_by_date_icon", "icon"),
     Input("cache_dcor_files", "data"),
     Input("cache_hsm_files", "data"),
+    Input("sort_by_date_button", "n_clicks"),
+    State("show_grid", "selectedRows"),
     prevent_initial_call=True,
 )
-def update_show_grid_data(dcor_files, hsm_files):
-    """Collect the user-selected data files and send them to `show_grid`"""
+def update_show_grid_data(dcor_files, hsm_files, sort_clicks, selected_rows):
+    """Collect the user-selected data files and send them to `show_grid`.
+    Once the sort button is clicked, rows are sorted by the date in their
+    file names (oldest first, then toggles to newest first on every click)"""
     # Convert list of strings into ag grid rowdata
     rowdata = [{"filepath": i} for i in (dcor_files + hsm_files)]
-    return rowdata, rowdata
+    descending = sort_clicks % 2 == 0
+    icon = (
+        "mdi:sort-calendar-descending"
+        if sort_clicks and descending
+        else "mdi:sort-calendar-ascending"
+    )
+    if sort_clicks:
+        rowdata = sort_rows_by_date(rowdata, descending=descending)
+
+    button_triggered = cc.triggered[0]["prop_id"].split(".")[0]
+    if button_triggered == "sort_by_date_button":
+        # Only reorder, keep the user's current (de)selection
+        selected = {r["filepath"] for r in (selected_rows or [])}
+        return (
+            rowdata,
+            [r for r in rowdata if r["filepath"] in selected],
+            icon,
+        )
+    return rowdata, rowdata, icon
 
 
 @callback(

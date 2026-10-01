@@ -1,3 +1,5 @@
+0.4.3
+ - enh: add sort button to sort refined list by file date
 0.4.2
  - enh: cache gitlab issues as pickle files to speedup the loading
  - fix: improve error handling in read_cached_issue_data method 
