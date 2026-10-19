@@ -1,3 +1,6 @@
+0.4.4
+ - fix: write HSMFS cache atomically so the grid is not empty during updates
+ - enh: fall back to the previous HSMFS cache file if the new one is unavailable
 0.4.3
  - enh: add sort button to sort refined list by file date
 0.4.2

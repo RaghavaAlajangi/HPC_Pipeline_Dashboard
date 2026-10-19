@@ -67,13 +67,27 @@ def sort_rows_by_date(rows, descending=False):
     return [row for _, row in dated] + [row for _, row in undated]
 
 
+HSM_BACKUP_FILE = HSM_DATA_FILE.with_name(HSM_DATA_FILE.stem + ".prev.pkl")
+_hsm_cache = {"mtime": None, "data": None}
+
+
 def load_hsm_data():
-    """Load rtdc file paths from pickled HSMFS drive"""
-    if HSM_DATA_FILE.exists():
-        with open(HSM_DATA_FILE, "rb") as file:
-            return pickle.load(file)
-    else:
-        return None
+    """Load rtdc file paths from pickled HSMFS drive. The parsed data is kept
+    in memory and re-read only when the file changes. If the current file is
+    missing or unreadable, fall back to the previous file, then to the last
+    data held in memory, instead of showing nothing"""
+    for path in (HSM_DATA_FILE, HSM_BACKUP_FILE):
+        try:
+            mtime = (path.stat().st_mtime, str(path))
+            if mtime == _hsm_cache["mtime"]:
+                return _hsm_cache["data"]
+            with open(path, "rb") as file:
+                data = pickle.load(file)
+        except (OSError, EOFError, pickle.UnpicklingError):
+            continue
+        _hsm_cache["mtime"], _hsm_cache["data"] = mtime, data
+        return data
+    return _hsm_cache["data"]
 
 
 def create_hsm_grid():
@@ -312,8 +326,8 @@ def create_show_grid(show_grid_id):
 def load_hms_grid_data(pipeline_active_accord):
     """Show HSMFS grid and update time only when user clicks on
     `Data to Process` accord"""
-    data = load_hsm_data()
-    if pipeline_active_accord == "hsm_accord" and data:
+    data = load_hsm_data() if pipeline_active_accord == "hsm_accord" else None
+    if data:
         hsm_grid_data, hsm_time = data["cache_data"], data["update_time"]
         return hsm_grid_data, f"Last Update: {hsm_time}"
     return None, "Last Update: N/A"

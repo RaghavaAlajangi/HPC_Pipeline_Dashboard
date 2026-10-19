@@ -2,6 +2,7 @@ from datetime import datetime as dt, timedelta
 from pathlib import Path
 import pickle
 import os
+import shutil
 import time
 
 
@@ -11,6 +12,7 @@ class DriveFileScanner:
         self.result_path = result_path
         self.file_suffix = file_suffix
         self.identifier = identifier
+        self.backup_path = result_path.with_name(result_path.stem + ".prev.pkl")
         if not result_path.parent.is_dir():
             result_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -27,8 +29,17 @@ class DriveFileScanner:
 
     def save_data(self, data):
         """Save extracted paths as a pickle file in resources dir."""
-        with open(self.result_path, "wb") as f:
+        # Write to a temp file first and swap it in atomically, so readers
+        # never see an empty or partially written file
+        tmp_path = self.result_path.with_name(self.result_path.name + ".tmp")
+        with open(tmp_path, "wb") as f:
             pickle.dump(data, f)
+            f.flush()
+            os.fsync(f.fileno())
+        # Keep the previous good file as a fallback for the dashboard
+        if self.result_path.exists():
+            shutil.copy2(self.result_path, self.backup_path)
+        os.replace(tmp_path, self.result_path)
 
     def process_drive(self):
         t1 = time.time()
@@ -66,6 +77,12 @@ class DriveFileScanner:
                         "size": file_size,
                     }
                     cache_data.append(entry)
+
+        # An empty scan usually means the drive was not mounted; keep the
+        # existing file instead of replacing it with nothing
+        if not cache_data:
+            print("Scan found no files, keeping the existing data file.")
+            return
 
         # Get the time at which the data was processed
         update_time = dt.now().strftime("%H:%M %p, %d-%b-%y")
