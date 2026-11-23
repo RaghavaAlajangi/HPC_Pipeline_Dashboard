@@ -78,12 +78,9 @@ def workflow_tab_content():
         children=dbc.ListGroupItem(
             children=[
                 line_breaks(2),
-                html.Div(
-                    children=html.Img(
-                        src="assets/hpc_workflow.jpg",
-                        style={"width": "1000px", "height": "900px"},
-                    ),
-                    className="row justify-content-center",
+                html.Iframe(
+                    src="assets/hpc_workflow.html",
+                    style={"width": "100%", "height": "1100px", "border": 0},
                 ),
                 line_breaks(2),
             ]

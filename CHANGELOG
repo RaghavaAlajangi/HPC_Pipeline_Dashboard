@@ -1,3 +1,5 @@
+0.4.5
+ - enh: show the interactive HPC workflow diagram on the workflow tab
 0.4.4
  - fix: write HSMFS cache atomically so the grid is not empty during updates
  - enh: fall back to the previous HSMFS cache file if the new one is unavailable

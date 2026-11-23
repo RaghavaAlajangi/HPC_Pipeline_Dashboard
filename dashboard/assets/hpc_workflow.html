@@ -1,0 +1,712 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>HPC Pipeline Dashboard Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lato:wght@400;700&display=swap">
+<style>
+  /* Layout: tabs, then diagram left and details panel right; stacks on phones. Views, nodes, edges and failure modes are data in the script. */
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --ink: #1a1d27;
+    --muted: #5b6173;
+    --line: #c9cdd8;
+    --edge: #2b2f3d;
+    --storage: #0e8f78;
+    --compute: #5f2bb0;
+    --repo: #2c5a9c;
+    --lib: #8f5a06;
+    --focus: #d9480f;
+    --fail: #c92a2a;
+    --fail-ink: #ffffff;
+    --font-body: "Lato", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161c; --surface: #1c1f27; --ink: #e9ebf2; --muted: #9aa1b5; --line: #343947;
+      --edge: #c9cee0; --storage: #12a58a; --compute: #7b46d6; --repo: #4a82d4; --lib: #a5640f; --focus: #ffa94d;
+      --fail: #ff6b6b; --fail-ink: #2a0707; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161c; --surface: #1c1f27; --ink: #e9ebf2; --muted: #9aa1b5; --line: #343947;
+    --edge: #c9cee0; --storage: #12a58a; --compute: #7b46d6; --repo: #4a82d4; --lib: #a5640f; --focus: #ffa94d;
+    --fail: #ff6b6b; --fail-ink: #2a0707; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+    padding-block: 28px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  header h1 { font-size: 24px; font-weight: 600; margin: 0 0 4px; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 72ch; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); }
+  nav button {
+    all: unset; cursor: pointer; padding: 8px 14px; font-size: 14px; font-weight: 500; color: var(--muted);
+    border-bottom: 3px solid transparent; margin-bottom: -1px;
+  }
+  nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--focus); }
+  nav button:hover { color: var(--ink); }
+  nav button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .viewdesc { margin: 0; color: var(--muted); max-width: 80ch; font-size: 14px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  .sw.storage { background: var(--storage); border-radius: 7px / 4px; }
+  .sw.compute { background: var(--compute); }
+  .sw.repo { background: var(--repo); }
+  .sw.lib { background: var(--lib); }
+  .sw.fail { background: var(--fail); border-radius: 50%; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .left { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .canvas {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto;
+    background-image: radial-gradient(var(--line) 1px, transparent 1px); background-size: 22px 22px;
+  }
+  .canvas { max-height: 82vh; overflow: auto; cursor: default; }
+  .canvas.pan { cursor: grabbing; user-select: none; }
+  svg { display: block; width: 100%; height: auto; font-family: var(--font-body); }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .toolbar button {
+    all: unset; cursor: pointer; min-width: 34px; height: 32px; padding: 0 12px; box-sizing: border-box; text-align: center; line-height: 30px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 14px;
+  }
+  .toolbar button:hover { border-color: var(--focus); }
+  .toolbar button[aria-pressed="true"] { border-color: var(--focus); box-shadow: inset 0 0 0 1px var(--focus); }
+  .toolbar button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .toolbar output { min-width: 48px; text-align: center; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  .toolbar .tip { font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .grid.wide { grid-template-columns: minmax(0, 1fr); }
+  .grid.wide aside { position: static; }
+  @media (max-width: 700px) { .toolbar .tip { display: none; } }
+  .node { cursor: pointer; outline: none; }
+  .node .shape { stroke: var(--surface); stroke-width: 2; transition: filter .15s; }
+  .node.storage .shape { fill: var(--storage); }
+  .node.compute .shape { fill: var(--compute); }
+  .node.repo .shape { fill: var(--repo); }
+  .node.lib .shape { fill: var(--lib); }
+  .node text { fill: #fff; font-size: 13px; font-weight: 600; pointer-events: none; }
+  .node text.sub { font-weight: 400; font-size: 12px; }
+  .node text.mono { font-family: var(--font-mono); font-size: 11px; font-weight: 400; }
+  .node:hover .shape, .node:focus-visible .shape { filter: brightness(1.15); }
+  .node.sel .shape, .node:focus-visible .shape { stroke: var(--focus); stroke-width: 3; }
+  .node.hit .shape { stroke: var(--fail); stroke-width: 4; }
+  .badge circle { fill: var(--fail); stroke: var(--surface); stroke-width: 2; }
+  .badge text { fill: var(--fail-ink) !important; font-size: 10px !important; font-weight: 700 !important; }
+  .edge { cursor: pointer; outline: none; }
+  .edge path.line { fill: none; stroke: var(--edge); stroke-width: 1.6; }
+  .edge path.hitarea { fill: none; stroke: transparent; stroke-width: 16; }
+  .edge.dashed path.line { stroke-dasharray: 6 5; }
+  .edge text { fill: var(--ink); font-size: 12px; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  .edge.sel path.line, .edge:focus-visible path.line { stroke: var(--focus); stroke-width: 2.6; }
+  .edge.hit path.line { stroke: var(--fail); stroke-width: 2.8; }
+  .edge.sel text { font-weight: 600; }
+  .dim { opacity: .22; }
+  svg .node, svg .edge { transition: opacity .15s; }
+  .failbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .failbar .lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  .chip {
+    all: unset; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; font-size: 13px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+  }
+  .chip b { background: var(--fail); color: var(--fail-ink); border-radius: 10px; padding: 0 7px; font-size: 11px; font-family: var(--font-mono); }
+  .chip:hover { border-color: var(--fail); }
+  .chip[aria-pressed="true"] { border-color: var(--fail); box-shadow: inset 0 0 0 1px var(--fail); }
+  .chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .repos { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; }
+  .repos h2 { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
+  .repos ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 24px; }
+  .repos li { min-width: 0; font-size: 13px; color: var(--muted); }
+  .repos li code { display: block; font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+  aside {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px;
+    position: sticky; top: 16px; min-width: 0;
+  }
+  aside .kind { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  aside .kind.failkind { color: var(--fail); }
+  aside h2 { margin: 4px 0 8px; font-size: 19px; font-weight: 600; text-wrap: balance; overflow-wrap: anywhere; }
+  aside p { margin: 0 0 12px; }
+  aside code { font-family: var(--font-mono); font-size: 12.5px; }
+  aside h3 { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; font-weight: 500; }
+  aside ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  aside li button, aside .go {
+    all: unset; cursor: pointer; display: block; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    font-size: 13px; line-height: 1.4; box-sizing: border-box;
+  }
+  aside li button:hover, aside .go:hover { border-color: var(--focus); }
+  aside li button.f:hover { border-color: var(--fail); }
+  aside li button:focus-visible, aside .go:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  aside .go { margin-top: 14px; font-weight: 500; text-align: center; }
+  aside li .dir { font-family: var(--font-mono); font-size: 11px; color: var(--muted); display: block; }
+  .todo { color: var(--muted); font-style: italic; font-size: 13px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header>
+    <h1>HPC Pipeline Dashboard Flow</h1>
+    <p>How data moves through the HPC pipeline project, from the dashboard that creates requests to the files that end up on S3. Click a component or an arrow for details.</p>
+  </header>
+
+  <nav role="tablist" id="tabs" aria-label="Views"></nav>
+  <p class="viewdesc" id="viewdesc"></p>
+  <div class="legend" id="legend" aria-hidden="true"></div>
+
+  <div class="grid">
+    <div class="left">
+      <div class="toolbar" role="group" aria-label="Zoom">
+        <button type="button" id="zout" aria-label="Zoom out">−</button>
+        <output id="zval">100%</output>
+        <button type="button" id="zin" aria-label="Zoom in">+</button>
+        <button type="button" id="zfit">Fit</button>
+        <button type="button" id="zwide" aria-pressed="false">Wide</button>
+        <span class="tip">Ctrl + scroll to zoom, drag the background to pan</span>
+      </div>
+      <div class="canvas" id="canvas">
+        <svg id="chart" role="img">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="currentColor" style="color: var(--edge)"/>
+            </marker>
+          </defs>
+          <g id="edges"></g>
+          <g id="nodes"></g>
+        </svg>
+      </div>
+      <div class="failbar" id="failbar" hidden></div>
+      <section class="repos" id="repos" hidden>
+        <h2>The four repositories</h2>
+        <ul id="repolist"></ul>
+      </section>
+    </div>
+    <aside id="panel" aria-live="polite"></aside>
+  </div>
+</main>
+
+<script>
+  // ---- Chart data: add views, nodes, edges and failure modes here ----
+  var VIEWS = {
+    overview: {
+      tab: 'Overview',
+      desc: 'The high-level picture: where data comes from, where it is processed and where results are stored.',
+      viewBox: '0 0 900 690', minWidth: 640,
+      label: 'Flowchart. DCOR-colab transfers data to HPC Garching when a job is done. HPC downloads from and pushes results to MPCDF S3. The DVC proxy mounts S3 as a share drive. MPL-HSMFS transfers data to S3 if it is missing there. The dashboard writes to GitLab, which stores pipeline data for HPC.',
+      nodes: [
+        { id: 'dcor', type: 'storage', shape: 'cyl', x: 110, y: 120, label: ['DCOR-', 'colab'],
+          title: 'DCOR-colab', kind: 'Data storage',
+          desc: 'Source of data that users mention in a request on the dashboard. HPC pulls it from here.' },
+        { id: 's3', type: 'storage', shape: 'cyl', x: 420, y: 120, label: ['MPCDF-', 'S3'],
+          title: 'MPCDF-S3', kind: 'Data storage',
+          desc: 'S3 storage at MPCDF. Holds the actual data files, results and model weights that the DVC repo points to. It is mounted as a share drive through the DVC proxy.' },
+        { id: 'hpc', type: 'compute', shape: 'box', x: 250, y: 360, w: 180, h: 72, label: ['HPC - Garching', '(Processing)'],
+          title: 'HPC - Garching', kind: 'Processing',
+          desc: 'The cluster where the data is processed. It pulls data from DCOR-colab, downloads from S3 when data is missing, and pushes its results back to S3. hpc_pipeline_code runs here: it pulls the data from S3 and DCOR-colab and submits the SLURM jobs.',
+          link: 'transfer' },
+        { id: 'gitlab', type: 'compute', shape: 'box', x: 250, y: 495, w: 180, h: 64, label: ['GitLab', '(Store pipeline data)'],
+          title: 'GitLab', kind: 'Service',
+          desc: 'Stores the pipeline data that drives the HPC processing.' },
+        { id: 'dash', type: 'compute', shape: 'box', x: 250, y: 612, w: 180, h: 56, label: ['Dashboard'],
+          title: 'Dashboard', kind: 'Service',
+          desc: 'hpc_pipeline_dashboard. The interactive dashboard for users. It creates requests (issues with parameters and data file paths) and shows the HSMFS file grid.' },
+        { id: 'dvc', type: 'compute', shape: 'box', x: 560, y: 360, w: 160, h: 64, label: ['DVC - proxy'],
+          title: 'DVC - proxy', kind: 'Service',
+          desc: 'Mounts MPCDF-S3 as a share drive. Users explore the results here, as human-readable symlinks.',
+          link: 'transfer' },
+        { id: 'mpl', type: 'compute', shape: 'box', x: 790, y: 360, w: 150, h: 64, label: ['MPL - HSMFS'],
+          title: 'MPL - HSMFS', kind: 'Tape share drive',
+          desc: 'The HSMFS share drive, backed by tape. Its data is transferred to S3 automatically when it is not on S3 yet.',
+          link: 'transfer' }
+      ],
+      edges: [
+        { id: 'e-dcor-hpc', from: 'dcor', to: 'hpc', dashed: false,
+          d: 'M110 172 C110 320 120 360 158 360',
+          text: ['HPC pulls data', 'named in the request'], tx: 124, ty: 292, anchor: 'start',
+          title: 'DCOR-colab to HPC', desc: 'HPC pulls the DCOR-colab data mentioned in the request. It is not an automatic transfer.' },
+        { id: 'e-s3-hpc', from: 's3', to: 'hpc', dashed: true,
+          d: 'M392 172 C392 260 222 250 222 322',
+          text: ['Automatic download', 'if data is not on HPC', 'already'], tx: 290, ty: 214, anchor: 'end',
+          title: 'S3 to HPC', desc: 'Automatic download, if the data is not on HPC already.' },
+        { id: 'e-hpc-s3', from: 'hpc', to: 's3', dashed: true,
+          d: 'M342 360 C448 360 448 280 448 174',
+          text: ['Push HPC', 'results'], tx: 460, ty: 270, anchor: 'start',
+          title: 'HPC to S3', desc: 'HPC pushes its results to S3.' },
+        { id: 'e-s3-dvc', from: 's3', to: 'dvc', dashed: true,
+          d: 'M472 126 C560 126 560 240 560 326',
+          text: ['Mount S3 as', 'share drive'], tx: 574, ty: 240, anchor: 'start',
+          title: 'S3 to DVC proxy', desc: 'The DVC proxy mounts S3 as a share drive.', link: 'transfer' },
+        { id: 'e-mpl-s3', from: 'mpl', to: 's3', dashed: false,
+          d: 'M790 326 C790 30 600 30 466 90',
+          text: ['Automated transfer of data', 'if data is not on', 'S3 already'], tx: 780, ty: 170, anchor: 'end',
+          title: 'MPL-HSMFS to S3', desc: 'Automated transfer of data, if the data is not on S3 already. In practice it runs through a VM and the DVC repo; the Full pipeline tab shows how.', link: 'transfer' },
+        { id: 'e-gitlab-hpc', from: 'gitlab', to: 'hpc', dashed: false,
+          d: 'M250 463 L250 398', text: [], tx: 0, ty: 0, anchor: 'start',
+          title: 'GitLab to HPC', desc: 'GitLab supplies the pipeline data for HPC.' },
+        { id: 'e-dash-gitlab', from: 'dash', to: 'gitlab', dashed: false,
+          d: 'M250 584 L250 529', text: [], tx: 0, ty: 0, anchor: 'start',
+          title: 'Dashboard to GitLab', desc: 'The dashboard works against GitLab.' }
+      ],
+      failures: []
+    },
+
+    transfer: {
+      tab: 'Full pipeline',
+      desc: 'From request to results. The dashboard creates an issue, a VM copies the raw files from the HSMFS tape drive to S3, HPC pulls the data from S3 and DCOR-colab and runs SLURM jobs, and the results go back to S3 where the VM turns them into symlinks. Red markers show where it breaks.',
+      viewBox: '0 0 1400 1040', minWidth: 1000,
+      label: 'Flowchart of the full pipeline. The dashboard creates an issue in the requests repo. A VM polls the repo every 5 minutes, reads raw files from the HSMFS tape drive, adds pointer files to the DVC repo and transfers the actual files to S3. HPC polls the requests repo, pulls data from S3 and from DCOR-colab, submits SLURM jobs and pushes the results to S3. The VM reads the results from S3 and builds symlinks for the DVC proxy. A crawler container scans HSMFS hourly and writes a pkl file the dashboard reads. Five failure modes are marked: daily VM restarts, DVC repo corruption, HSMFS mount issues, a full S3 quota and HPC dependency mismatches.',
+      nodes: [
+        { id: 'dash', type: 'compute', shape: 'box', x: 170, y: 100, w: 220, h: 66, label: ['Dashboard', 'hpc_pipeline_dashboard'], mono: true,
+          title: 'Dashboard', kind: 'Service', repo: 'hpc_pipeline_dashboard',
+          desc: 'The interactive dashboard for users. It creates a request issue with parameters and data file paths. Users can point to data on HSMFS, shown in the HSMFS grid read from the crawler pkl file, and also mention data from DCOR-colab.' },
+        { id: 'req', type: 'repo', shape: 'box', x: 620, y: 100, w: 220, h: 66, label: ['Requests repo', 'hpc_pipeline_requests'], mono: true,
+          title: 'Requests repo', kind: 'Git repository', repo: 'hpc_pipeline_requests',
+          desc: 'Each dashboard request is an issue here, carrying the parameters and the data file paths. Both the transfer VM and the HPC poll it.' },
+        { id: 'crawler', type: 'compute', shape: 'box', x: 170, y: 330, w: 220, h: 66, label: ['Crawler container', 'docker, runs every 1 h'],
+          title: 'Crawler container', kind: 'Docker container',
+          desc: 'Has the HSMFS share drive mounted. Every hour it crawls the drive and stores the content in a pkl file, which the dashboard reads to show the HSMFS grid.' },
+        { id: 'hsmfs', type: 'storage', shape: 'cyl', x: 170, y: 600, label: ['HSMFS', '(tape)'],
+          title: 'HSMFS', kind: 'Tape share drive',
+          desc: 'The share drive that holds the raw data, backed by tape. The VM and the crawler container both mount it.', link: 'overview' },
+        { id: 'vm', type: 'compute', shape: 'box', x: 620, y: 400, w: 300, h: 130, label: ['Transfer VM', 'cron job every 5 min', 'hpc_pipeline_code'], mono: true,
+          title: 'Transfer VM', kind: 'Virtual machine', repo: 'hpc_pipeline_code',
+          desc: 'A virtual machine with the repos cloned. A cron job runs every 5 minutes and checks the requests repo. For each new request, hpc_pipeline_code adds the pointer files to the DVC repo and transfers the actual files to S3. Later it reads the results from S3 and converts them into human-readable symlinks for the DVC proxy.' },
+        { id: 'data', type: 'repo', shape: 'box', x: 1050, y: 220, w: 220, h: 66, label: ['DVC repo', 'hpc_pipeline_data'], mono: true,
+          title: 'DVC repo', kind: 'Git repository', repo: 'hpc_pipeline_data',
+          desc: 'Stores raw data, result files and model weights as pointer files in git, for versioning. The actual files live in S3. HPC depends on the model weights and data stored here.' },
+        { id: 's3', type: 'storage', shape: 'cyl', x: 1050, y: 530, label: ['MPCDF-', 'S3'],
+          title: 'MPCDF-S3', kind: 'Data storage',
+          desc: 'Holds the actual files that the DVC pointer files refer to: raw data, results and model weights. It has a storage quota.', link: 'overview' },
+        { id: 'hpc', type: 'compute', shape: 'box', x: 1050, y: 800, w: 240, h: 76, label: ['HPC - Garching', 'hpc_pipeline_code · SLURM'], mono: true,
+          title: 'HPC - Garching', kind: 'Processing', repo: 'hpc_pipeline_code',
+          desc: 'hpc_pipeline_code runs here on the MPCDF HPC. It pulls the issues from hpc_pipeline_requests, pulls the data from MPCDF-S3 and DCOR-colab, and triggers the SLURM jobs. The results are transferred back to S3. The code depends on dcevent, the model weights and the data in hpc_pipeline_data.', link: 'overview' },
+        { id: 'dcor', type: 'storage', shape: 'cyl', x: 680, y: 800, label: ['DCOR-', 'colab'],
+          title: 'DCOR-colab', kind: 'Data storage',
+          desc: 'The second data source. Users can mention DCOR-colab data in a request on the dashboard, and HPC pulls it from here.', link: 'overview' },
+        { id: 'dcevent', type: 'lib', shape: 'box', x: 1050, y: 960, w: 220, h: 60, label: ['dcevent', 'main processing library'],
+          title: 'dcevent', kind: 'Library',
+          desc: 'The main processing library that hpc_pipeline_code depends on.' },
+        { id: 'proxy', type: 'compute', shape: 'box', x: 540, y: 960, w: 220, h: 66, label: ['DVC - proxy', '(results as symlinks)'],
+          title: 'DVC - proxy', kind: 'Service',
+          desc: 'Where users explore the results. The VM reads the results from S3 and converts them into human-readable symlinks shown here. S3 is mounted as its share drive, as shown in the Overview.', link: 'overview' }
+      ],
+      edges: [
+        { id: 'e-dash-req', from: 'dash', to: 'req', dashed: false, step: 1,
+          d: 'M282 100 L508 100', text: ['creates issue', '(params, data file paths)'], tx: 395, ty: 58, anchor: 'middle',
+          title: 'Dashboard creates a request', desc: 'The dashboard creates an issue in the requests repo, with the parameters and the data file paths. The paths can point to HSMFS data or mention DCOR-colab data.' },
+        { id: 'e-vm-req', from: 'vm', to: 'req', dashed: false, step: 2,
+          d: 'M620 335 L620 135', text: ['polls issues', 'cron, every 5 min'], tx: 636, ty: 235, anchor: 'start',
+          title: 'VM polls the requests repo', desc: 'A cron job on the VM tracks the requests repo every 5 minutes and picks up new issues.' },
+        { id: 'e-hsmfs-vm', from: 'hsmfs', to: 'vm', dashed: false, step: 3,
+          d: 'M222 590 C340 590 360 440 468 440', text: ['reads raw files', '(mounted drive)'], tx: 240, ty: 650, anchor: 'start',
+          title: 'VM reads raw files from HSMFS', desc: 'The VM reads the raw data files named in the request from the mounted HSMFS drive.' },
+        { id: 'e-vm-data', from: 'vm', to: 'data', dashed: false, step: 4,
+          d: 'M770 380 C860 380 860 220 938 220', text: ['adds pointer', 'files (git)'], tx: 850, ty: 160, anchor: 'middle',
+          title: 'VM adds pointer files to the DVC repo', desc: 'hpc_pipeline_code adds the DVC pointer files to the DVC repo.' },
+        { id: 'e-vm-s3', from: 'vm', to: 's3', dashed: false, step: 4,
+          d: 'M770 430 C870 430 880 530 998 530', text: ['transfers', 'actual files'], tx: 880, ty: 505, anchor: 'middle',
+          title: 'VM transfers the actual files to S3', desc: 'hpc_pipeline_code transfers the actual files to S3.' },
+        { id: 'e-data-s3', from: 'data', to: 's3', dashed: true,
+          d: 'M1050 253 L1050 476', text: ['pointers refer', 'to files in S3'], tx: 1066, ty: 360, anchor: 'start',
+          title: 'Pointer files refer to S3 files', desc: 'The pointer files in the DVC repo identify the actual files stored in S3.' },
+        { id: 'e-hpc-req', from: 'hpc', to: 'req', dashed: false, step: 5,
+          d: 'M1172 812 L1370 812 L1370 28 L620 28 L620 65', text: ['polls issues from hpc_pipeline_requests'], tx: 1000, ty: 52, anchor: 'middle',
+          title: 'HPC polls the requests repo', desc: 'hpc_pipeline_code on HPC reads the issues in the requests repo, to know which data to pull and which jobs to run.' },
+        { id: 'e-s3-hpc', from: 's3', to: 'hpc', dashed: false, step: 6,
+          d: 'M1010 578 L1010 760', text: ['pulls data', 'from S3'], tx: 998, ty: 665, anchor: 'end',
+          title: 'HPC pulls data from S3', desc: 'hpc_pipeline_code on HPC pulls the data from S3, including what the VM transferred from HSMFS.' },
+        { id: 'e-dcor-hpc', from: 'dcor', to: 'hpc', dashed: false, step: 6,
+          d: 'M732 800 L928 800', text: ['pulls dataset', 'named in request'], tx: 830, ty: 756, anchor: 'middle',
+          title: 'HPC pulls data from DCOR-colab', desc: 'hpc_pipeline_code on HPC pulls the DCOR-colab data mentioned in the request.' },
+        { id: 'e-hpc-s3', from: 'hpc', to: 's3', dashed: false, step: 7,
+          d: 'M1090 760 L1090 580', text: ['SLURM jobs,', 'results to S3'], tx: 1104, ty: 665, anchor: 'start',
+          title: 'HPC pushes results to S3', desc: 'hpc_pipeline_code triggers the SLURM jobs, and the results are transferred to S3.' },
+        { id: 'e-s3-vm', from: 's3', to: 'vm', dashed: false, step: 8,
+          d: 'M1000 565 C900 610 760 570 700 467', text: ['reads results'], tx: 850, ty: 618, anchor: 'middle',
+          title: 'VM reads the results from S3', desc: 'The VM reads the result content from S3 again.' },
+        { id: 'e-vm-proxy', from: 'vm', to: 'proxy', dashed: false, step: 9,
+          d: 'M540 465 L540 925', text: ['builds symlinks', '(human-readable)'], tx: 556, ty: 700, anchor: 'start',
+          title: 'VM publishes results on the DVC proxy', desc: 'The VM converts the results into human-readable symlinks, shown on the DVC proxy where users explore them.' },
+        { id: 'e-dcevent-hpc', from: 'dcevent', to: 'hpc', dashed: true,
+          d: 'M1050 930 L1050 840', text: ['imported by', 'hpc_pipeline_code'], tx: 1066, ty: 885, anchor: 'start',
+          title: 'HPC depends on dcevent', desc: 'hpc_pipeline_code depends on the dcevent processing library.' },
+        { id: 'e-data-hpc', from: 'data', to: 'hpc', dashed: true,
+          d: 'M1162 220 C1300 220 1310 780 1172 780', text: ['model weights,', 'data (DVC)'], tx: 1262, ty: 480, anchor: 'end',
+          title: 'HPC depends on the DVC repo', desc: 'hpc_pipeline_code depends on the model weights and the data tracked in hpc_pipeline_data.' },
+        { id: 'e-crawler-dash', from: 'crawler', to: 'dash', dashed: false,
+          d: 'M170 297 L170 135', text: ['pkl file', '(HSMFS grid)'], tx: 184, ty: 210, anchor: 'start',
+          title: 'Crawler feeds the dashboard', desc: 'The crawler stores the drive content in a pkl file. The dashboard reads it to show the HSMFS grid.' },
+        { id: 'e-hsmfs-crawler', from: 'hsmfs', to: 'crawler', dashed: false,
+          d: 'M170 548 L170 365', text: ['mounted, crawled', 'every 1 h'], tx: 184, ty: 450, anchor: 'start',
+          title: 'Crawler scans HSMFS', desc: 'The container has the drive mounted and crawls it every hour.' }
+      ],
+      failures: [
+        { id: 'F1', at: 'vm', title: 'VM restarts every day',
+          desc: 'The VM restarts daily. A restart in the middle of a cron run or a transfer can break the pipeline for that request.',
+          affects: ['vm', 'e-vm-req', 'e-vm-data', 'e-vm-s3'] },
+        { id: 'F2', at: 'data', title: 'DVC repo corruption',
+          desc: 'The DVC repo gets corrupted. Pointer files cannot be added, and HPC cannot get the model weights and data tracked there.',
+          cause: 'Cause to confirm: noted as “sequential”, possibly overlapping runs.',
+          affects: ['data', 'e-vm-data', 'e-data-hpc'] },
+        { id: 'F3', at: 'hsmfs', title: 'HSMFS mount issues',
+          desc: 'The HSMFS drive has mount problems. Both the VM and the crawler container depend on that mount, so transfers and the dashboard HSMFS grid are exposed.',
+          affects: ['hsmfs', 'e-hsmfs-vm', 'e-hsmfs-crawler', 'crawler'] },
+        { id: 'F4', at: 's3', title: 'S3 quota full',
+          desc: 'The MPCDF S3 quota fills up. Writes fail, so the VM transfer and the result push from HPC both break, and the pipeline stops.',
+          affects: ['s3', 'e-vm-s3', 'e-hpc-s3'] },
+        { id: 'F5', at: 'hpc', title: 'HPC dependency mismatch',
+          desc: 'hpc_pipeline_code depends on dcevent, the model weights and the data in hpc_pipeline_data. If any of them is wrong or missing, the pipeline breaks.',
+          affects: ['hpc', 'dcevent', 'data', 'e-dcevent-hpc', 'e-data-hpc'] }
+      ]
+    }
+  };
+
+  var REPOS = [
+    { name: 'hpc_pipeline_code', node: 'vm', role: 'Adds pointer files to the DVC repo and transfers files to S3 on the transfer VM. On HPC it pulls the issues and the data, and triggers the SLURM jobs.' },
+    { name: 'hpc_pipeline_requests', node: 'req', role: 'The dashboard creates an issue here with the parameters and data file paths.' },
+    { name: 'hpc_pipeline_data', node: 'data', role: 'The DVC repo. Raw data, results and model weights as pointer files; the actual files are in S3.' },
+    { name: 'hpc_pipeline_dashboard', node: 'dash', role: 'The interactive dashboard. Shows the HSMFS share drive paths, read from the crawler pkl file.' }
+  ];
+
+  var LEGEND = {
+    storage: 'Data storage', compute: 'Service or processing', repo: 'Git repository', lib: 'Library'
+  };
+
+  // ---- Rendering ----
+  var NS = 'http://www.w3.org/2000/svg';
+  var view, viewName, byId, edgeById, nodeEls, edgeEls;
+  var sel = { kind: null, id: null };
+  var svg = document.getElementById('chart');
+  var nodesG = document.getElementById('nodes');
+  var edgesG = document.getElementById('edges');
+  var panel = document.getElementById('panel');
+
+  function el(name, attrs, parent) {
+    var node = document.createElementNS(NS, name);
+    for (var k in attrs) node.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+  function h(tag, text, cls) {
+    var x = document.createElement(tag);
+    if (text != null) x.textContent = text;
+    if (cls) x.className = cls;
+    return x;
+  }
+  function onActivate(node, fn) {
+    node.addEventListener('click', fn);
+    node.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); fn(); }
+    });
+  }
+
+  function failuresFor(id) {
+    return view.failures.filter(function (f) { return f.affects.indexOf(id) >= 0; });
+  }
+
+  function buildView(name) {
+    viewName = name; view = VIEWS[name];
+    byId = {}; edgeById = {}; nodeEls = {}; edgeEls = {};
+    view.nodes.forEach(function (n) { byId[n.id] = n; });
+    view.edges.forEach(function (e) { edgeById[e.id] = e; });
+
+    svg.setAttribute('viewBox', view.viewBox);
+    svg.setAttribute('aria-label', view.label);
+    zoom = 1; applyZoom();
+    nodesG.textContent = ''; edgesG.textContent = '';
+
+    view.edges.forEach(function (e) {
+      var g = el('g', { 'class': 'edge' + (e.dashed ? ' dashed' : ''), tabindex: 0, role: 'button', 'aria-label': e.title }, edgesG);
+      el('path', { d: e.d, 'class': 'hitarea' }, g);
+      el('path', { d: e.d, 'class': 'line', 'marker-end': 'url(#arrow)' }, g);
+      e.text.forEach(function (line, i) {
+        var t = el('text', { x: e.tx, y: e.ty + i * 15, 'text-anchor': e.anchor }, g);
+        t.textContent = (i === 0 && e.step ? e.step + ' · ' : '') + line;
+      });
+      onActivate(g, function () { select('edge', e.id); });
+      g.addEventListener('mouseenter', function () { focusSet('edge', e.id); });
+      g.addEventListener('mouseleave', function () { focusSet(sel.kind, sel.id); });
+      edgeEls[e.id] = g;
+    });
+
+    view.nodes.forEach(function (n) {
+      var g = el('g', { 'class': 'node ' + n.type, tabindex: 0, role: 'button', 'aria-label': n.title }, nodesG);
+      var cy = n.y;
+      if (n.shape === 'cyl') {
+        var w = 100, hh = 104, x = n.x - w / 2, y = n.y - hh / 2, ry = 13;
+        el('path', { 'class': 'shape', d: 'M' + x + ' ' + (y + ry) + ' a50 ' + ry + ' 0 0 1 100 0 v' + (hh - 2 * ry) + ' a50 ' + ry + ' 0 0 1 -100 0 z' }, g);
+        el('path', { d: 'M' + x + ' ' + (y + ry) + ' a50 ' + ry + ' 0 0 0 100 0', fill: 'none', stroke: 'rgba(255,255,255,.55)', 'stroke-width': 1.5 }, g);
+        cy = n.y + 8;
+      } else {
+        el('rect', { 'class': 'shape', x: n.x - n.w / 2, y: n.y - n.h / 2, width: n.w, height: n.h, rx: 3 }, g);
+      }
+      var gap = 16, start = cy - ((n.label.length - 1) * gap) / 2 + 4;
+      n.label.forEach(function (line, i) {
+        var cls = '';
+        if (i > 0 && n.shape === 'box') cls = (n.mono && /^hpc_pipeline/.test(line)) ? 'mono' : 'sub';
+        var t = el('text', { x: n.x, y: start + i * gap, 'text-anchor': 'middle', 'class': cls }, g);
+        t.textContent = line;
+      });
+      view.failures.forEach(function (f) {
+        if (f.at !== n.id) return;
+        var bx = n.shape === 'cyl' ? n.x + 48 : n.x + n.w / 2;
+        var by = n.shape === 'cyl' ? n.y - 40 : n.y - n.h / 2;
+        var b = el('g', { 'class': 'badge' }, g);
+        el('circle', { cx: bx, cy: by, r: 12 }, b);
+        var bt = el('text', { x: bx, y: by + 3.5, 'text-anchor': 'middle' }, b);
+        bt.textContent = f.id;
+      });
+      onActivate(g, function () { select('node', n.id); });
+      g.addEventListener('mouseenter', function () { focusSet('node', n.id); });
+      g.addEventListener('mouseleave', function () { focusSet(sel.kind, sel.id); });
+      nodeEls[n.id] = g;
+    });
+
+    // legend, description, failure chips, repo list
+    document.getElementById('viewdesc').textContent = view.desc;
+    var legend = document.getElementById('legend'); legend.textContent = '';
+    var used = {};
+    view.nodes.forEach(function (n) { used[n.type] = true; });
+    Object.keys(LEGEND).forEach(function (t) {
+      if (!used[t]) return;
+      var s = h('span'); s.appendChild(h('i', null, 'sw ' + t)); s.appendChild(document.createTextNode(LEGEND[t])); legend.appendChild(s);
+    });
+    if (view.failures.length) {
+      var s = h('span'); s.appendChild(h('i', null, 'sw fail')); s.appendChild(document.createTextNode('Failure mode')); legend.appendChild(s);
+    }
+
+    var bar = document.getElementById('failbar'); bar.textContent = '';
+    bar.hidden = !view.failures.length;
+    if (view.failures.length) {
+      bar.appendChild(h('span', 'Failure modes', 'lbl'));
+      view.failures.forEach(function (f) {
+        var c = h('button', null, 'chip'); c.type = 'button'; c.id = 'chip-' + f.id; c.setAttribute('aria-pressed', 'false');
+        c.appendChild(h('b', f.id)); c.appendChild(document.createTextNode(f.title));
+        c.addEventListener('click', function () { select('failure', f.id); });
+        bar.appendChild(c);
+      });
+    }
+
+    var repos = document.getElementById('repos');
+    repos.hidden = name !== 'transfer';
+    var rl = document.getElementById('repolist'); rl.textContent = '';
+    REPOS.forEach(function (r) {
+      var li = h('li'); li.appendChild(h('code', r.name)); li.appendChild(document.createTextNode(r.role)); rl.appendChild(li);
+    });
+  }
+
+  // ---- Selection and highlighting ----
+  function failureById(id) {
+    return view.failures.filter(function (f) { return f.id === id; })[0];
+  }
+
+  function focusSet(kind, id) {
+    var liveNodes = {}, liveEdges = {}, hitNodes = {}, hitEdges = {};
+    if (kind === 'node') {
+      liveNodes[id] = true;
+      view.edges.forEach(function (e) {
+        if (e.from === id || e.to === id) { liveEdges[e.id] = true; liveNodes[e.from] = true; liveNodes[e.to] = true; }
+      });
+    } else if (kind === 'edge') {
+      var e = edgeById[id]; liveEdges[id] = true; liveNodes[e.from] = true; liveNodes[e.to] = true;
+    } else if (kind === 'failure') {
+      failureById(id).affects.forEach(function (a) {
+        if (byId[a]) { liveNodes[a] = true; hitNodes[a] = true; }
+        if (edgeById[a]) { liveEdges[a] = true; hitEdges[a] = true; liveNodes[edgeById[a].from] = true; liveNodes[edgeById[a].to] = true; }
+      });
+    }
+    var any = !!kind;
+    view.nodes.forEach(function (n) {
+      nodeEls[n.id].classList.toggle('dim', any && !liveNodes[n.id]);
+      nodeEls[n.id].classList.toggle('sel', sel.kind === 'node' && sel.id === n.id);
+      nodeEls[n.id].classList.toggle('hit', !!hitNodes[n.id]);
+    });
+    view.edges.forEach(function (e) {
+      edgeEls[e.id].classList.toggle('dim', any && !liveEdges[e.id]);
+      edgeEls[e.id].classList.toggle('sel', sel.kind === 'edge' && sel.id === e.id);
+      edgeEls[e.id].classList.toggle('hit', !!hitEdges[e.id]);
+    });
+    view.failures.forEach(function (f) {
+      document.getElementById('chip-' + f.id).setAttribute('aria-pressed', String(sel.kind === 'failure' && sel.id === f.id));
+    });
+  }
+
+  function listButton(onclick, top, bottom, fail) {
+    var li = h('li'), b = h('button', null, fail ? 'f' : ''); b.type = 'button';
+    b.appendChild(h('span', top, 'dir')); b.appendChild(document.createTextNode(bottom));
+    b.addEventListener('click', onclick);
+    li.appendChild(b);
+    return li;
+  }
+  function plain(parts) { return parts.join(' '); }
+
+  function failureSection(id) {
+    var fs = failuresFor(id);
+    if (!fs.length) return;
+    panel.appendChild(h('h3', 'Failure modes'));
+    var ul = h('ul');
+    fs.forEach(function (f) {
+      ul.appendChild(listButton(function () { select('failure', f.id); }, f.id, f.title, true));
+    });
+    panel.appendChild(ul);
+  }
+
+  function viewLink(target) {
+    if (!target) return;
+    var b = h('button', 'Open the ' + VIEWS[target].tab + ' view', 'go'); b.type = 'button';
+    b.addEventListener('click', function () { setView(target); });
+    panel.appendChild(b);
+  }
+
+  function render() {
+    panel.textContent = '';
+    function add(tag, text, cls) { var x = h(tag, text, cls); panel.appendChild(x); return x; }
+
+    if (!sel.kind) {
+      add('div', 'Details', 'kind');
+      add('h2', 'Pick a component');
+      add('p', 'Click any box, cylinder or arrow in the diagram. The rest of the chart dims so you can follow one path at a time. Click empty space to clear.', 'hint');
+      return;
+    }
+    if (sel.kind === 'node') {
+      var n = byId[sel.id];
+      add('div', n.kind, 'kind');
+      add('h2', n.title);
+      if (n.repo) { var p0 = add('p'); p0.appendChild(document.createTextNode('Repo: ')); p0.appendChild(h('code', n.repo)); }
+      add('p', n.desc);
+      add('p', 'More detail to be added.', 'todo');
+      add('h3', 'Connections');
+      var ul = h('ul');
+      view.edges.forEach(function (e) {
+        var txt = e.text.length ? ' — ' + plain(e.text) : '';
+        if (e.from === n.id) ul.appendChild(listButton(function () { select('edge', e.id); }, 'Sends to', byId[e.to].title + txt));
+        else if (e.to === n.id) ul.appendChild(listButton(function () { select('edge', e.id); }, 'Receives from', byId[e.from].title + txt));
+      });
+      panel.appendChild(ul);
+      failureSection(n.id);
+      viewLink(n.link);
+    } else if (sel.kind === 'edge') {
+      var e = edgeById[sel.id];
+      add('div', e.step ? 'Step ' + e.step : 'Data flow', 'kind');
+      add('h2', e.title);
+      add('p', e.desc);
+      add('p', 'More detail to be added.', 'todo');
+      add('h3', 'Between');
+      var ul2 = h('ul');
+      ul2.appendChild(listButton(function () { select('node', e.from); }, 'From', byId[e.from].title));
+      ul2.appendChild(listButton(function () { select('node', e.to); }, 'To', byId[e.to].title));
+      panel.appendChild(ul2);
+      failureSection(e.id);
+      viewLink(e.link);
+    } else {
+      var f = failureById(sel.id);
+      add('div', 'Failure mode ' + f.id, 'kind failkind');
+      add('h2', f.title);
+      add('p', f.desc);
+      if (f.cause) add('p', f.cause, 'todo');
+      add('p', 'Impact detail and mitigation to be added.', 'todo');
+      add('h3', 'Affected');
+      var ul3 = h('ul');
+      f.affects.forEach(function (a) {
+        if (byId[a]) ul3.appendChild(listButton(function () { select('node', a); }, 'Component', byId[a].title));
+        else ul3.appendChild(listButton(function () { select('edge', a); }, 'Flow', edgeById[a].title));
+      });
+      panel.appendChild(ul3);
+    }
+  }
+
+  function select(kind, id) {
+    sel = { kind: kind, id: id };
+    focusSet(kind, id);
+    render();
+  }
+
+  function clearSel() { sel = { kind: null, id: null }; focusSet(null, null); render(); }
+  svg.addEventListener('click', function (ev) {
+    if (suppressClear) { suppressClear = false; return; }
+    if (ev.target === svg) clearSel();
+  });
+
+  // ---- Zoom and pan ----
+  var zoom = 1;
+  var canvas = document.getElementById('canvas');
+  function applyZoom() {
+    svg.style.width = (zoom * 100) + '%';
+    svg.style.minWidth = (view.minWidth * zoom) + 'px';
+    document.getElementById('zval').textContent = Math.round(zoom * 100) + '%';
+  }
+  function setZoom(z, cx, cy) {
+    z = Math.max(0.6, Math.min(3, z));
+    var oldW = svg.getBoundingClientRect().width, r = canvas.getBoundingClientRect();
+    var fx = (canvas.scrollLeft + (cx == null ? r.width / 2 : cx)) / oldW;
+    var fy = (canvas.scrollTop + (cy == null ? r.height / 2 : cy)) / svg.getBoundingClientRect().height;
+    zoom = z; applyZoom();
+    var nr = svg.getBoundingClientRect();
+    canvas.scrollLeft = fx * nr.width - (cx == null ? r.width / 2 : cx);
+    canvas.scrollTop = fy * nr.height - (cy == null ? r.height / 2 : cy);
+  }
+  document.getElementById('zin').addEventListener('click', function () { setZoom(zoom * 1.25); });
+  document.getElementById('zout').addEventListener('click', function () { setZoom(zoom / 1.25); });
+  document.getElementById('zfit').addEventListener('click', function () { zoom = 1; applyZoom(); canvas.scrollLeft = 0; canvas.scrollTop = 0; });
+  document.getElementById('zwide').addEventListener('click', function () {
+    var on = this.getAttribute('aria-pressed') !== 'true';
+    this.setAttribute('aria-pressed', String(on));
+    document.querySelector('.grid').classList.toggle('wide', on);
+  });
+  canvas.addEventListener('wheel', function (ev) {
+    if (!ev.ctrlKey && !ev.metaKey) return;
+    ev.preventDefault();
+    var r = canvas.getBoundingClientRect();
+    setZoom(zoom * (ev.deltaY < 0 ? 1.1 : 1 / 1.1), ev.clientX - r.left, ev.clientY - r.top);
+  }, { passive: false });
+  var drag = null;
+  canvas.addEventListener('pointerdown', function (ev) {
+    if (ev.target !== svg && ev.target !== canvas) return;
+    drag = { x: ev.clientX, y: ev.clientY, sl: canvas.scrollLeft, st: canvas.scrollTop, moved: false };
+  });
+  window.addEventListener('pointermove', function (ev) {
+    if (!drag) return;
+    var dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; canvas.classList.add('pan'); }
+    if (drag.moved) { canvas.scrollLeft = drag.sl - dx; canvas.scrollTop = drag.st - dy; }
+  });
+  window.addEventListener('pointerup', function () {
+    if (drag && drag.moved) suppressClear = true;
+    drag = null; canvas.classList.remove('pan');
+  });
+  var suppressClear = false;
+
+  // ---- Tabs and hash routing ----
+  var tabs = document.getElementById('tabs');
+  Object.keys(VIEWS).forEach(function (name) {
+    var b = h('button', VIEWS[name].tab); b.type = 'button'; b.setAttribute('role', 'tab'); b.id = 'tab-' + name;
+    b.addEventListener('click', function () { setView(name); });
+    tabs.appendChild(b);
+  });
+
+  function setView(name) {
+    if (!VIEWS[name]) name = 'overview';
+    if (location.hash !== '#' + name) { try { location.hash = name; } catch (e) {} }
+    showView(name);
+  }
+  function showView(name) {
+    if (!VIEWS[name]) name = 'overview';
+    if (name === viewName) return;
+    Object.keys(VIEWS).forEach(function (k) {
+      document.getElementById('tab-' + k).setAttribute('aria-selected', String(k === name));
+    });
+    sel = { kind: null, id: null };
+    buildView(name);
+    focusSet(null, null);
+    render();
+    if (name === 'overview') select('node', 'hpc');
+  }
+  window.addEventListener('hashchange', function () { showView(location.hash.replace('#', '')); });
+
+  showView(location.hash.replace('#', '') || 'overview');
+</script>
+
+</body></html>
